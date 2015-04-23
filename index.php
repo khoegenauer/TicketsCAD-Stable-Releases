@@ -7,7 +7,7 @@ if(!(file_exists("./incs/mysql.inc.php"))) {
 
 require_once('./incs/functions.inc.php');	
 
-$version = "2.20 G beta - 6/22/12";	
+$version = "2.30B Beta - 03/05/13";	
 
 /*
 10/1/08 added error reporting
@@ -88,6 +88,7 @@ $version = "2.20 G beta - 6/22/12";
 5/11/12 Added extra indexes to Assigns and log table.
 5/11/12 Added code for invocation of quick start choice on first login.
 6/21/12 Version number change
+10/23/12 New code for Messaging and Portal
 */
 
 //snap(basename(__FILE__) . " " . __LINE__  , count($_SESSION));
@@ -206,12 +207,14 @@ if (table_exists("css_night") == 0) {			//	3/15/11
 	do_insert_night_colors('label_text', '000000');			//	3/15/11
 	} // end if !table_exists css_night
 
-function do_caption ($temp) { 				// adds a 'captions' table entry - 12/4/10
+function do_caption ($temp, $repl="") { 				// adds a 'captions' table entry - 12/4/10
+	if($repl == "") { $repl = $temp; }
 	$caption = quote_smart($temp);
+	$repl = quote_smart($repl);	
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]captions` WHERE `capt` = $caption LIMIT 1;";	// 11/30/10
 	$result = mysql_query($query) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__); 
 	if (mysql_affected_rows()==0) {	
-		$query = "INSERT INTO `$GLOBALS[mysql_prefix]captions` ( `capt`, `repl`) VALUES ( $caption, $caption);";
+		$query = "INSERT INTO `$GLOBALS[mysql_prefix]captions` ( `capt`, `repl`) VALUES ( $caption, $repl);";
 		$result = mysql_query($query) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__); 
 		}
 	return;
@@ -239,6 +242,17 @@ function update_setting ($which, $what) {		//	3/15/11
 	return TRUE;
 	}				// end function update_setting ()
 	
+function update_settings ($which, $what) {		//	3/15/11
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]msg_settings` WHERE `name`= '$which' LIMIT 1";
+	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+	if (mysql_affected_rows()!=0) {
+		$query = "UPDATE `$GLOBALS[mysql_prefix]msg_settings` SET `value`= '$what' WHERE `name` = '$which'";
+		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+		}
+	unset ($result);
+	return TRUE;
+	}				// end function update_msg_settings ()
+	
 function microtime_float() {
     list($usec, $sec) = explode(" ", microtime());
     return ((float)$usec + (float)$sec);
@@ -263,6 +277,10 @@ if (!($version == $old_version)) {		// current? - 5/19/10 ======================
 		do_setting ('group_or_dispatch','0');			// 12/16/10
 		do_setting ('title_string','');			// 12/16/10		
 		do_setting ('regions_control','0');			// 12/16/10		
+		do_setting('regions_control','0');				//	10/23/12	
+		do_setting('map_in_portal','1');				//	10/23/12	
+		do_setting('use_messaging','0');				//	10/23/12	
+		
 		$query = "ALTER TABLE `$GLOBALS[mysql_prefix]assigns` ADD INDEX ( `ticket_id` )";	//	5/11/12
 		$result = mysql_query($query);
 
@@ -588,7 +606,7 @@ if (!($version == $old_version)) {		// current? - 5/19/10 ======================
 		}
 	else {									// exists, not-empty
 		if(strpos($the_inc_num, $left_br)) {		// if unencoded - else ignore
-//			snap(__LINE__, $the_inc_num);
+	//			snap(__LINE__, $the_inc_num);
 			$instr = unserialize(get_variable('_inc_num'));
 			$outstr = base64_encode(serialize($the_inc_num));
 			update_setting ('_inc_num',$outstr);
@@ -1086,6 +1104,275 @@ if (!($version == $old_version)) {		// current? - 5/19/10 ======================
 		
 		$query = "ALTER TABLE `$GLOBALS[mysql_prefix]settings` CHANGE `value` `value` VARCHAR( 512 ) CHARACTER SET latin1 COLLATE latin1_swedish_ci NULL DEFAULT NULL ;";
 		$result = mysql_query($query);		// 9/26/11		
+
+			$query = "ALTER TABLE `$GLOBALS[mysql_prefix]responder` ADD `smsg_id` VARCHAR( 16 ) DEFAULT NULL AFTER `contact_via` ;";
+			$result = mysql_query($query);		// 10/23/12	
+			
+			if (table_exists("auto_status") == 0) {		//	10/23/12
+				$query = "CREATE TABLE IF NOT EXISTS `$GLOBALS[mysql_prefix]auto_status` (
+					`id` int(3) NOT NULL AUTO_INCREMENT,
+					`text` varchar(24) NOT NULL,
+					`status_val` int(3) NOT NULL,
+					PRIMARY KEY (`id`)
+					) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;";
+				$result = mysql_query($query) or do_error($query , 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);		//	10/23/12
+				}
+
+			if (table_exists("known_sources") == 0) {		//	10/23/12
+				$query = "CREATE TABLE IF NOT EXISTS `$GLOBALS[mysql_prefix]known_sources` (
+					`id` int(4) NOT NULL AUTO_INCREMENT,
+					`contact` varchar(64) NOT NULL,
+					`email` varchar(64) NOT NULL,
+					`allow` int(2) NOT NULL DEFAULT '0',
+					`_by` int(7) NOT NULL,
+					`_on` datetime NOT NULL,
+					`_from` varchar(16) NOT NULL,
+					PRIMARY KEY (`id`)
+					) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;";
+				$result = mysql_query($query) or do_error($query , 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);		//	10/23/12
+				}
+				
+				
+			if (table_exists("messages") == 0) {		//	10/23/12
+				$query = "CREATE TABLE IF NOT EXISTS `$GLOBALS[mysql_prefix]messages` (
+					`id` int(10) NOT NULL AUTO_INCREMENT,
+					`msg_type` int(2) NOT NULL,
+					`message_id` varchar(24) DEFAULT NULL,
+					`ticket_id` int(8) DEFAULT NULL,
+					`resp_id` varchar(128) DEFAULT NULL,
+					`recipients` varchar(1024) DEFAULT NULL,
+					`from_address` varchar(128) NOT NULL,
+					`fromname` varchar(128) DEFAULT NULL,
+					`subject` varchar(128) NOT NULL DEFAULT 'No Subject',
+					`message` longtext,
+					`status` varchar(24) DEFAULT NULL,
+					`date` datetime NOT NULL,
+					`read_status` int(11) NOT NULL DEFAULT '0',
+					`readby` varchar(512) DEFAULT NULL,
+					`delivered` varchar(512) DEFAULT NULL,
+					`delivery_status` tinyint(2) NOT NULL DEFAULT '0',
+					`_by` int(7) DEFAULT NULL,
+					`_from` varchar(16) DEFAULT NULL,
+					`_on` datetime DEFAULT NULL,
+					PRIMARY KEY (`id`)
+					) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;";
+				$result = mysql_query($query) or do_error($query , 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);		//	10/23/12
+				}
+
+			if (table_exists("messages_bin") == 0) {		//	10/23/12
+				$query = "CREATE TABLE IF NOT EXISTS `$GLOBALS[mysql_prefix]messages_bin` (
+					`id` int(10) NOT NULL AUTO_INCREMENT,
+					`msg_type` int(2) NOT NULL,
+					`message_id` varchar(24) DEFAULT NULL,
+					`ticket_id` int(8) DEFAULT NULL,
+					`resp_id` varchar(128) DEFAULT NULL,
+					`recipients` varchar(1024) DEFAULT NULL,
+					`from_address` varchar(128) NOT NULL,
+					`fromname` varchar(128) DEFAULT NULL,
+					`subject` varchar(128) NOT NULL DEFAULT 'No Subject',
+					`message` longtext,
+					`status` varchar(24) DEFAULT NULL,
+					`date` datetime NOT NULL,
+					`read_status` int(11) NOT NULL DEFAULT '0',
+					`readby` varchar(512) DEFAULT NULL,
+					`delivered` varchar(512) DEFAULT NULL,
+					`delivery_status` tinyint(2) NOT NULL DEFAULT '0',
+					`_by` int(7) DEFAULT NULL,
+					`_from` varchar(16) DEFAULT NULL,
+					`_on` datetime DEFAULT NULL,
+					PRIMARY KEY (`id`)
+					) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;";
+				$result = mysql_query($query) or do_error($query , 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);		//	10/23/12
+				}
+
+			if (table_exists("msg_settings") == 1) {		//	01/08/13
+				$email_server = (get_msg_variable('email_server') != "") ? get_msg_variable('email_server') : "";
+				$email_port = (get_msg_variable('email_port') != "") ? get_msg_variable('email_port') : "995";
+				$email_protocol = (get_msg_variable('email_protocol') != "") ? get_msg_variable('email_protocol') : "POP3";
+				$email_addon = (get_msg_variable('email_addon') != "") ? get_msg_variable('email_addon') : "notls";
+				$email_folder = (get_msg_variable('email_folder') != "") ? get_msg_variable('email_folder') : "INBOX";
+				$email_userid = (get_msg_variable('email_userid') != "") ? get_msg_variable('email_userid') : "";
+				$email_password = (get_msg_variable('email_password') != "") ? get_msg_variable('email_password') : "";
+				$email_svr_simple = (get_msg_variable('email_svr_simple') != "") ? get_msg_variable('email_svr_simple') : "0";
+				$smsg_orgcode = (get_msg_variable('smsg_orgcode') != "") ? get_msg_variable('smsg_orgcode') : ""; 
+				$smsg_apipin = (get_msg_variable('smsg_apipin') != "") ? get_msg_variable('smsg_apipin') : ""; 		
+				$query = "DROP TABLE IF EXISTS `$GLOBALS[mysql_prefix]msg_settings`";
+				$result = mysql_query($query);		// 11/28/12	
+				} else {
+				$email_server = "";
+				$email_port = "995";
+				$email_protocol = "POP3";
+				$email_addon = "notls";
+				$email_folder = "INBOX";
+				$email_userid = "";
+				$email_password = "";
+				$email_svr_simple = "0";
+				$smsg_orgcode = ""; 
+				$smsg_apipin = ""; 	
+				}
+			
+			if (table_exists("msg_settings") == 0) {		//	11/28/12
+				$query = "CREATE TABLE IF NOT EXISTS `$GLOBALS[mysql_prefix]msg_settings` (
+				`id` int(11) NOT NULL AUTO_INCREMENT,
+				`name` tinytext,
+				`value` varchar(512) DEFAULT NULL,
+				PRIMARY KEY (`id`)
+				) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;";
+				$result = mysql_query($query) or do_error($query , 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);		//	10/23/12
+			
+				$query = "INSERT INTO `$GLOBALS[mysql_prefix]msg_settings` (`id`, `name`, `value`) VALUES
+					(1, 'email_server', '{$email_server}'),
+					(2, 'email_port', '{$email_port}'),
+					(3, 'email_protocol', '{$email_protocol}'),
+					(4, 'email_addon', '{$email_addon}'),
+					(5, 'email_folder', '{$email_folder}'),
+					(6, 'email_userid', '{$email_userid}'),
+					(7, 'email_password', '{$email_password}'),
+					(8, 'email_svr_simple', '{$email_svr_simple}'),
+					(9, 'smsg_provider', '0'),
+					(10, 'smsg_server', 'http://gate1.sms-responder.com/external/smsrcheck.asp'),
+					(11, 'smsg_server2', 'http://gate2.sms-responder.com/external/smsrcheck.asp'),
+					(12, 'smsg_og_serv1', 'http://gate1.sms-responder.com/external/smsrsend.asp'),
+					(13, 'smsg_og_serv2', 'http://gate2.sms-responder.com/external/smsrsend.asp'),
+					(14, 'smsg_server_inuse', '1'),
+					(15, 'smsg_force_sec', '0'),
+					(16, 'smsg_orgcode', '{$smsg_orgcode}'),
+					(17, 'smsg_apipin', '{$smsg_apipin}'),
+					(18, 'smsg_mode', 'SENDXML'),
+					(19, 'smsg_replyto', '07892012345'),
+					(20, 'smsg_replyto_2', '07537415550'),
+					(21, 'columns', '1,2,3,4,5,6,7'),
+					(22, 'use_autostat', '0'),
+					(23, 'start_tag', '*'),
+					(24, 'end_tag', '*');";
+				$result = mysql_query($query) or do_error($query , 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);		//	10/23/12		
+				}
+
+			$query = "DROP TABLE IF EXISTS `$GLOBALS[mysql_prefix]requests`";
+			$result = mysql_query($query);		// 11/28/12	
+			
+			if (table_exists("requests") == 0) {		//	11/28/12
+				$query = "CREATE TABLE IF NOT EXISTS `$GLOBALS[mysql_prefix]requests` (
+					`id` bigint(8) NOT NULL AUTO_INCREMENT,
+					`contact` varchar(48) NOT NULL DEFAULT '',
+					`street` varchar(12000) DEFAULT NULL,
+					`city` varchar(12000) DEFAULT NULL,
+					`state` char(4) DEFAULT NULL,
+					`the_name` varchar(64) DEFAULT NULL,
+					`phone` varchar(16) DEFAULT NULL,
+					`orig_facility` int(4) DEFAULT '0',
+					`rec_facility` int(4) DEFAULT '0',
+					`scope` text NOT NULL,
+					`description` text NOT NULL,
+					`comments` text,
+					`lat` varchar(12000) DEFAULT NULL,
+					`lng` varchar(12000) DEFAULT NULL,
+					`request_date` datetime DEFAULT NULL,
+					`status` enum('Open','Tentative','Accepted','Resourced','Complete','Declined','Closed') NOT NULL DEFAULT 'Open',
+					`tentative_date` datetime DEFAULT NULL,
+					`accepted_date` datetime DEFAULT NULL,
+					`declined_date` datetime DEFAULT NULL,
+					`resourced_date` datetime DEFAULT NULL,
+					`completed_date` datetime DEFAULT NULL,
+					`closed` datetime DEFAULT NULL,
+					`requester` bigint(8) NOT NULL,
+					`ticket_id` bigint(8) DEFAULT NULL,
+					`_by` int(7) NOT NULL,
+					`_on` datetime NOT NULL,
+					`_from` varchar(16) NOT NULL,
+					PRIMARY KEY (`id`),
+					UNIQUE KEY `ID` (`id`),
+					KEY `requester` (`requester`)
+					) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;";
+				$result = mysql_query($query) or do_error($query , 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);		//	10/23/12		
+				}
+				
+			if (table_exists("std_msgs") == 0) {		//	10/23/12
+				$query = "CREATE TABLE IF NOT EXISTS `$GLOBALS[mysql_prefix]std_msgs` (
+					`id` int(4) NOT NULL AUTO_INCREMENT,
+					`message` varchar(248) NOT NULL,
+					PRIMARY KEY (`id`)
+					) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;";
+				$result = mysql_query($query) or do_error($query , 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);		//	10/23/12		
+				
+				$query = "INSERT INTO `$GLOBALS[mysql_prefix]std_msgs` (`id`, `message`) VALUES
+					(1, 'Example Standard Message');";
+				$result = mysql_query($query) or do_error($query , 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);		//	10/23/12		
+				}
+				
+			do_caption ("Beds") ;
+			do_caption ("Available") ;
+			do_caption ("Occupied") ;
+			do_caption ("Beds information") ;
+
+			$query = "ALTER TABLE `$GLOBALS[mysql_prefix]facilities`
+				ADD `beds_a` VARCHAR( 6 ) NULL DEFAULT NULL COMMENT 'Available' AFTER `description` ,
+				ADD `beds_o` VARCHAR( 6 ) NULL DEFAULT NULL COMMENT 'Occupied' AFTER `beds_a` ,
+				ADD `beds_info` VARCHAR( 2048 ) NULL DEFAULT NULL COMMENT 'Information' AFTER `beds_o` ";
+			$result = mysql_query($query);
+			
+			update_settings ('smsg_provider', '1');
+
+			if (table_exists("replacetext") == 0) {		//	10/23/12
+				$query = "CREATE TABLE IF NOT EXISTS `$GLOBALS[mysql_prefix]replacetext` (
+					`id` int(3) NOT NULL auto_increment,
+					`in_text` varchar(128) NOT NULL,
+					`out_text` varchar(128) NOT NULL,
+					`add_ticket` enum('Yes','No') NOT NULL default 'No',
+					`add_user` enum('Yes','No') NOT NULL default 'No',
+					`add_user_unit` enum('Yes','No') NOT NULL default 'No',
+					`add_time` enum('Yes','No') NOT NULL default 'No',
+					`add_date` enum('Yes','No') NOT NULL default 'No',
+					`app_summ` enum('Yes','No') NOT NULL default 'No',
+					PRIMARY KEY  (`id`)
+					) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;";
+				$result = mysql_query($query) or do_error($query , 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);		//	10/23/12	
+				}
+				
+			if (table_exists("roadinfo") == 0) {		//	10/23/12
+				$query = "CREATE TABLE IF NOT EXISTS `$GLOBALS[mysql_prefix]roadinfo` (
+					`id` int(8) NOT NULL auto_increment,
+					`title` varchar(256) NOT NULL,
+					`description` longtext NOT NULL,
+					`date` datetime NOT NULL,
+					`lat` double NOT NULL,
+					`lng` double NOT NULL,
+					`icon` int(3) NOT NULL,
+					`_by` int(3) NOT NULL,
+					`_from` varchar(16) NOT NULL,
+					`_on` datetime NOT NULL,
+					PRIMARY KEY  (`id`)
+					) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;";
+				$result = mysql_query($query) or do_error($query , 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);		//	10/23/12	
+				}
+				
+			if (table_exists("organisations") == 0) {		//	10/23/12
+				$query = "CREATE TABLE IF NOT EXISTS `$GLOBALS[mysql_prefix]organisations` (
+					`id` int(4) NOT NULL auto_increment,
+					`name` varchar(128) NOT NULL,
+					`street` varchar(256) NOT NULL,
+					`city` varchar(64) NOT NULL,
+					`state` varchar(4) NOT NULL,
+					`tel` varchar(16) NOT NULL,
+					`email` varchar(256) NOT NULL,
+					PRIMARY KEY  (`id`)
+					) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=2 ;";
+				$result = mysql_query($query) or do_error($query , 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);		//	10/23/12	
+				}
+				
+			$query = "ALTER TABLE `$GLOBALS[mysql_prefix]ticket` ADD `org` INT( 3 ) NOT NULL DEFAULT '0' COMMENT 'Organisation' AFTER `in_types_id`;";
+			$result = mysql_query($query);		//	10/23/12			
+
+			$query = "ALTER TABLE `$GLOBALS[mysql_prefix]requests` ADD `org` INT( 3 ) NOT NULL DEFAULT '0' COMMENT 'Organisation' AFTER `id`;";
+			$result = mysql_query($query);		//	10/23/12	
+			
+			$query = "ALTER TABLE `$GLOBALS[mysql_prefix]user` ADD `org` INT( 3 ) NOT NULL DEFAULT '0' COMMENT 'Organisation' AFTER `pers`;";
+			$result = mysql_query($query);		//	10/23/12		
+
+			$query = "ALTER TABLE `$GLOBALS[mysql_prefix]assigns` ADD `miles` INT( 8 ) NULL DEFAULT NULL AFTER `end_miles`;";
+			$result = mysql_query($query);		//	10/23/12				
+
+			do_caption("messaging help", "Messaging Help Goes Here");	
 		}		// end (!($version ==...) ==================================================			
 
 	function update_disp_stat ($which, $what, $old) {		//	10/26/11

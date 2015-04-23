@@ -509,9 +509,16 @@ $tick_id = (isset($_REQUEST['ticket_id'])) ? $_REQUEST['ticket_id'] : "";							
 
 //		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` ORDER BY `name` ASC";		// 2/12/09
 
-		$query = "SELECT *, UNIX_TIMESTAMP(updated) AS `updated`, `y`.`id` AS `type_id`, `r`.`id` AS `unit_id`, `r`.`name` AS `unit_name`,
-			`s`.`description` AS `stat_descr`,  `r`.`description` AS `unit_descr`, 
-			(SELECT  COUNT(*) as numfound FROM `$GLOBALS[mysql_prefix]assigns` WHERE `$GLOBALS[mysql_prefix]assigns`.`responder_id` = unit_id  AND `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' ) AS `nr_assigned` 
+		$query = "SELECT *, 
+			`updated` AS `updated`,
+			`y`.`id` AS `type_id`,
+			`r`.`id` AS `unit_id`,
+			`r`.`name` AS `unit_name`,
+			`s`.`description` AS `stat_descr`,
+			`r`.`description` AS `unit_descr`, 
+			(SELECT  COUNT(*) as numfound FROM `$GLOBALS[mysql_prefix]assigns` 
+				WHERE `$GLOBALS[mysql_prefix]assigns`.`responder_id` = unit_id  AND `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' ) 
+				AS `nr_assigned` 
 			FROM `$GLOBALS[mysql_prefix]responder` `r` 
 			LEFT JOIN `$GLOBALS[mysql_prefix]unit_types` `y` ON ( `r`.`type` = y.id )	
 			LEFT JOIN `$GLOBALS[mysql_prefix]un_status` `s` ON ( `r`.`un_status_id` = s.id ) 		
@@ -656,8 +663,13 @@ $tick_id = (isset($_REQUEST['ticket_id'])) ? $_REQUEST['ticket_id'] : "";							
 	$where .= "AND `a`.`type` = 2";	//	6/10/11		
 
 
-		$query = "SELECT *, UNIX_TIMESTAMP(updated) AS `updated`, `t`.`id` AS `type_id`, `r`.`id` AS `unit_id`, `r`.`name` AS `unit_name`,
-			`s`.`description` AS `stat_descr`,  `r`.`description` AS `unit_descr`, 
+		$query = "SELECT *, 
+			`updated` AS `updated`,
+			`t`.`id` AS `type_id`, 
+			`r`.`id` AS `unit_id`, 
+			`r`.`name` AS `unit_name`,
+			`s`.`description` AS `stat_descr`,  
+			`r`.`description` AS `unit_descr`, 
 			(SELECT  COUNT(*) as numfound FROM `$GLOBALS[mysql_prefix]assigns` 
 				WHERE `$GLOBALS[mysql_prefix]assigns`.`responder_id` = unit_id  AND `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' ) 
 				AS `nr_assigned` 
@@ -700,6 +712,7 @@ $tick_id = (isset($_REQUEST['ticket_id'])) ? $_REQUEST['ticket_id'] : "";							
 			<INPUT TYPE="hidden" NAME = "frm_ticket_id" VALUE = "<?php print $tick_id;?>" />		<!-- 6/10/11 -->
 			&nbsp;&nbsp;&nbsp;&nbsp;<img id='lock' border=0 src='unlock.png' STYLE='vertical-align: middle' onClick = 'do_unlock(document.add_frm);'>
 			<br /> <br /> <br />
+
 			<INPUT TYPE="button" VALUE="Cancel"	onClick="history.back();"  STYLE = 'margin-left:40px' />
 			<INPUT TYPE="button" VALUE="Reset form"	onClick="this.form.reset();init();"  STYLE = 'margin-left:20px' />
 			<INPUT TYPE="button" VALUE="Next"	onClick="return validate(this.form)"  STYLE = 'margin-left:20px' />
