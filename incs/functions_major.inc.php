@@ -3793,7 +3793,7 @@ function show_ticket($id,$print=FALSE, $search = FALSE) {								/* show specifi
 		print "</TD></TR>";
 		print "<TR CLASS='print_TD' STYLE = 'display:none;'><TD colspan=2><SPAN ID='oldlat'>" . $row['lat'] . "</SPAN><SPAN ID='oldlng'>" . $row['lng'] . "</SPAN></TD></TR>";
 		print "<TR><TD COLSPAN=99>";
-		print show_assigns(0, $theRow[0]);				// 'id' ambiguity - 7/27/09 - new_show_assigns($id_in)
+		print show_assigns(0, $row[0]);				// 'id' ambiguity - 7/27/09 - new_show_assigns($id_in)
 		print "</TD></TR>";		
 		print "<TR CLASS='print_TD'><TD colspan=99 ALIGN='left'>";
 		print show_actions($row['tick_id'], "date", FALSE, TRUE);		// lists actions and patient data, print - 10/30/09
@@ -4459,8 +4459,6 @@ function do_ticket($theRow, $theWidth, $search=FALSE, $dist=TRUE) {						// retu
 	$print .= "</TABLE>\n";
 	return $print;
 	}		// end function do ticket(
-
-
 //	} -- dummy
 
 function popup_ticket($id,$print='false', $search = FALSE) {								/* 7/9/09 - show specified ticket */
