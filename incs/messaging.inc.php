@@ -257,10 +257,34 @@ function ReplaceImap($txt) {	//	function to clean up body text
 	return $txt;
 	}
 
+function clean_hdr_fm_text($thetext) {
+	$start = "------=";
+	$end = "--";
+	$is_start = strripos($thetext, $start, 0);
+	$is_end = strripos($thetext, $end, -0);
+	$output = "";
+	if(($is_start != false) && ($is_end != false)) {
+		$lines = preg_split( '/\r\n|\r|\n/', $thetext );
+		$total = count($lines);
+		$i = 0;
+		foreach($lines as $text) {
+			if(($i==0) || ($i==1) || ($i==2) || ($i==3) || ($i==$total-1)) {
+				} else {
+				$output .= $text;
+				}
+			$i++;
+			}
+		} else {
+		$output .= $thetext;
+		}
+	return $output;
+	}
+
 // Xpertmailer version
 function get_emails($url, $user, $password, $port, $ssl="", $timeout=10 ) {	//	Called from AJAX file to get emails in background - AJAX file called by top.php
 //	print $url . "," . $user . "," . $password . "," . $port . "," .  $ssl . "," . $timeout . "<BR />"; 
 	$counter = 0;
+	$now = mysql_format_date(time() - (intval(get_variable('delta_mins'))*60));	
 	$ret = array();
 	$the_list = white_list();	
 	$ticket_id = 0;
@@ -287,22 +311,48 @@ function get_emails($url, $user, $password, $port, $ssl="", $timeout=10 ) {	//	C
 			$m = MIME::split_message($r);
 			$split = MIME::split_mail($r, $headers, $body);	
 			if($headers && $body) {
-				$y = 0;
 				foreach($headers AS $val) {
-					if($val['name'] == "From") { $the_message[$z]['from'] = GetBetween($val['value'],'<','>'); $thename = explode("<", $val['value']); $fromname = $thename[0]; } 
-					if($val['name'] == "To") { $the_message[$z]['to'] = $val['value']; } 
+					if($val['name'] == "From") { 
+						if((substr($val['value'], 0, 1) == "<") && ($val['value'] != "")) {
+							$the_message[$z]['from'] = GetBetween($val['value'],'<','>'); 
+							$thename = explode("<", $val['value']); 
+							$the_message[$z]['fromname'] = $thename[0]; 
+							} else {
+							$the_message[$z]['from'] = $val['value'];
+							$the_message[$z]['fromname'] = $val['value'];
+							}
+						}
+					if($val['name'] == "To") { 
+						if((substr($val['value'], 0, 1) == "<") && ($val['value'] != "")) {
+							$the_message[$z]['to'] = GetBetween($val['value'],'<','>');
+							} else {
+							$the_message[$z]['to'] = $val['value'];
+							}
+						}
 					if($val['name'] == "Subject") { $the_message[$z]['subject'] = $val['value']; } 
 					if($val['name'] == "Date") { $the_message[$z]['date'] = $val['value']; } 
-					$y++;
 					}
-				$the_message[$z]['text'] = addslashes(htmlentities($body[0]['content']));
-				$from = $the_message[$z]['from'];
-				if(in_array($from, $the_list)) {
+				$the_message[$z]['from'] = ((isset($the_message[$z]['from'])) && ($the_message[$z]['from'] != "")) ? $the_message[$z]['from'] : "No address";		
+				$the_message[$z]['fromname'] = (($the_message[$z]['fromname'] == "") && ($the_message[$z]['from'] != "No Address")) ? $the_message[$z]['from'] : "No Name";						
+				$the_message[$z]['to'] = ((isset($the_message[$z]['to'])) && ($the_message[$z]['to'] != "")) ? $the_message[$z]['to'] : "Tickets";				
+				$the_message[$z]['subject'] = ((isset($the_message[$z]['subject'])) && ($the_message[$z]['subject'] != "")) ? $the_message[$z]['subject'] : "Email";
+				$the_message[$z]['text'] = clean_hdr_fm_text(addslashes(htmlentities($body[0]['content'])));
+				$the_message[$z]['text'] = ((isset($the_message[$z]['text'])) && ($the_message[$z]['text'] != "")) ? $the_message[$z]['text'] : "No Text";				
+				$from_address = $the_message[$z]['from'];
+				$from_name = (($the_message[$z]['fromname'] == "No Name") && ($from_address != "")) ? $from_address : $the_message[$z]['fromname'];	
+				$to = $the_message[$z]['to'];	
+				$subject = $the_message[$z]['subject'];
+				$text = $the_message[$z]['text'];				
+				if((in_array($from_address, $the_list)) || ($the_message[$z]['from'] == "")) {
+					if((isset($the_message[$z]['date'])) && ($the_message[$z]['date'] != "")) {
 					$date = date_parse($the_message[$z]['date']);				
 					$datepart = $date['year'] . "-" . $date['month'] . "-" . $date['day'];
 					$timepart = $date['hour'] . ":" . $date['minute'] . ":" . $date['second'];
 					$datestring = $datepart . " " . $timepart;	
-					$the_count = store_email(2, "Tickets", "email", "{$the_message[$z]['subject']}", "{$the_message[$z]['text']}", $ticket_id, 0, $datestring, $the_message[$z]['from'], $fromname);
+						} else {
+						$datestring = $now;
+						}
+					$the_count = store_email(2, "Tickets", "email", "{$subject}", "{$text}", $ticket_id, 0, $datestring, $from_address, $from_name);
 					if($the_count == 1) {
 						$counter++;
 						}
@@ -326,10 +376,10 @@ function store_email($msg_type, $recipients, $messageid, $subject, $message, $ti
 	$from = $_SERVER['REMOTE_ADDR'];
 	$now = mysql_format_date(time() - (intval(get_variable('delta_mins'))*60));
 	$message = mysql_real_escape_string($message);
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]messages` WHERE `msg_type` = '2' AND `message_id` = '{$messageid}' AND `subject` = '{$subject}' AND `message` = '{$message}'";
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]messages` WHERE `msg_type` = '2' AND `message_id` = '{$messageid}' AND `subject` = '{$subject}' AND `message` = '{$message}' AND `date` = '" . $time . "'";
 	$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), basename( __FILE__), __LINE__);	
 	if(mysql_num_rows($result) == 0) {
-		$query = "INSERT INTO `$GLOBALS[mysql_prefix]messages` (msg_type, message_id, ticket_id, resp_id, recipients, from_address, fromname, subject, message, date, _by, _from, _on) VALUES({$msg_type},'{$messageid}',{$ticket_id},{$resp_id},'{$recipients}','{$from_address}','{$fromname}','{$subject}','" . $message . "','{$now}',{$who},'{$from}','{$now}')";
+		$query = "INSERT INTO `$GLOBALS[mysql_prefix]messages` (msg_type, message_id, ticket_id, resp_id, recipients, from_address, fromname, subject, message, date, _by, _from, _on) VALUES({$msg_type},'{$messageid}',{$ticket_id},{$resp_id},'{$recipients}','{$from_address}','{$fromname}','{$subject}','" . $message . "','{$time}',{$who},'{$from}','{$now}')";
 		$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), basename( __FILE__), __LINE__);	
 		if($result) {
 			$counter = 1;
@@ -907,5 +957,3 @@ function store_msg($recipients, $messageid, $subject, $message, $fromname, $tick
 		}
 	return $stored;
 	}
-
-?>	
