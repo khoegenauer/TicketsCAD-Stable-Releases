@@ -171,9 +171,11 @@
 5/11/2013 revised do_error() logging
 5/11/2013 fix to remove '_on' from set_u_updated () sql 
 5/20/2013 - rewrote get_elapsed_time with its calls, added function now_ts()
-5/23/2013 - r4eplaced nl2br with replace_newline
+5/23/2013 - replaced nl2br with replace_newline
 5/31/2013 message selector string housekeeping added
 6/10/2013 fix to set_u_updated () re _from 
+7/3/2013 function mail_it () subject line corrected 
+7/10/13 Revisions to function show_actions( to correct failure to show patients if no actions.
 */
 error_reporting(E_ALL);
 
@@ -522,63 +524,52 @@ function show_actions ($the_id, $theSort="date", $links, $display) {			/* list a
 	while ($act_row = stripslashes_deep(mysql_fetch_assoc($result))){
 		$responderlist[$act_row['id']] = $act_row['handle'];
 		}
-	$print = "<TABLE WIDTH='100%' ALIGN='center' ID='patients'>";
+	$print = "<TABLE style='width: 100%;' ID='patients'>";
 																	/* list patients */
-	$query = "SELECT *
+	$query = "SELECT *, `p`.`id` AS `pat_id` 
 		FROM `$GLOBALS[mysql_prefix]patient` `p` 
  		LEFT JOIN `$GLOBALS[mysql_prefix]insurance` `i` ON (`i`.`id` = `p`.`insurance_id` )
- 		WHERE `ticket_id`='{$the_id}' ORDER BY `date`";
+ 		WHERE `ticket_id`='{$the_id}' ORDER BY `date`";	//	7/10/13
 	
 	$result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 	$caption = get_text("Patients");
-	$actr=0;
+	$pctr=0;
 	$genders = array("", "M", "F", "T", "U");
 	if(mysql_num_rows($result) > 0) {
-		$print .= "<TR style='width: 100%;'><TD CLASS='heading' COLSPAN=99 ALIGN='center'><U>{$caption}</U></TD></TR>";	
+		$print .= "<TR style='width: 98%;'><TD CLASS='heading' COLSPAN=99 ALIGN='center'><U>{$caption}</U></TD></TR>";	
 		}
-	while ($act_row = stripslashes_deep(mysql_fetch_assoc($result))){
-		$the_gender = $genders[$act_row['gender']];
-
-//		$tipstr = addslashes("Name: {$act_row['name']}<br> Fullname: {$act_row['fullname']}<br> DOB: {$act_row['dob']}<br> Gender: {$the_gender}<br>Insurance_id: {$act_row['ins_value']}<br>Facility_contact: {$act_row['facility_contact']}<br>    Date: {$act_row['date']}<br>    Description: {$act_row['description']}");
-		$tipstr = addslashes("Name: {$act_row['name']}<br> Fullname: {$act_row['fullname']}<br> DOB: {$act_row['dob']}<br> Gender: {$the_gender}<br>  Insurance_id: {$act_row['ins_value']}<br>    Facility_contact: {$act_row['facility_contact']}<br>    Date: {$act_row['date']}<br>Description:{$act_row['description']}");
-
-		$print .= "<TR CLASS='{$evenodd[$actr%2]}' WIDTH='100%'  onmouseout=\"UnTip();\" onmouseover=\"Tip('{$tipstr}');\">\n";
-		$print .= "<TD NOWRAP>{$act_row['name']}</TD>\n
-			\t<TD NOWRAP>Z". format_date_2($act_row['updated']) . "</TD>\n";
-		$print .= "\t<TD NOWRAP> by <B>". get_owner($act_row['user'])."</B>";
-
-		$print .= ($act_row['action_type']!=$GLOBALS['ACTION_COMMENT'] ? "*" : "-")."</TD>\n
-			\t<TD>" . shorten($act_row['description'], 24) . "</TD>\n";
-	
+	while ($pat_row = stripslashes_deep(mysql_fetch_assoc($result))){
+		$the_gender = ($pat_row['gender'] != 0) ? $genders[$pat_row['gender']] : $genders[4];	//	7/12/13
+		$tipstr = addslashes("Name: {$pat_row['name']}<br> Fullname: {$pat_row['fullname']}<br> DOB: {$pat_row['dob']}<br> Gender: {$the_gender}<br>  Insurance_id: {$pat_row['ins_value']}<br>    Facility_contact: {$pat_row['facility_contact']}<br>    Date: {$pat_row['date']}<br>Description:{$pat_row['description']}");
+		$print .= "<TR CLASS='{$evenodd[$pctr%2]}' style='width: 98%;' onmouseout=\"UnTip();\" onmouseover=\"Tip('{$tipstr}');\">\n";
+		$print .= "<TD NOWRAP>{$pat_row['name']}</TD>\n
+			\t<TD NOWRAP>Z". format_date_2($pat_row['updated']) . "</TD>\n";
+		$print .= "\t<TD NOWRAP> by <B>". get_owner($pat_row['user'])."</B>";
+		$print .= ($pat_row['action_type']!=$GLOBALS['ACTION_COMMENT'] ? "*" : "-")."</TD>\n
+			\t<TD>" . shorten($pat_row['description'], 24) . "</TD>\n";
 		if ($links) {
-			$print .= "\t<TD>&nbsp;[<A HREF='patient.php?ticket_id=$the_id&id={$act_row['id']}&action=edit'>edit</A>|
-				<A HREF='patient.php?id=" . $act_row['id'] . "&ticket_id=$the_id&action=delete'>delete</A>]</TD>\n";	
+			$print .= "\t<TD>&nbsp;[<A HREF='patient.php?ticket_id=$the_id&id={$pat_row['pat_id']}&action=edit'>edit</A>|
+				<A HREF='patient.php?id=" . $pat_row['pat_id'] . "&ticket_id=$the_id&action=delete'>delete</A>]</TD>\n";	
 				}
-		$print .=  "\t<TD></TD><TD>Y({$genders[$act_row['gender']]}) - {$act_row['fullname']} -
-					 Z{$act_row['dob']}</TD>\n
-				\t<TD></TD><TD>A{$act_row['ins_value']} -
-				B{$act_row['facility_contact']}</TD>\n
+		$print .=  "\t<TD></TD><TD>Y({$genders[$pat_row['gender']]}) - {$pat_row['fullname']} -
+					 Z{$pat_row['dob']}</TD>\n
+				\t<TD></TD><TD>A{$pat_row['ins_value']} -
+				B{$pat_row['facility_contact']}</TD>\n
 			</TR>\n";
-			
 		$caption = "";				// once only
-		$actr++;
+		$pctr++;
 		}
 																	/* list actions */
-	$query = "SELECT *
-		FROM `$GLOBALS[mysql_prefix]action` 
-		WHERE `ticket_id`='$the_id' 
-		ORDER BY `date`";
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]action` WHERE `ticket_id` = '$the_id' ORDER BY `date`";
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	if ((mysql_affected_rows())==0) { 				// 8/6/08
-		return "";
+	$caption = get_text("Actions");
+	$actr=0;	
+	if ((mysql_num_rows($result)) > 0) { 				// 8/6/08
+		$print .= "<TR style='width: 98%;'><TD CLASS='heading' COLSPAN=99 ALIGN='center'><U>{$caption}</U></TD></TR>";		
 				}
-			else {
-		$caption = get_text("Actions");
-		$pctr=0;
-		$print .= "<TR style='width: 100%;'><TD CLASS='heading' COLSPAN=99 ALIGN='center'><U>{$caption}</U></TD></TR>";			
 		while ($act_row = stripslashes_deep(mysql_fetch_assoc($result))){
 			$tipstr = addslashes(replace_newline($act_row['description']));		
-			$print .= "<TR CLASS='{$evenodd[$pctr%2]}' WIDTH='100%' onmouseout=\"UnTip();\" onmouseover=\"Tip('{$tipstr}');\">";
+		$print .= "<TR CLASS='{$evenodd[$actr%2]}' style='width: 98%;' onmouseout=\"UnTip();\" onmouseover=\"Tip('{$tipstr}');\">";
 			$responders = explode (" ", trim($act_row['responder']));	// space-separated list to array
 			$sep = $respstring = "";
 			for ($i=0 ;$i< count($responders);$i++) {				// build string of responder names
@@ -598,14 +589,10 @@ function show_actions ($the_id, $theSort="date", $links, $display) {			/* list a
 				}
 			$print .= "</TR>\n";
 			$caption = "";
-			$pctr++;
-			}				// end if/else (...)
-		$print .= "<TR CLASS='spacer'><TD CLASS='spacer'>&nbsp;</TD></TR>";
-		$print .= "</TABLE>\n";			
+		$actr++;
+		}				// end while (...)
+	$print .= "</TABLE>\n";	// 7/10/13 moved out of actions if/else as it fails to close the table if there are no actions.
 	return $print;
-		}				// end else
-	
-
 	}			// end function show_actions
 	
 function list_messages($the_id, $theSort="date", $links, $display) {
@@ -890,11 +877,19 @@ function set_ticket_status($status,$id){				/* alter ticket status */
 	}
 	
 function get_allocates($type, $resource) {	//	6/10/11
-	$query_al = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `type`= '$type' AND `resource_id` = '$resource' ORDER BY `group`;";		//	6/10/11
-	$result_al = mysql_query($query_al);	// 4/13/11
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `type`= '$type' AND `resource_id` = '$resource' ORDER BY `group`;";		//	6/10/11
+	$result = mysql_query($query);	// 4/13/11
 	$al_groups = array();
-	while ($row_al = stripslashes_deep(mysql_fetch_assoc($result_al))) 	{		//	6/10/11
-		$al_groups[] = $row_al['group'];
+	if(mysql_num_rows($result) == 0) {
+		$query2 = "SELECT * FROM `$GLOBALS[mysql_prefix]region`;";		//	6/10/11
+		$result2 = mysql_query($query2);	// 4/13/11
+		while ($row2 = stripslashes_deep(mysql_fetch_assoc($result))) 	{		//	6/10/11
+			$al_groups[] = $row2['id'];
+			}
+		} else {
+		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{		//	6/10/11
+			$al_groups[] = $row['group'];
+			}
 		}
 	return $al_groups;
 	}
@@ -1749,6 +1744,7 @@ function do_log($code, $ticket_id=0, $responder_id=0, $info="", $facility_id=0, 
 	@session_start();							// 4/4/10
 //	$who = (array_key_exists($_SESSION, 'user_id'))? $_SESSION['user_id']: 0;		// 11/14/10
 	$who = (array_key_exists('user_id', $_SESSION))? $_SESSION['user_id']: 0;		// 11/14/10
+	$info = substr($info, 0, 2047);
 	$from = $_SERVER['REMOTE_ADDR'];
 	$now = mysql_format_date(time() - (intval(get_variable('delta_mins'))*60));
 	$query = sprintf("INSERT INTO `$GLOBALS[mysql_prefix]log` (`who`,`from`,`when`,`code`,`ticket_id`,`responder_id`,`info`, `facility`, `rec_facility`, `mileage`)  
@@ -2215,10 +2211,8 @@ function mail_it ($to_str, $smsg_to_str, $text, $ticket_id, $text_sel=1, $txt_on
 
 	$message = str_replace("\n.", "\n..", $message);					// see manual re mail win platform peculiarities
 
-	$subject = (strpos ($match_str, "A" ))? "": "Incident: {$the_scope}";	// 11/14/2012 - 11/14/2012 - don't duplicate
-
-	snap(__LINE__, $subject);
-	snap(__LINE__, $message);
+//	$subject = (strpos ($match_str, "A" ))? "": "Incident: {$the_scope}";	// 11/14/2012 - 11/14/2012 - don't duplicate
+	$subject = get_text("Incident") . ": {$the_scope}";						// 7/3/2013
 	
 	if ($txt_only) {
 		return $subject . "\n" . $message;		// 2/16/09
@@ -3190,7 +3184,11 @@ function get_index_str ($in_str) {
 		}
 
 	function log_error($err_arg) {							// reports non-fatal error - 11/29/2012
-		do_log($GLOBALS['LOG_ERROR'], 0, 0, $err_arg);		// logs supplied error message
+		@session_start();											//
+		if ( ! ( array_key_exists ( $err_arg, $_SESSION ) ) ) {		// limit to once per session to avoid log overload
+			do_log($GLOBALS['LOG_ERROR'], 0, 0, $err_arg);			// logs argument error message
+			$_SESSION[$err_arg] = TRUE;								// 
+			}
 		}				// end function log_error()
 
 	function get_maptype_str () {			// 3/27/2013
