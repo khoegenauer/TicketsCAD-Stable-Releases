@@ -458,14 +458,14 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{	// 6/10/11
 		$al_groups[] = $row['group'];
 		}	
-	if(count($al_groups == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
-		$where2 = "WHERE `a`.`type` = 3";
-		} else {
 	if(isset($_SESSION['viewed_groups'])) {	//	6/10/11
 		$curr_viewed= explode(",",$_SESSION['viewed_groups']);
 		}
 
 	if(!isset($curr_viewed)) {	
+		if(count($al_groups == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
+			$where2 = "WHERE `a`.`type` = 3";
+			} else {
 		$x=0;	//	6/10/11
 		$where2 = "WHERE (";	//	6/10/11
 		foreach($al_groups as $grp) {	//	6/10/11
@@ -474,6 +474,11 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 			$where2 .= $where3;
 			$x++;
 			}
+			$where2 .= "AND `a`.`type` = 3";	//	6/10/11	
+			}
+		} else {
+		if(count($curr_viewed == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
+			$where2 = "WHERE `a`.`type` = 3";
 	} else {
 		$x=0;	//	6/10/11
 		$where2 = "WHERE (";	//	6/10/11
@@ -483,10 +488,11 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 			$where2 .= $where3;
 			$x++;
 			}
-	}
 	$where2 .= "AND `a`.`type` = 3";	//	6/10/11				
 		}
+		}	//	end if count($al_groups == 0)
 	//	3/15/11, 6/10/11
+	
 	$query = "SELECT *,
 		`t`.`id` AS `type_id`, 	
 		`f`.id AS `id`, 
@@ -1009,7 +1015,6 @@ var buttons_html = "";
 		}
 ?>
 		<TR class='spacer'><TD class='spacer' COLSPAN=99>&nbsp;</TD></TR>
-
 		<TR CLASS = "even" VALIGN='middle'><TD CLASS="td_label"><A CLASS="td_label" HREF="#" TITLE="Facility Type - Select from pulldown menu">Type</A>:&nbsp;<font color='red' size='-1'>*</font></TD>
 			<TD ALIGN='left'><FONT SIZE='-2'>
 				<SELECT NAME='frm_type'>

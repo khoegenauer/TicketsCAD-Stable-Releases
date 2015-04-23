@@ -1395,14 +1395,14 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 		$al_groups[] = $row_gp['group'];
 		}	
 
-	if(count($al_groups == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
-		$where2 = "WHERE `a`.`type` = 3";
-		} else {
 	if(isset($_SESSION['viewed_groups'])) {	//	6/10/11
 		$curr_viewed= explode(",",$_SESSION['viewed_groups']);
 		}
 
 	if(!isset($curr_viewed)) {	
+		if(count($al_groups == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
+			$where2 = "WHERE `a`.`type` = 3";
+			} else {
 		$x=0;	//	6/10/11
 		$where2 = "WHERE (";	//	6/10/11
 		foreach($al_groups as $grp) {	//	6/10/11
@@ -1411,6 +1411,11 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 			$where2 .= $where3;
 			$x++;
 			}
+			$where2 .= "AND `a`.`type` = 3";	//	6/10/11	
+			}
+		} else {
+		if(count($curr_viewed == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
+			$where2 = "WHERE `a`.`type` = 3";
 	} else {
 		$x=0;	//	6/10/11
 		$where2 = "WHERE (";	//	6/10/11
@@ -1420,9 +1425,8 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 			$where2 .= $where3;
 			$x++;
 			}
+			$where2 .= "AND `a`.`type` = 3";	//	6/10/11	
 	}
-	$where2 .= "AND `a`.`type` = 3";	//	6/10/11				
-	unset($result);
 		}	//	end if count($al_groups == 0)
 	//	3/15/11, 6/10/11, 1/19/2013
 
@@ -1756,6 +1760,7 @@ var buttons_html = "";
 				WHERE `id`= " . 	quote_smart(trim($_POST['frm_id'])) . ";";
 
 			$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(),basename( __FILE__), __LINE__);
+
 			if (!empty($_POST['frm_log_it'])) { do_log($GLOBALS['LOG_FACILITY_CHANGE'], 0, $_POST['frm_id'], $_POST['frm_status_id']);}	//2/17/11
 			$list = $_POST['frm_exist_groups']; 	//	4/14/11
 			$ex_grps = explode(',', $list); 	//	4/14/11 

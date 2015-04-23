@@ -18,6 +18,7 @@
 7/28/10 Added inclusion of startup.inc.php for checking of network status and setting of file name variables to support no-maps versions of scripts.
 8/13/10 map.setUIToDefault();
 3/15/11 changed stylesheet.php to stylesheet.php
+6/21/2013 corrected the APRS-only sql
 
 */
 
@@ -363,6 +364,9 @@ unset($result);
 	$calls_time = array();
 	
 	$query = "SELECT * , UNIX_TIMESTAMP(packet_date) AS `packet_date` FROM `$GLOBALS[mysql_prefix]tracks` ORDER BY `packet_date` ASC";		// 6/17/08
+//	dump (__LINE__);
+//	dump ($query);
+
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
 	while ($row = mysql_fetch_assoc($result)) {
 		if (isset($calls[$row['source']])) {		// array_key_exists ( mixed key, array search )
@@ -376,28 +380,22 @@ unset($result);
 		$calls_time[$row['source']] = $row['packet_date'];		// save latest - note query order
 		}
 
-//	dump($calls);
-//	dump($calls_nr);
-//	dump($calls_time);
-	
-
 	$query = "SELECT `id`, `status_val` FROM `$GLOBALS[mysql_prefix]un_status`";		// build unit status values array
 	$temp_result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
 	$status_vals[0]="TBD";
 	while ($temp_row = mysql_fetch_assoc($temp_result)) {					// build array of values
 		$status_vals[$temp_row['id']]=$temp_row['status_val'];
 		}	
-
-	$query = "SELECT *, UNIX_TIMESTAMP(updated) AS updated FROM `$GLOBALS[mysql_prefix]responder` WHERE `mobile` = 1 AND `aprs` = 1 AND `callsign` <> '' ORDER BY `name`";	// 1/24/09 
-//	$query = "SELECT *, UNIX_TIMESTAMP(updated) AS updated FROM `$GLOBALS[mysql_prefix]responder` ORDER BY `name`";	// 1/24/09 
+//					6/21/2013
+	$query = "SELECT *, UNIX_TIMESTAMP(updated) AS updated FROM `$GLOBALS[mysql_prefix]responder` WHERE `mobile` = 1 AND `callsign` <> '' ORDER BY `name`";	// 1/24/09 
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-//	dump(mysql_affected_rows());
 
 	$bulls = array(0 =>"",1 =>"red",2 =>"green",3 =>"white",4 =>"black"); 
 
 		// major while ... for mobile RESPONDER data starts here
 
 	$aprs = FALSE;													// legend show/not boolean
+	
 	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
 		$toedit = (is_guest())? "" : "<A HREF='units.php?func=responder&edit=true&id=" . $row['id'] . "'><U>Edit</U></A>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" ;
 		$totrack  = (empty($row['callsign']))? "" : "&nbsp;&nbsp;&nbsp;&nbsp;<SPAN onClick = do_track('" .$row['callsign']  . "');><U>Tracks</U></SPAN>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" ;
@@ -414,7 +412,7 @@ unset($result);
 			}
 		else {			// is mobile, do infowin, etc.
 			$query = "SELECT DISTINCT `source`, `latitude`, `longitude` ,`course` ,`speed` ,`altitude` ,`closest_city` ,`status` , UNIX_TIMESTAMP(packet_date) AS `packet_date`, UNIX_TIMESTAMP(updated) AS `updated` FROM `$GLOBALS[mysql_prefix]tracks` WHERE `source` = '" .$row['callsign'] . "' ORDER BY `updated`";	//	6/16/08 
-//			print $query . "<BR />";
+//			dump ($query);
 			$result_tr = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 			if (mysql_affected_rows()> 0 ) {
 ?>
@@ -432,6 +430,7 @@ unset($result);
 <?php
 				$theLast = "";
 				while ($row_tr = stripslashes_deep(mysql_fetch_assoc($result_tr))) {
+//					dump(__LINE__);
 					if($theLast != "") {
 ?>
 						theLastLat = <?php print $theLast['latitude'];?>;
@@ -498,6 +497,8 @@ unset($result);
 <?php
 		$temptype = $u_types[$row['type']];
 		$the_type = $temptype[0];																			// 1/1/09
+		snap(__LINE__, $row['name']);
+		snap(__LINE__, format_date($row['updated']));
 
 		$tab_1 = "<TABLE CLASS='infowin' width='" . $_SESSION['scr_width']/4 . "'>";
 //		$tab_1 .= "<TR CLASS='even'><TD COLSPAN=2 ALIGN='center'><B>" . shorten($row['name'], 48) . "</B> - " . $types[$row['type']] . "</TD></TR>";
@@ -508,7 +509,7 @@ unset($result);
 		$tab_1 .= "<TR CLASS='even'><TD>As of:</TD><TD>" . format_date($row['updated']) . "</TD></TR>";
 		$tab_1 .= "<TR CLASS='odd'><TD COLSPAN=2 ALIGN='center'>Details:" . $totrack . "&nbsp;&nbsp;&nbsp;&nbsp;". $toedit . "<A HREF='units.php?func=responder&view=true&id=" . $row['id'] . "'><U>View</U></A></TD></TR>";
 		$tab_1 .= "</TABLE>";
-//		dump($row['callsign']);
+
 		switch ($mode) {
 			case 0:				// not mobile
 ?>			
@@ -597,6 +598,7 @@ unset($result);
 <?php
 	}				// end function list_responders() ===========================================================
 $key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : "";	
+
 ?>
 
 

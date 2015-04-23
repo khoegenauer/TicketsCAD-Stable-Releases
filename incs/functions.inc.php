@@ -2651,6 +2651,9 @@ function curr_regs() {	//	10/18/11	Gets currently allocated or viewed regions
 		}
 
 	if(!isset($curr_viewed)) {	
+		if(count($al_groups == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
+			$where = "WHERE `$GLOBALS[mysql_prefix]allocates`.`type` = 3";
+			} else {	
 		$x=0;	//	6/10/11
 		$where = "WHERE (";
 		foreach($al_groups as $grp) {
@@ -2659,6 +2662,11 @@ function curr_regs() {	//	10/18/11	Gets currently allocated or viewed regions
 			$where .= $where2;
 			$x++;
 			}
+			$where .= "AND `$GLOBALS[mysql_prefix]allocates`.`type` = 3";	//	sets the region allocations searched for to type = 3 - Facilities.
+			}				
+		} else {
+		if(count($curr_viewed == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
+			$where = "WHERE `a`.`type` = 2";
 		} else {
 		$x=0;	//	6/10/11
 		$where = "WHERE (";	//	6/10/11
@@ -2668,8 +2676,9 @@ function curr_regs() {	//	10/18/11	Gets currently allocated or viewed regions
 			$where .= $where2;
 			$x++;
 			}
+			$where .= "AND `$GLOBALS[mysql_prefix]allocates`.`type` = 3";	//	sets the region allocations searched for to type = 3 - Facilities.
+			}
 		}
-	$where .= "AND `$GLOBALS[mysql_prefix]allocates`.`type` = 3";	//	sets the region allocations searched for to type = 3 - Facilities.
 	return $where;
 	}	
 	
@@ -3175,7 +3184,6 @@ function get_index_str ($in_str) {
 		}
 
 	function format_date_2($date_in){								// datetime: 2012-11-03 14:13:45 - 11/29/2012
-
 		$date_wk = (strlen(trim($date_in))== 19)? strtotime(trim($date_in)) : trim($date_in) ;			// force to integer
 		if (get_variable('locale')==1)	{ return date("j/n/y H:i", intval($date_wk));}					// 08/27/10 - Revised to show UK format for locale = 1	
 		else 							{ return date(get_variable("date_format"), intval($date_wk)); }

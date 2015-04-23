@@ -420,6 +420,9 @@ if (is_guest()) {													// 8/25/10
 			$al_groups[] = $row_al['group'];
 			}	
 
+		if(count($al_groups == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
+			$where2 = "WHERE `a`.`type` = 2 AND `r`.`ring_fence` > 0 AND `r`.`lat` != '' AND `r`.`lng` != ''";
+			} else {
 		$x=0;	//	6/10/11
 		$where2 = "WHERE (";	//	6/10/11
 		foreach($al_groups as $grp) {	//	6/10/11
@@ -430,6 +433,7 @@ if (is_guest()) {													// 8/25/10
 			}
 
 		$where2 .= " AND `a`.`type` = 2 AND `r`.`ring_fence` > 0 AND `r`.`lat` != '' AND `r`.`lng` != ''";	//	6/10/11
+			}			
 		
 		$query66 = "SELECT `r`.`id` AS `responder_id`,
 					`a`.`id` AS `all_id`, 
@@ -531,6 +535,9 @@ if (is_guest()) {													// 8/25/10
 			$al_groups[] = $row_al['group'];
 			}	
 
+		if(count($al_groups == 0)) {	//	catch for errors - no entries in allocates for the user.	//	6/24/13
+			$where2 = "WHERE `a`.`type` = 2 AND `r`.`excl_zone` > 0 AND `r`.`lat` != '' AND `r`.`lng` != ''";
+			} else {
 		$x=0;	//	6/10/11
 		$where2 = "WHERE (";	//	6/10/11
 		foreach($al_groups as $grp) {	//	6/10/11
@@ -540,7 +547,8 @@ if (is_guest()) {													// 8/25/10
 			$x++;
 			}
 
-		$where2 .= " AND `a`.`type` = 2 AND `r`.`excl_zone` > 0 AND `r`.`lat` != '' AND `r`.`lng` != ''";	//	6/10/11
+			$where2 .= " AND `a`.`type` = 2 AND `r`.`excl_zone` > 0 AND `r`.`lat` != '' AND `r`.`lng` != ''";	//	6/24/13
+			}			
 		
 		$query66 = "SELECT `r`.`id` AS `responder_id`,
 					`a`.`id` AS `all_id`, 
@@ -991,7 +999,6 @@ if (is_guest()) {													// 8/25/10
 <DIV ID = "div_assign_id" STYLE="display:none;"></DIV>
 <DIV ID = "div_action_id" STYLE="display:none;"></DIV>
 <DIV ID = "div_patient_id" STYLE="display:none;"></DIV>
-
 <?php
 if((get_num_groups()) && (COUNT(get_allocates(4, $_SESSION['user_id'])) > 1))  {	//	6/10/11
 ?>
