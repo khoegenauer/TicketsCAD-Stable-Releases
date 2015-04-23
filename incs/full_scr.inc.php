@@ -16,9 +16,14 @@
 4/11/11 Where clause updated in all major queries to support Group functionality
 6/10/11 Added Groups and Boundaries
 7/3/11 added lines data, do_landb() - 
+6/22/12 set def_zoom as zoom limit
 */
 error_reporting(E_ALL);
-
+$curr_cats = get_category_butts();	//	get current categories.
+$cat_sess_stat = get_session_status($curr_cats);	//	get session current status categories.
+$hidden = find_hidden($curr_cats);
+$shown = find_showing($curr_cats);
+$un_stat_cats = get_all_categories();
 
 //	dump ( $_GET);
 
@@ -50,7 +55,7 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 	}		
 
 	function full_scr($sort_by_field='',$sort_value='') {	// list tickets ===================================================
-		global $now_num, $now_day, $now_mon, $now_year, $monday, $disposition;
+		global $now_num, $now_day, $now_mon, $now_year, $monday, $disposition, $curr_cats, $hidden, $shown, $un_stat_cats, $cat_sess_stat;
 		
 		if(($_SESSION['scr_width'] < 1300) && ($_SESSION['scr_width'] > 1050)) {		//	4/5/11	sets shorten length depending on client screen width
 			$shorten_length = 11;
@@ -573,10 +578,10 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 // 	Units show / hide functions				
 		
 	function set_categories() {			//	12/03/10 - checks current session values and sets checkboxes and view states for hide and show.
-		var curr_cats = <?php echo json_encode(get_category_butts()); ?>;
-		var cat_sess_stat = <?php echo json_encode(get_session_status()); ?>;
-		var hidden = <?php print find_hidden(); ?>;
-		var shown = <?php print find_showing(); ?>;
+		var curr_cats = <?php echo json_encode($curr_cats); ?>;
+		var cat_sess_stat = <?php echo json_encode($cat_sess_stat); ?>;
+		var hidden = <?php print json_encode($hidden); ?>;
+		var shown = <?php print json_encode($shown); ?>;
 		var number_of_units = <?php print get_no_units(); ?>;		
 		if(hidden!=0) {
 			$('ALL').style.display = '';
@@ -912,8 +917,8 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 				}
 			}
 
-		var hidden = <?php print find_hidden(); ?>;
-		var shown = <?php print find_showing(); ?>;
+		var hidden = <?php print find_hidden($curr_cats); ?>;
+		var shown = <?php print find_showing($curr_cats); ?>;
 
 		$('fac_go_button').style.display = 'none';
 		$('fac_can_button').style.display = 'none';
@@ -2598,7 +2603,9 @@ var sidebar_line = "";
 				}
 			else {
 				center = bounds.getCenter();
-				zoom = map.getBoundsZoomLevel(bounds);
+				var max_zoom = <?php echo get_variable('def_zoom');?>;				// 6/22/12
+				zoom = (map.getBoundsZoomLevel(bounds) > max_zoom )? max_zoom : map.getBoundsZoomLevel(bounds);
+
 				map.setCenter(center,zoom);
 				}			// end if/else (!points)
 		}				// end if (!(map_is_fixed))

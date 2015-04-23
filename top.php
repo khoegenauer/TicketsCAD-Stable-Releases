@@ -155,8 +155,8 @@ if(file_exists("./incs/modules.inc.php")) {
 			}
 		catch (e) {
 			alert("<?php echo 'error: ' . basename(__FILE__) . '@' .  __LINE__;?>");
+			alert(req.responseText);
 			do_logout();				// 2/10/12			
-//			alert(req.responseText);
 			return;
 			}
 
@@ -198,6 +198,7 @@ if(file_exists("./incs/modules.inc.php")) {
 			}
 
 		$("div_assign_id").innerHTML = the_id_arr[4].trim();			// 2/19/12
+//		alert("201 " + the_id_arr[4].trim());
 		if (the_id_arr[4].trim() != dispatch)  {		// 1/21/11
 			dispatch = the_id_arr[4].trim();
 			unit_signal();								// sit scr to blue

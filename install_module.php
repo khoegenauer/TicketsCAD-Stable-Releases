@@ -2,12 +2,12 @@
 /*
 9/10/10 Module Installation Script
 3/15/11 changed stylesheet.php to stylesheet.php
-3/1/12 Completely revised to remove requirements for zip.
 */
 
 @session_start();
 
 require_once('./incs/functions.inc.php');
+require_once('./incs/mysql.inc.php');
 error_reporting(E_ALL);				// 2/3/09
 do_login(basename(__FILE__));	// session_start()
 $tickets_dir = getcwd();	
@@ -21,18 +21,71 @@ $tickets_dir = getcwd();
 <META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
 <META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
 <LINK REL=StyleSheet HREF="stylesheet.php" TYPE="text/css" />	<!-- 3/15/11 -->
+<SCRIPT>
+function $() {									// 1/21/09, 7/18/10
+	var elements = new Array();
+	for (var i = 0; i < arguments.length; i++) {
+		var element = arguments[i];
+		if (typeof element == 'string')		element = document.getElementById(element);
+		if (arguments.length == 1)			return element;
+		elements.push(element);
+		}
+	return elements;
+	}
+	
+function do_hover (the_id) {
+	CngClass(the_id, 'hover');
+	return true;
+	}
+
+function do_plain (the_id) {				// 8/21/10
+	CngClass(the_id, 'plain');
+	return true;
+	}
+
+function CngClass(obj, the_class){
+	$(obj).className=the_class;
+	return true;
+	}	
+</SCRIPT>
 </HEAD><BODY>
 
 <?php
 
+function prefix ($tbl) {		/* returns concatenated string */
+	global $mysql_prefix;
+	return  $mysql_prefix . $tbl;
+	}
+
+$table_name = prefix("modules");	//	check to see if module table exists - if not create.
+$query = "CREATE TABLE IF NOT EXISTS `$table_name` (
+  `id` int(4) NOT NULL AUTO_INCREMENT,
+  `mod_name` varchar(48) NOT NULL,
+  `mod_status` int(4) NOT NULL DEFAULT '0' COMMENT 'Set to 1 for module Active, 0 for module inactive',
+  `table` varchar(18) NOT NULL,		  
+  `affecting_files` varchar(128) NOT NULL COMMENT 'Files that use this module',
+  `httpuser` varchar(48) DEFAULT NULL COMMENT 'For data sources behind protected areas',
+  `httppwd` varchar(48) DEFAULT NULL COMMENT 'For data sources behind protected areas',		  
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;";
+$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
+if($result) {
+print "Module Table Created";
+}
+
+
 function get_mod_to_install() {
 	$to_install = array();
 	$current = array();
-	$query = "SELECT `mod_name` FROM $GLOBALS[mysql_prefix]modules`";
-	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	while($row = stripslashes_deep(mysql_fetch_assoc($result))) {
+	if(mod_table_exists("modules") == 1) {
+		$query = "SELECT * FROM $GLOBALS[mysql_prefix]modules`";
+		$result = mysql_query($query);
+		if($result) {
+			while($row = mysql_fetch_assoc($result)) {
 		$current[] = $row['mod_name'];
 		}
+			}
+		}		
 			
 	$entry = array();
 	$path = "./modules";
@@ -142,14 +195,18 @@ if (isset($_POST['submit'])) { // Handle the form.
 	$version = $xml->version;
 	$description = $xml->description;
 	$directoryname = $xml->directories->directoryname;
-	print $directoryname;
 	$tablename = $xml->tables->tablename;		
 	$installfile = $xml->configuration->installfile;
 	$installfile = "./" . $installfile;
 	$modincsdir = $xml->directories->incsdirectoryname;
 	$modincsdir = "/" . $modincsdir;
 
+	$mod_entry_exists = module_tabs_exist($modname); // if a table entry aready exists for the module	
 	$mod_table_exists = mod_table_exists($tablename);
+
+		if ((file_exists($directoryname)) && ($mod_entry_exists==1) && ($mod_table_exists==1)) { // checks fully functioning previous existance of module.
+		   echo "The Module Directory and tables already exist. Please remove existing versions before installing a new one"; 
+		} else { 
 
 	write_path($modincsdir, $tickets_dir);	
 
@@ -166,13 +223,13 @@ if (isset($_POST['submit'])) { // Handle the form.
 
 	print "<A HREF=$installfile><< Configure Module >></A>";
 	print "</DIV>";
-	
+		}
 } else { // If form not submitted print form.
 ?>
 	<DIV style='background-color:#CECECE; position: absolute; width: 60%; height: 60%; left: 20%; top: 10%; border:2px inset #FFF2BF; display: block'>	
 	<center>TICKETS MODULES INSTALLATION.</center>
 	<DIV style='background-color:#CECECE; position: absolute; width: 40%; height: 20%; left: 5%; top: 10%; border:2px inset #FFF2BF; display: block'>
-	<TABLE BORDER="0">
+	<TABLE BORDER="0" style='width: 100%;'>
 	<TH COLSPAN="2">Chose Module to Install<BR /></TH>
 	<FORM action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post">
 	<fieldset>

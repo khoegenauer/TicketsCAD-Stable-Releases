@@ -139,32 +139,45 @@ function adj_time($time_stamp) {
 	<SCRIPT TYPE="text/javascript" src="./js/misc_function.js"></SCRIPT>
 	<script language="JavaScript">
 	<!--
+	
+function do_save_handleResult(req) {			// the called-back function
+	}			// end function handle Result()
+
+function do_save(in_val) {
+	var params = "f_n=show_hide_upper&v_n=" + in_val + "&sess_id=<?php print get_sess_key(__LINE__); ?>";
+	var url = "persist2.php";								//	3/15/11
+	sendRequest (url, do_save_handleResult, params);
+	}		// end function	
+
+	var row_str;
+	frames_obj = window.top.document.getElementsByTagName("frameset")[0];
+	rows_arr = frames_obj.rows.split(",", 4);
+	if (parseInt(rows_arr[0]) > 0) { 							// save as the normalizing string
+		row_str = window.top.document.getElementsByTagName("frameset")[0].rows;}
+
 	function showhideFrame(btn) {
-		xx = window.top.document.getElementsByTagName("frameset")[0];
-		if (xx.rows == "75,*")
-			{xx.rows = "0,*";
-			var params = "f_n=show_hide_upper&v_n=h&sess_id=<?php print get_sess_key(__LINE__); ?>";
-			var url = "persist2.php";	//	3/15/11
-			sendRequest (url, handleResult, params);
+		frames_obj = window.top.document.getElementsByTagName("frameset")[0];
+		rows_arr = frames_obj.rows.split(",", 4);		
+		if (parseInt(rows_arr[0]) > 0){ 
+			rows_arr[0] = 0;
+			frames_obj.rows = rows_arr.join(",");						// string to attribute - hide the top frame
+			do_save("h");
 			btn.value = "Show Menu";
 		} else {
-			xx.rows = "75,*";
-			var params = "f_n=show_hide_upper&v_n=s&sess_id=<?php print get_sess_key(__LINE__); ?>";
-			var url = "persist2.php";
-			sendRequest (url, handleResult, params);
+			frames_obj.rows = row_str;								// make top frame visible
+			do_save("s");
 			btn.value = "Hide Menu";			
 		}
 	}
 	
 	function checkUpper() {
-		xx = window.top.document.getElementsByTagName("frameset")[0];	
 		var upperVis = "<?php print $_SESSION['show_hide_upper'];?>";
 		if (upperVis == "h") {
-			xx = window.top.document.getElementsByTagName("frameset")[0];
-			xx.rows = "0,*";
+			rows_arr[0] = 0;
+			frames_obj.rows = rows_arr.join(",");		// string to attribute - hide the top frame
 			$('b1').value = "Show Menu";
 			} else {
-			xx.rows = "75,*";
+			frames_obj.rows = row_str;				// make top frame visible
 			$('b1').value = "Hide Menu";
 		}
 	}	
@@ -426,7 +439,7 @@ else {
 	}
 
 $restrict = ((($mode==UNIT) ) || ($mode==MINE))? " (`responder_id` = {$the_unit}) AND ": "";		// 8/20/10, 9/3/10 
-																					// 5/19/11, 2/29/12 -  all open assigns
+																					// 5/19/11 -  all open assigns
 $query = "SELECT *,  `t`.`id` AS `tick_id`,
 			`t`.`street` AS `tick_street`,
 			`t`.`city` AS `tick_city`,
@@ -440,13 +453,12 @@ $query = "SELECT *,  `t`.`id` AS `tick_id`,
 		LEFT JOIN `$GLOBALS[mysql_prefix]responder` `r` 	ON (`a`.`responder_id` = `r`.`id`)
 		LEFT JOIN `$GLOBALS[mysql_prefix]unit_types` `u`	ON (`r`.`type` = `u`.`id` )	
 		WHERE {$restrict}
-			(((`t`.`status` = {$GLOBALS['STATUS_OPEN']})
-			OR (`t`.`status` = {$GLOBALS['STATUS_SCHEDULED']} AND `t`.`booked_date` < (NOW() + INTERVAL {$interval} HOUR)))
-			AND (`a`.`clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' )			
+			((`t`.`status` = {$GLOBALS['STATUS_OPEN']})
+			OR ((`t`.`status` = {$GLOBALS['STATUS_SCHEDULED']} AND `t`.`booked_date` < (NOW() + INTERVAL {$interval} HOUR)))
 			)
 		ORDER BY `t`.`status` DESC, `t`.`severity` DESC, `t`.`problemstart` ASC";
 
-//dump($query);
+// dump($query);
 $result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
 if (mysql_affected_rows()==0) {
 	$now = mysql_format_date(time() - (intval(get_variable('delta_mins'))*60));
@@ -466,7 +478,7 @@ if (mysql_affected_rows()==0) {
 
 <BR /><BR /><BR /><BR />
 <CENTER>
-<input id="b1" type="button" value="Hide Top Menu" onclick="showhideFrame(this)"><BR /><BR /> 
+<input id="b1" type="button" value="Hide Top Menu" CLASS='btn_not_chkd' onclick="showhideFrame(this)"><BR /><BR /> 
 <H2><?php print $for_str;?>: no current calls  as of <?php print substr($now, 11,5);?></H2>
 <?php
 	if (can_edit()) {
@@ -670,7 +682,7 @@ $unload_str = ($_SESSION['internet'])? "GUnload(); end_watch();"  : "end_watch()
 	</TD>
 	<TD ID = 'ctr top' ALIGN='center'>
 		<TABLE BORDER=0 >
-		<TR><TD ALIGN='center'><input id="b1" type="button" value="Hide Menu" onclick="showhideFrame(this)"></TD></TR>
+		<TR><TD ALIGN='center'><input id="b1" type="button" value="Hide Menu" CLASS='btn_not_chkd' onclick="showhideFrame(this)"></TD></TR>
 		<TR CLASS='spacer'><TD class='spacer'>&nbsp;</TD></TR>
 		<TR><TD ALIGN='left'>	<!-- 3/15/11 -->	
 <?php

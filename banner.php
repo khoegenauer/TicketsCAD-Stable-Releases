@@ -396,6 +396,8 @@ function to_view(id) {						// invoke switch case 'u' for selected id
 			$use_w_bm = ($use_with_bm==1) ? "CHECKED" : "";	// checkbox settings
 			$use_w_r = ($use_with_r==1) ? "CHECKED" : "";
 			$use_w_f = ($use_with_f==1) ? "CHECKED" : "";
+			$use_w_u_ex = ($use_with_u_ex==1) ? "CHECKED" : "";
+			$use_w_u_ex = ($use_with_u_rf==1) ? "CHECKED" : "";
 
 			switch ($row['line_type']) {
 				case "p":		// poly
@@ -522,6 +524,8 @@ switch ($_POST["_func"]) {
 			<TD onmouseout=\"UnTip()\" onmouseover=\"Tip('Apply to base map');\"><B>&nbsp;BM&nbsp;</B></TD>
 			<TD onmouseout=\"UnTip()\" onmouseover=\"Tip('Apply to regions');\"><B>&nbsp;R&nbsp;</B></TD>
 			<TD onmouseout=\"UnTip()\" onmouseover=\"Tip('Apply to facilities');\"><B>&nbsp;F&nbsp;</B></TD>
+			<TD onmouseout=\"UnTip()\" onmouseover=\"Tip('Apply to units - Exclusion zone');\"><B>&nbsp;EX&nbsp;</B></TD>
+			<TD onmouseout=\"UnTip()\" onmouseover=\"Tip('Apply to units - Ringfence');\"><B>&nbsp;RF&nbsp;</B></TD>
 			<TD><B>&nbsp;&nbsp;As of</B></TD></TR>\n";
 
 		$i = 0;
@@ -538,6 +542,8 @@ switch ($_POST["_func"]) {
 				<TD ALIGN='center'>{$use_with_bm}</TD>
 				<TD ALIGN='center'>{$use_with_r}</TD>
 				<TD ALIGN='center'>{$use_with_f}</TD>
+				<TD ALIGN='center'>{$use_with_u_ex}</TD>
+				<TD ALIGN='center'>{$use_with_u_rf}</TD>	
 				<TD ALIGN='right'>&nbsp;" . format_date($row['_on']) . "</TD></TR>\n";
 			$i++;
 			}
@@ -670,6 +676,8 @@ function buildMap_c() {															// 'create' version
 				<SPAN STYLE="margin-left: 20px;border:1px; width:20%">Base Map&nbsp;&raquo;&nbsp;<INPUT TYPE= "checkbox" NAME="box_use_with_bm" onClick = "this.form.frm_use_with_bm.value=1"/></SPAN>
 				<SPAN STYLE="border:1px; width:20%">&nbsp;&nbsp;<?php print get_text("Regions");?>&nbsp;&raquo;&nbsp;<INPUT TYPE= "checkbox" NAME="box_use_with_r"  onClick = 	"this.form.frm_use_with_r.value=1"/></SPAN>
 				<SPAN STYLE="border:1px; width:20%">&nbsp;&nbsp;Facilities&nbsp;&raquo;&nbsp;<INPUT TYPE= "checkbox" NAME="box_use_with_f"  onClick = "this.form.frm_use_with_f.value=1"/></SPAN>
+				<SPAN STYLE="border:1px; width:20%">&nbsp;&nbsp;Unit Exclusion Zone&nbsp;&raquo;&nbsp;<INPUT  TYPE= "checkbox" NAME="box_use_with_u_ex"  onClick = "this.form.frm_use_with_u_ex.value=1"/></SPAN>
+				<SPAN STYLE="border:1px; width:20%">&nbsp;&nbsp;Unit Ringfence&nbsp;&raquo;&nbsp;<INPUT  TYPE= "checkbox" NAME="box_use_with_u_rf"  onClick = "this.form.frm_use_with_u_rf.value=1"/></SPAN>
 				</TD>
 			</TR>
 		<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label" ALIGN="left"><?php echo $line_ary[$_type];?>:</TD>
@@ -853,6 +861,8 @@ function buildMap_c() {															// 'create' version
 			$use_w_bm = ($use_with_bm==1) ? "CHECKED" : "";	// checkbox settings
 			$use_w_r = ($use_with_r==1) ? "CHECKED" : "";
 			$use_w_f = ($use_with_f==1) ? "CHECKED" : "";
+			$use_w_u_ex = ($use_with_u_ex==1) ? "CHECKED" : "";
+			$use_w_u_rf = ($use_with_u_rf==1) ? "CHECKED" : "";			
 // ___________________________________________________________________________
 			switch ($row['line_type']) {
 				case "p":		// poly
@@ -1095,6 +1105,8 @@ else {
 				<SPAN STYLE="border:1px; width:20%">&nbsp;&nbsp;Base Map&nbsp;&raquo;&nbsp;<INPUT TYPE= "checkbox" 	NAME="box_use_with_bm" 	<?php print $use_w_bm;?> onClick = "this.form.frm_use_with_bm.value=toggle(this.value)" <?php print $dis;?>/></SPAN>
 				<SPAN STYLE="border:1px; width:20%">&nbsp;&nbsp;<?php print get_text("Regions");?>&nbsp;&raquo;&nbsp;<INPUT TYPE= "checkbox" 		NAME="box_use_with_r"	<?php print $use_w_r;?> onClick = "this.form.frm_use_with_r.value=toggle(this.value)" <?php print $dis;?>/></SPAN>
 				<SPAN STYLE="border:1px; width:20%">&nbsp;&nbsp;Facilities&nbsp;&raquo;&nbsp;<INPUT TYPE= "checkbox"	NAME="box_use_with_f"	<?php print $use_w_f;?> onClick = "this.form.frm_use_with_f.value=toggle(this.value)" <?php print $dis;?>/></SPAN>
+				<SPAN STYLE="border:1px; width:20%">&nbsp;&nbsp;Unit Exclusion Zone&nbsp;&raquo;&nbsp;<INPUT  TYPE= "checkbox" 		NAME="box_use_with_u_ex"	<?php print $use_w_u_ex;?> onClick = "this.form.frm_use_with_u_ex.value=toggle(this.value)" <?php print $dis;?>/></SPAN>
+				<SPAN STYLE="border:1px; width:20%">&nbsp;&nbsp;Unit Ringfence&nbsp;&raquo;&nbsp;<INPUT  TYPE= "checkbox" 		NAME="box_use_with_u_rf"	<?php print $use_w_u_rf;?> onClick = "this.form.frm_use_with_u_rf.value=toggle(this.value)" <?php print $dis;?>/></SPAN>
 				</TD>
 			</TR>
 

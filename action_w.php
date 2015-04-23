@@ -16,6 +16,7 @@
 8/15/10 dupe prvention added
 8/27/10 missing fmp call
 3/15/11 changed default.css to stylesheet.php
+1/22/11 Added refresh of window opener when Finished adding action.
 */
 error_reporting(E_ALL);
 
@@ -39,7 +40,7 @@ $get_action = (empty($_GET['action']))? "form" : $_GET['action'];		// 10/21/08
 	<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE" />
 	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript" />
 	<META HTTP-EQUIV="Script-date" CONTENT="8/24/08" />
-	<LINK REL=StyleSheet HREF="default.css" TYPE="text/css" />	<!-- 3/15/11 -->
+	<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">	<!-- 3/15/11 -->
 <SCRIPT src="./js/multiSelect.js"></SCRIPT>
 <SCRIPT>
 	function ck_window() {		//  onLoad = "ck_window()"
@@ -201,8 +202,7 @@ $get_action = (empty($_GET['action']))? "form" : $_GET['action'];		// 10/21/08
 			print "<br /><FONT CLASS='header' STYLE = 'margin-left:200px;'>Action record has been added</FONT><BR /><BR />";
 
 //			show_ticket($_GET['ticket_id']);
-			print "<BR /><BR /><INPUT TYPE='button' VALUE='Finished' onClick = 'window.close();' STYLE = 'margin-left:300px' /><BR /><BR /><BR />\n";
-
+			print "<BR /><BR /><INPUT TYPE='button' VALUE='Finished' onClick = 'opener.location.reload(true); opener.parent.frames[\"upper\"].show_msg(\"Action added!\"); window.close();' STYLE = 'margin-left:300px;' /><BR /><BR /><BR />";	//	01/22/11Added refresh of opener window.
 //________________________________________________________________
 			print "</BODY>";				// 10/19/08
 			
