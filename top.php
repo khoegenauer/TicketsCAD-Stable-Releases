@@ -209,7 +209,7 @@ if(file_exists("./incs/modules.inc.php")) {
 		catch (e) {
 			alert("<?php echo 'error: ' . basename(__FILE__) . '@' .  __LINE__;?>");
 			alert(req.responseText);
-			do_logout();				// 2/10/12			
+//			do_logout();				// 2/10/12			
 			return;
 			}
 
@@ -346,7 +346,6 @@ if(file_exists("./incs/modules.inc.php")) {
 						}
 //					alert("There are " + the_id_arr[7] + " Open Requests not yet actioned");
 					}
-
 				mu_get();				// start loop
 				get_msgs();
 				}				// end function init_cb()

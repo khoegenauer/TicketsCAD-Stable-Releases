@@ -593,11 +593,11 @@ function doReset() {
 
 //										8/10/09, 10/6/09, 1/7/10
 	$query = "SELECT *,
-		`$GLOBALS[mysql_prefix]ticket`.`problemstart` AS `problemstart`,
-		`$GLOBALS[mysql_prefix]ticket`.`problemend` AS `problemend`,
-		`$GLOBALS[mysql_prefix]ticket`.`booked_date` AS `booked_date`,		
-		`$GLOBALS[mysql_prefix]ticket`.`date` AS `date`,
-		`$GLOBALS[mysql_prefix]ticket`.`updated` AS `updated`,
+		UNIX_TIMESTAMP(problemstart) AS problemstart,
+		UNIX_TIMESTAMP(problemend) AS problemend,
+		UNIX_TIMESTAMP(booked_date) AS booked_date,		
+		UNIX_TIMESTAMP(date) AS date,
+		UNIX_TIMESTAMP(`$GLOBALS[mysql_prefix]ticket`.`updated`) AS updated,
 		 `$GLOBALS[mysql_prefix]ticket`.`description` AS `tick_descr`,
 		 `$GLOBALS[mysql_prefix]ticket`.`lat` AS `lat`,
 		 `$GLOBALS[mysql_prefix]ticket`.`lng` AS `lng`,

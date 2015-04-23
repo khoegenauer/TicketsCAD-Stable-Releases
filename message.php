@@ -487,8 +487,11 @@ if(empty($_POST)) {
 
 	$tick_result = mysql_query($tick_query) or do_error($tick_query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 	if (!mysql_num_rows($tick_result)){	//no tickets? print "error" or "restricted user rights"
-		print "<FONT CLASS=\"warn\">Internal error " . basename(__FILE__) ."/" .  __LINE__  .".  Notify developers of this message.</FONT>";	// 8/18/09
-		exit();
+		$num_tkts = 0;
+		$error_msg = "No Ticket details for this message";
+		} else {
+		$num_tkts = mysql_num_rows($tick_result);
+		$error_msg = "";
 		}
 
 	$tick_row = stripslashes_deep(mysql_fetch_array($tick_result));
@@ -518,6 +521,9 @@ if(empty($_POST)) {
 		<DIV id='outer' style='position: relative; top: 100px; height: 82%; display: block; border: 2px outset #707070; overflow-y: scroll;'>
 			<DIV id='view' style='padding: 1%; margin: 2%; position: absolute; width: 85%; height: 100%;'>
 					<DIV style='font-size: 24px; color: #000000; text-align: center;'>VIEW</DIV>
+<?php
+					if($num_tkts > 0) {
+?>
 					<DIV style='width: 100%; border: 2px outset #707070; min-height: 30px;'>TICKET DETAILS
 						<SPAN id='show_tick' class='plain' style='float: right;' onMouseover='do_hover(this);' onMouseout='do_plain(this);' onClick="$('the_tick').style.display = 'inline-block'; $('show_tick').style.display = 'none'; $('hide_tick').style.display = 'inline-block';">Show</SPAN>
 						<SPAN id='hide_tick' class='plain' style='display: none; float: right;' onMouseover='do_hover(this);' onMouseout='do_plain(this);' onClick="$('the_tick').style.display = 'none'; $('hide_tick').style.display = 'none'; $('show_tick').style.display = 'inline-block';">Hide</SPAN>						
@@ -527,6 +533,9 @@ if(empty($_POST)) {
 ?>
 						</DIV>
 					</DIV>
+<?php
+						}
+?>
 					<DIV style='text-align: center; font-size: 16px; padding: 5px; <?php print $color;?>'><?php print $type_flag;?></DIV><BR /><BR />
 					
  					<DIV style='background-color: #707070; color: #FFFFFF; width: 100%; font-weight: bold;'>Already Read by:</DIV>           

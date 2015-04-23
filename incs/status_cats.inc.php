@@ -320,7 +320,7 @@ function get_sess_boundaries() {
 	while($row = stripslashes_deep(mysql_fetch_assoc($result))) {
 		$all_boundaries[] = $row['excl_zone'];		
 		}	//	End while			
-	return $all_boundaries;
+	return array_unique($all_boundaries);
 	}
 
 function get_bnd_session() {	
