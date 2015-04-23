@@ -553,7 +553,9 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 			while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{	// 4/18/11
 				$al_groups[] = $row['group'];
 				}	
-			
+			if(count($al_groups == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
+				$where2 = "";
+				} else {			
 			if(isset($_SESSION['viewed_groups'])) {		//	6/10/11
 				$curr_viewed= explode(",",$_SESSION['viewed_groups']);
 				}
@@ -577,6 +579,7 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 					$x++;
 					}
 				}				
+				}
 
 			$query = "SELECT *, `$GLOBALS[mysql_prefix]ticket`.`id` AS `tick_id`
 					FROM `$GLOBALS[mysql_prefix]ticket` 
@@ -644,7 +647,9 @@ setTimeout('do_post()', 1000);
 			while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{	// 4/18/11
 				$al_groups[] = $row['group'];
 				}	
-			
+			if(count($al_groups == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
+				$where2 = "WHERE `$GLOBALS[mysql_prefix]allocates`.`type` = 2";
+				} else {			
 			if(isset($_SESSION['viewed_groups'])) {		//	6/10/11
 				$curr_viewed= explode(",",$_SESSION['viewed_groups']);
 				}
@@ -669,6 +674,7 @@ setTimeout('do_post()', 1000);
 					}
 				}
 			$where2 .= "AND `$GLOBALS[mysql_prefix]allocates`.`type` = 2";	//	6/10/11					
+				}
 
 			$assigns = array();				// map unit id to ticket id
 			function get_cd_str ($unit_row, $ticket_id) {
@@ -1410,7 +1416,9 @@ setTimeout('do_post()', 1000);
 			if(is_super()) {	//	6/10/11
 				$al_names .= "Superadmin Level";
 			}				
-
+			if(count($al_groups == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
+				$where = "WHERE `a`.`type` = 1";
+				} else {
 			if(isset($_SESSION['viewed_groups'])) {	//	5/4/11
 				$curr_viewed= explode(",",$_SESSION['viewed_groups']);
 				} else {
@@ -1437,6 +1445,7 @@ setTimeout('do_post()', 1000);
 				}
 			}
 			$where .= " AND `a`.`type` = 1) ";
+				}
 			
 // ================================ end of regions stuff																				
 																	

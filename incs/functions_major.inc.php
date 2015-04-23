@@ -152,6 +152,12 @@ $iw_width = 	"300px";		// map infowindow with
 1/30/2013 - 0.999999 -> $GLOBALS['NM_LAT_VAL'] 
 3/3/2013 function do_ticket_wm added 
 3/30/2013 several revisions to accommodate version 20C per AH
+5/21/2013 revised get_elapsed_time calls to pass entire row
+5/24/2013 hid up/down arrows if in print mode
+5/26/2013 added 'hide_booked' variable handling
+5/30/13 Implement catch for when there are no allocated regions for current user. 
+5/31/2013 tracking speed display corrections made
+6/1/2013 revised 'contact us' addr to user setting value
 */
 
 $nature = get_text("Nature");			// 12/03/10
@@ -385,7 +391,7 @@ function list_tickets($sort_by_field='',$sort_value='', $my_offset=0) {	// list 
 			</TABLE>
 		</TD></TR>
 		<TR><TD CLASS='td_label' COLSPAN=99 ALIGN='CENTER'>
-			&nbsp;&nbsp;&nbsp;&nbsp;<A HREF="mailto:info@TicketsCAD.org?subject=Question/Comment on Tickets Dispatch System"><u>Contact us</u>&nbsp;&nbsp;&nbsp;&nbsp;<IMG SRC="mail.png" BORDER="0" STYLE="vertical-align: text-bottom"></A>
+			&nbsp;&nbsp;&nbsp;&nbsp;<A HREF="mailto:<?php echo get_contact_addr ();?>?subject=Question/Comment on Tickets Dispatch System"><u>Contact us</u>&nbsp;&nbsp;&nbsp;&nbsp;<IMG SRC="mail.png" BORDER="0" STYLE="vertical-align: text-bottom"></A>
 		</TD></TR>
 	</TABLE>
 	</TD></TR>
@@ -482,7 +488,7 @@ function list_tickets($sort_by_field='',$sort_value='', $my_offset=0) {	// list 
 					$lng = $coords[1];
 					$fill_opacity = (intval($filled) == 0)?  0 : $fill_opacity;
 					
-					echo "\n drawCircle({$lat}, {$lng}, {$radius}, add_hash('{$line_color}'), {$line_width}, {$line_opacity}, add_hash('{$fill_color}'), {$fill_opacity}, {$name}); // 513\n";
+					echo "\n drawCircle({$lat}, {$lng}, {$radius}, add_hash('{$line_color}'), {$line_width}, {$line_opacity}, add_hash('{$fill_color}'), {$fill_opacity}, '{$name}'); // 513\n";
 					break;
 				case "t":		// text banner
 
@@ -492,7 +498,7 @@ function list_tickets($sort_by_field='',$sort_value='', $my_offset=0) {	// list 
 					echo "\n var point = new google.maps.LatLng(parseFloat({$coords[0]}) , parseFloat({$coords[1]}));\n";
 					$the_banner = htmlentities($banner, ENT_QUOTES);
 					$the_width = intval( trim($line_width), 10);		// font size
-					echo "\n drawBanner( point, '{$the_banner}', '{$the_banner}', {$the_width});\n";
+					echo "\n drawBanner( point, '{$the_banner}', '{$the_banner}', {$the_width}, add_hash('{$line_color}'));\n";
 					break;
 				}	// end switch
 		}			// end while ()
@@ -755,8 +761,6 @@ var tr_id_fixed_part = "tr_id_";		// 3/2/10
 	var colors = new Array ('odd', 'even');
 
 	function drawCircle(lat, lng, radius, strokeColor, strokeWidth, strokeOpacity, fillColor, fillOpacity, name) {		// 8/19/09, 2/26/2013
-	
-//		drawCircle(53.479874, -2.246704, 10.0, "#000080", 1, 0.75, "#0000FF", .5);
 		var circle = new google.maps.Circle({
 				center: new google.maps.LatLng(lat,lng),
 				map: map,
@@ -769,24 +773,24 @@ var tr_id_fixed_part = "tr_id_";		// 3/2/10
 		circle.setRadius(radius*5000); 
 		}
 		
-	function drawBanner(point, html, text, font_size, color, name) {        // Create the banner
-//		alert("<?php echo __LINE__;?> " + color);
-//		var invisibleIcon = new GIcon(G_DEFAULT_ICON, "./markers/markerTransparent.png");      // Custom icon is identical to the default icon, except invisible
-
+	function drawBanner(point, html, text, font_size, color, name) {        // Create the banner - 6/5/2013
+		var invisibleIcon = new google.maps.MarkerImage("./markers/markerTransparent.png");
 		map.setCenter(point, 8);
-//		map.addControl(new GLargeMapControl());
-//		map.addControl(new GMapTypeControl());
-		var the_color = (typeof color == 'undefined')? "#000000" : color ;	// default to black
-
-		var style_str = 'background-color:transparent;font-weight:bold;border:0px black solid;white-space:nowrap; font-size:' + font_size + 'px; font-family:arial; opacity: 0.9; color:' + add_hash(the_color) + ';';
-
-		var contents = '<div><div style= "' + style_str + '">'+text+'<\/div><\/div>';
-		var label=new ELabel(point, contents, null, new GSize(-8,4), 75, 1);
+		var the_color = (typeof color == 'undefined')? "000000" : color ;	// default to black
+		var label = new ELabel({
+			latlng: point, 
+			label: html, 
+			classname: "label", 
+			offset: new google.maps.Size(-8, 4), 
+			opacity: 100,
+			theSize: font_size + "px",		
+			theColor:add_hash(the_color),
+			overlap: true,
+			clicktarget: false
+			});	
 		label.setMap(map);		
-		
 		var marker = new google.maps.Marker(point,invisibleIcon);	        // Create an invisible google.maps.Marker
 		marker.setMap(map);		
-		
 		}				// end function draw Banner()		
 		
 	function URLEncode(plaintext ) {					// 3/15/11 The Javascript escape and unescape functions do,
@@ -1832,7 +1836,6 @@ var divarea;
 		var iconStr = sym.substring(origin);						// icon string
 
 		var image_file = "./our_icons/gen_icon.php?blank=" + escape(icons[color]) + "&text=" + iconStr;
-		
 		var marker = new google.maps.Marker({position: point, map: map, icon: image_file});		
 
 		marker.id = color;				// for hide/unhide
@@ -1849,12 +1852,6 @@ var divarea;
 			infowindow.open(map, marker);
 			open_iw = infowindow;
 			which = id;
-//			gmarkers[which].setMap(null);		
-
-//			marker.openInfoWindowTabsHtml(infoTabs[id]);
-//			curr_loc = point;	//	3/15/11
-//			currbnds = map.getBounds();	//	3/15/11
-
 			});							// end add Listener( ... function())
 		gmarkers[id] = marker;							// marker to array for side_bar click function
 		gmarkers[id]['x'] = "y";							// ????
@@ -1867,41 +1864,29 @@ var divarea;
  		alert(location) 
 		}
 
-
-	function createdummyMarker(point, tabs, id) {					// Creates dummymarker and sets up click event infowindow for "no maps" added tickets and units. 7/28/10 
-		got_points = true;
-		var icon_url = "./our_icons/question1.png";				// 7/28/10
-//		icon.image = icon_url;
-
-		var dummymarker = new google.maps.Marker({position: point, map: map, icon: icon_url});			
-
-		google.maps.event.addListener(dummymarker, "click", function() {
-
-			which = id;
-			gmarkers[which].setMap(null);		
-			dummymarker.openInfoWindowTabsHtml(infoTabs[id]);
-
-			setTimeout(function() {
-				if ($("detailmap")) {
-//					var dMapDiv = $("detailmap");
-//					var detailmap = new GMap2(dMapDiv);
-//					detailmap.addControl(new GSmallMapControl());
-//					detailmap.setCenter(point, 17);
-//					dummymarker.setMap(map);		
-					}
-				else {
-//					alert($("detailmap"));
-					}
-				},3000);				// end setTimeout(...)
-
-			});
-		gmarkers[id] = dummymarker;							// marker to array for side_bar click function
+	function createdummyMarker(point, tabs, color, id, unit_id) {
+		got_points = true;											// 6/18/12
+		var image_file = "./our_icons/question1.png";
+		var dummymarker = new google.maps.Marker({position: point, map: map, icon: image_file});		
+		dummymarker.id = color;				// for hide/unhide - unused
+		google.maps.event.addListener(dummymarker, "click", function() {		// here for both side bar and icon click
+			if (dummymarker) {
+				try {open_iw.close()} catch(err) {;}
+				map.setZoom(8);
+				map.setCenter(point);
+				infowindow = new google.maps.InfoWindow({ content: tabs, maxWidth: 300});	 
+				open_iw = infowindow;				
+				infowindow.open(map, dummymarker);
+				}		// end if (marker)
+			});			// end google.maps.Event.add Listener()
+		gmarkers[id] = dummymarker;									// marker to array for side bar click function
 		infoTabs[id] = tabs;							// tabs to array
-		if (!(map_is_fixed)){
+		if (!(map_is_fixed)) {				// 4/3/09
 			bounds.extend(point);
+			map.fitBounds(bounds);			
 			}
 		return dummymarker;
-		}				// end function create dummyMarker()
+		}				// end function create dummy Marker()
 		
 	var grid_bool = false;		
 	function toglGrid() {						// toggle
@@ -2071,13 +2056,13 @@ function cs_handleResult(req) {					// the 'called-back' function for show curre
 	var side_bar_html = "<TABLE border=0 CLASS='sidebar' WIDTH = <?php print $col_width;?> >";
 	var sched_html = "";	//	3/15/11
 <?php
-
-	$query_sched = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE `status`='{$GLOBALS['STATUS_SCHEDULED']}' AND `booked_date` >= (NOW() + INTERVAL 2 DAY)";	//	11/29/10
+	$hide_limit = get_variable('hide_booked');		// 5/26/2013
+	$query_sched = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE `status`='{$GLOBALS['STATUS_SCHEDULED']}' AND `booked_date` >= (NOW() + INTERVAL {$hide_limit} HOUR)";	//	11/29/10
 	$result_sched = mysql_query($query_sched) or do_error($query_sched, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);		//	11/29/10
 	$num_sched = mysql_num_rows($result_sched);	//	11/29/10
 	
 	if (($num_sched != 0) && ($func != 10)) {	//	11/29/10
-		$scheduled_link = ($num_sched >= 2) ? "Scheduled Jobs: " . $num_sched : "Scheduled Jobs: " . $num_sched;
+		$scheduled_link = ($num_sched >= 1) ? "Scheduled Jobs: " . $num_sched : "Scheduled Jobs: " . $num_sched;
 	$order_by =  (!empty ($get_sortby))? $get_sortby: $_SESSION['sortorder']; // use default sort order?
 ?>
 		sched_html +="\t\t<SPAN class='scheduled' TITLE='Click link to view a list of scheduled jobs that are not shown on the current situation screen. Scheduled jobs that are due in the next 2 days are shown on the current situation screen and have a * in front of the ID, the date is highlighted and is the scheduled date.' onClick='do_sched_jobs(10);'><u><?php print $scheduled_link;?></u></SPAN>\n";	//	3/15/11
@@ -2283,7 +2268,10 @@ if(isset($_SESSION['viewed_groups'])) {		//	6/10/11
 	$curr_viewed= explode(",",$_SESSION['viewed_groups']);
 	}
 
-if(!isset($curr_viewed)) {			//	6/10/11
+if(count($al_groups == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13		
+	$where2 = " AND `$GLOBALS[mysql_prefix]allocates`.`type` = 1";
+	} else {		
+	if(!isset($curr_viewed)) {			//	6/10/11
 	$x=0;	
 	$where2 = "AND (";
 	foreach($al_groups as $grp) {
@@ -2304,7 +2292,7 @@ if(!isset($curr_viewed)) {			//	6/10/11
 	}
 
 	$where2 .= "AND `$GLOBALS[mysql_prefix]allocates`.`type` = 1";	
-	
+	}
 	switch($func) {		
 		case 0: 
 			$where = "WHERE (`$GLOBALS[mysql_prefix]ticket`.`status`='{$GLOBALS['STATUS_OPEN']}' OR (`$GLOBALS[mysql_prefix]ticket`.`status`='{$GLOBALS['STATUS_SCHEDULED']}' AND `$GLOBALS[mysql_prefix]ticket`.`booked_date` <= (NOW() + INTERVAL 2 DAY)) OR 
@@ -2518,10 +2506,7 @@ if(!isset($curr_viewed)) {			//	6/10/11
 			$tab_1 .= "<TR CLASS='odd'><TD ALIGN='left'>Phone:</TD><TD ALIGN='left'>" . format_phone($row['phone']) . "</TD></TR>";
 			$tab_1 .= "<TR CLASS='even'><TD ALIGN='left'>Addr:</TD><TD ALIGN='left'>$address_street</TD></TR>";
 	
-//			$end_date = (intval($row['problemend'])> 1)? $row['problemend']:  (time() - (intval(get_variable('delta_mins'))*60));
-//			$end_date = (is_null($row['problemend'])) ? $row['problemend']: date("Y-m-d H:i:00", (time() - (intval(get_variable('delta_mins'))*60)));	// 11/29/2012
-			$elapsed = get_elapsed_time ($row['problemstart'], $row['problemend']);
-	
+			$elapsed = get_elapsed_time ($row);
 			$tab_1 .= "<TR CLASS='odd'><TD ALIGN='left'>Status:</TD><TD ALIGN='left'>" . get_status($row['status']) . "&nbsp;&nbsp;&nbsp;($elapsed)</TD></TR>";	// 3/27/10
 			$tab_1 .= (empty($row['fac_name']))? "" : "<TR CLASS='even'><TD ALIGN='left'>Receiving Facility:</TD><TD ALIGN='left'>" . replace_quotes(shorten($row['fac_name'], 30))  . "</TD></TR>";	//3/27/10, 3/15/11
 			$utm = get_variable('UTM');
@@ -2793,7 +2778,9 @@ if(!isset($curr_viewed)) {			//	6/10/11
 	if(isset($_SESSION['viewed_groups'])) {
 		$curr_viewed= explode(",",$_SESSION['viewed_groups']);
 		}
-
+	if(count($al_groups == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13		
+		$where2 = "WHERE `a`.`type` = 2";
+		} else {	
 	if(!isset($curr_viewed)) {	
 		$x=0;	//	4/18/11
 		$where2 = "WHERE (";	//	4/18/11
@@ -2814,6 +2801,7 @@ if(!isset($curr_viewed)) {			//	6/10/11
 			}
 	}
 	$where2 .= "AND `a`.`type` = 2";
+		}
 	
 //-----------------------UNIT RING FENCE STUFF--------------------6/10/11
 ?>
@@ -3088,13 +3076,15 @@ if(!isset($curr_viewed)) {			//	6/10/11
 		$sidebar_line .= "<TD>" . get_status_sel($row['unit_id'], $row['un_status_id'], "u") . "</TD>";		// status
 
 //  MOBILITY
-	$the_bull = "";
-//	dump($row_track);
 	if 	($row_track){
-		if ($row_track['speed']>50) {$the_bull = "<FONT COLOR = 'black'><B>" . $GLOBALS['TRACK_2L'][$track_type] . "</B></FONT>";} 
-		if ($row_track['speed']<50) {$the_bull = "<FONT COLOR = 'black'><B>" . $GLOBALS['TRACK_2L'][$track_type] . "</B></FONT>";}
-		if ($row_track['speed']==0) {$the_bull = "<FONT COLOR = 'red'><B>" . $GLOBALS['TRACK_2L'][$track_type] . "</B></FONT>";}
+		if ($row_track['speed']>=50) {$the_bull = "<FONT COLOR = 'blue'><B>{$GLOBALS['TRACK_2L'][$track_type]}</B></FONT>";} 
+		if ($row_track['speed']<50) {$the_bull = "<FONT COLOR = 'green'><B>{$GLOBALS['TRACK_2L'][$track_type]}</B></FONT>";}
+		if ($row_track['speed']==0) {$the_bull = "<FONT COLOR = 'red'><B>{$GLOBALS['TRACK_2L'][$track_type]}</B></FONT>";}
 		} 
+	else {
+		$the_bull = "<FONT COLOR = 'black'><STRIKE><B>{$GLOBALS['TRACK_2L'][$track_type]}</B></STRIKE></FONT>";	// no data - 5/31/2013
+		}
+
 	$cstip = htmlentities($row['callsign'], ENT_QUOTES); 
 	$tip_str = "onMouseover=\\\"Tip('{$cstip}')\\\" onmouseout=\\\"UnTip();\\\" "; 
 	$sidebar_line .= "<TD {$tip_str} onClick = '{$on_click}'>{$the_bull}</TD>";
@@ -3319,6 +3309,9 @@ function createfacMarker(fac_point, fac_tabs, id, fac_icon, type, region) {		// 
 		$curr_viewed= explode(",",$_SESSION['viewed_groups']);
 		}
 
+	if(count($al_groups == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13		
+		$where2 = "WHERE `$GLOBALS[mysql_prefix]allocates`.`type` = 3";
+		} else {	
 	if(!isset($curr_viewed)) {	
 		$x=0;	//	6/10/11
 		$where2 = "WHERE (";	//	6/10/11
@@ -3339,6 +3332,7 @@ function createfacMarker(fac_point, fac_tabs, id, fac_icon, type, region) {		// 
 			}
 	}
 	$where2 .= "AND `$GLOBALS[mysql_prefix]allocates`.`type` = 3";	//	6/10/11
+		}
 	
 //-----------------------FACILITY BOUNDARY / CATCHMENT FENCE STUFF--------------------6/10/11
 ?>
@@ -3792,7 +3786,7 @@ function tester() {
 function show_ticket($id,$print='false', $search = FALSE) {								/* show specified ticket */
 	global $iw_width, $istest, $zoom_tight, $nature, $disposition, $patient, $incident, $incidents, $col_width;	// 12/3/10, 8/4/11
 	$tickno = (get_variable('serial_no_ap')==0)?  "&nbsp;&nbsp;<I>(#{$id})</I>" : "";			// 1/25/09, 2/18/12
-
+	$istest = FALSE;
 	if($istest) {
 		print "GET<br />\n";
 		dump($_GET);
@@ -3890,10 +3884,7 @@ print get_buttons_inner2();	//	4/12/12
 		print "<TR CLASS='print_TD'  VALIGN='top'><TD ALIGN='left'>" . get_text("911 Contacted") . ":</TD>
 				<TD ALIGN='left'>" .  nl2br($row['nine_one_one']) . "</TD></TR>\n";	//	8/12/09
 
-//		$end_date = (intval($row['problemend'])> 1)? $row['problemend']:  (time() - (intval(get_variable('delta_mins'))*60));
-//		$end_date = (is_null($row['problemend'])) ? $row['problemend']: date("Y-m-d H:i:00", (time() - (intval(get_variable('delta_mins'))*60)));	// 11/29/2012
-//		$elapsed =  my_date_diff($row['problemstart'], $end_date);				// 11/29/2012
-		$elapsed = get_elapsed_time ($row['problemstart'], $row['problemend']);
+		$elapsed = get_elapsed_time ($row);
 		print "<TR CLASS='print_TD'><TD ALIGN='left'>" . get_text("Status") . ":</TD>	
 				<TD ALIGN='left'>" . get_status($row['status']) . "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{$elapsed}</TD></TR>\n";
 		print "<TR CLASS='print_TD'><TD ALIGN='left'>" . get_text("Reported by") . ":</TD>
@@ -3917,7 +3908,7 @@ print get_buttons_inner2();	//	4/12/12
 		print "<TR CLASS='print_TD' ><TD ALIGN='left'>" . get_text("Run Start") . ":3758</TD>				
 				<TD ALIGN='left'>" . format_date_2(strtotime($row['problemstart']));
 //		$elapsed_str = (!(empty($closed)))? $elapsed : "" ;				
-		$elapsed_str = get_elapsed_time ($row['problemstart'], $row['problemend']);			
+		$elapsed_str = get_elapsed_time ($row);			
 		print	"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;End:&nbsp;&nbsp;" . format_date_2(strtotime($row['problemend'])) . "&nbsp;&nbsp;{$elapsed_str}</TD></TR>\n";
 	
 		$locale = get_variable('locale');	// 08/03/09
@@ -3947,7 +3938,7 @@ print get_buttons_inner2();	//	4/12/12
 		print "</TD></TR>";
 		print "<TR CLASS='print_TD' STYLE = 'display:none;'><TD colspan=2><SPAN ID='oldlat'>" . $row['lat'] . "</SPAN><SPAN ID='oldlng'>" . $row['lng'] . "</SPAN></TD></TR>";
 		print "<TR><TD COLSPAN=99>";
- 		print show_assigns(0, $theRow[0]);				// 'id' ambiguity - 7/27/09 - new_show_assigns($id_in)
+ 		print show_assigns(0, $row[0]);				// 'id' ambiguity - 7/27/09 - new_show_assigns($id_in)
 		print "</TD></TR>";		
 		print "<TR CLASS='print_TD'><TD colspan=99 ALIGN='left'>";
 		print show_actions($row['tick_id'], "date", FALSE, TRUE);		// lists actions and patient data, print - 10/30/09
@@ -4023,8 +4014,7 @@ print get_buttons_inner2();	//	4/12/12
 */
 		
 // ==============
-
-		print "\n</BODY>\n</HTML>";
+			print "\n";
 		return;
 		}		// end if ($print == 'true')
 ?>
@@ -4515,9 +4505,8 @@ function do_ticket($theRow, $theWidth, $search=FALSE, $dist=TRUE) {						// retu
 	$print .= "<TR CLASS='even'  VALIGN='top'><TD ALIGN='left'>" . get_text("911 Contacted") . ":</TD>	<TD ALIGN='left'>" . highlight($search, nl2br($theRow['nine_one_one'])) . "</TD></TR>\n";	//	6/26/10
 	$print .= "<TR CLASS='odd'><TD ALIGN='left'>" . get_text("Reported by") . ":</TD>	<TD ALIGN='left'>" . highlight($search,$theRow['contact']) . "</TD></TR>\n";
 	$print .= "<TR CLASS='even' ><TD ALIGN='left'>" . get_text("Phone") . ":</TD>			<TD ALIGN='left'>" . format_phone ($theRow['phone']) . "</TD></TR>\n";
-	$end_date = (is_null($theRow['problemend'])) ? $theRow['problemend']: date("Y-m-d H:i:00", (time() - (intval(get_variable('delta_mins'))*60)));	// 11/29/2012
-	$elapsed = my_date_diff($theRow['problemstart'], $end_date);
-	$elapsed_str = get_elapsed_time ($theRow['problemstart'], $theRow['problemend']);			
+	$elapsed = get_elapsed_time ($theRow);			
+	$elapsed_str = get_elapsed_time ($theRow);			
 	$print .= "<TR CLASS='odd'><TD ALIGN='left'>" . get_text("Status") . ":</TD>		<TD ALIGN='left'>" . get_status($theRow['status']) . "&nbsp;&nbsp;{$elapsed_str}</TD></TR>\n";
 	$by_str = ($theRow['call_taker'] ==0)?	"" : "&nbsp;&nbsp;by " . get_owner($theRow['call_taker']) . "&nbsp;&nbsp;";		// 1/7/10
 	$print .= "<TR CLASS='even'><TD ALIGN='left'>" . get_text("Written") . ":</TD>		<TD ALIGN='left'>" . format_date_2($theRow['date']) . $by_str;
@@ -4591,9 +4580,8 @@ function do_ticket_only($theRow, $theWidth, $search=FALSE, $dist=TRUE) {						//
 	$print .= "<TR CLASS='even'  VALIGN='top'><TD ALIGN='left'>" . get_text("911 Contacted") . ":</TD>	<TD ALIGN='left'>" . highlight($search, nl2br($theRow['nine_one_one'])) . "</TD></TR>\n";	//	6/26/10
 	$print .= "<TR CLASS='odd'><TD ALIGN='left'>" . get_text("Reported by") . ":</TD>	<TD ALIGN='left'>" . highlight($search,$theRow['contact']) . "</TD></TR>\n";
 	$print .= "<TR CLASS='even' ><TD ALIGN='left'>" . get_text("Phone") . ":</TD>			<TD ALIGN='left'>" . format_phone ($theRow['phone']) . "</TD></TR>\n";
-	$end_date = (is_null($theRow['problemend'])) ? $theRow['problemend']: date("Y-m-d H:i:00", (time() - (intval(get_variable('delta_mins'))*60)));	// 11/29/2012
-	$elapsed =  my_date_diff($theRow['problemstart'], $end_date);
-	$elapsed_str = get_elapsed_time ($theRow['problemstart'], $theRow['problemend']);			
+	$elapsed = get_elapsed_time ($theRow);			
+	$elapsed_str = get_elapsed_time ($theRow);			
 	$print .= "<TR CLASS='odd'><TD ALIGN='left'>" . get_text("Status") . ":</TD>		<TD ALIGN='left'>" . get_status($theRow['status']) . "&nbsp;&nbsp;{$elapsed_str}</TD></TR>\n";
 	$by_str = ($theRow['call_taker'] ==0)?	"" : "&nbsp;&nbsp;by " . get_owner($theRow['call_taker']) . "&nbsp;&nbsp;";		// 1/7/10
 	$print .= "<TR CLASS='even'><TD ALIGN='left'>" . get_text("Written") . ":</TD>		<TD ALIGN='left'>" . format_date_2($theRow['date']) . $by_str;
@@ -5071,9 +5059,8 @@ function do_ticket_wm($theRow, $theWidth, $search=FALSE, $dist=TRUE) {						// r
 	$print .= "<TR CLASS='even'  VALIGN='top'><TD ALIGN='left'>" . get_text("911 Contacted") . ":</TD>	<TD ALIGN='left'>" . highlight($search, nl2br($theRow['nine_one_one'])) . "</TD></TR>\n";	//	6/26/10
 	$print .= "<TR CLASS='odd'><TD ALIGN='left'>" . get_text("Reported by") . ":</TD>	<TD ALIGN='left'>" . highlight($search,$theRow['contact']) . "</TD></TR>\n";
 	$print .= "<TR CLASS='even' ><TD ALIGN='left'>" . get_text("Phone") . ":</TD>			<TD ALIGN='left'>" . format_phone ($theRow['phone']) . "</TD></TR>\n";
-	$end_date = (is_null($theRow['problemend'])) ? $theRow['problemend']: date("Y-m-d H:i:00", (time() - (intval(get_variable('delta_mins'))*60)));	// 11/29/2012
-	$elapsed =  my_date_diff($theRow['problemstart'], $end_date);
-	$elapsed_str = get_elapsed_time ($theRow['problemstart'], $theRow['problemend']);			
+	$elapsed = get_elapsed_time ($theRow);			
+	$elapsed_str = get_elapsed_time ($theRow);			
 	$print .= "<TR CLASS='odd'><TD ALIGN='left'>" . get_text("Status") . ":</TD>		<TD ALIGN='left'>" . get_status($theRow['status']) . "&nbsp;&nbsp;{$elapsed_str}</TD></TR>\n";
 	$by_str = ($theRow['call_taker'] ==0)?	"" : "&nbsp;&nbsp;by " . get_owner($theRow['call_taker']) . "&nbsp;&nbsp;";		// 1/7/10
 	$print .= "<TR CLASS='even'><TD ALIGN='left'>" . get_text("Written") . ":</TD>		<TD ALIGN='left'>" . format_date_2(strtotime($theRow['date'])) . $by_str;
@@ -5112,6 +5099,7 @@ function do_ticket_wm($theRow, $theWidth, $search=FALSE, $dist=TRUE) {						// r
 	$print .= show_log ($theRow[0]);				// log
 	$print .="</TD></TR>";
 	$print .= "<TR STYLE = 'display:none;'><TD colspan=2><SPAN ID='oldlat'>" . $theRow['lat'] . "</SPAN><SPAN ID='oldlng'>" . $theRow['lng'] . "</SPAN></TD></TR>";
+
 	$print .= "<TR><TD COLSPAN=99>";
 	$print .= show_assigns(0, $theRow[0]);				// 'id' ambiguity - 7/27/09 - new_show_assigns($id_in)
 	$print .= "</TD></TR><TR><TD COLSPAN=99>";

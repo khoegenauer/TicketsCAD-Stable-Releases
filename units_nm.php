@@ -19,11 +19,12 @@ $zoom_tight = FALSE;		// replace with a decimal number to over-ride the standard
 2/8/12 Fixed error on single region operation - editing a unit removes region 1 region allocation.
 3/24/12 fixed to accommodate OGTS in validate()
 12/1/2012 - unix time revisions
+5/30/13 Implement catch for when there are no allocated regions for current user. 
 */
 
 session_start();
 
-require_once($_SESSION['fip']);		//7/28/10
+require_once("./incs/functions.inc.php");		//7/28/10
 if(file_exists("./incs/modules.inc.php")) {	//	10/28/10
 	require_once('./incs/modules.inc.php');
 	}
@@ -528,7 +529,9 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{	//	6/10/11
 		$al_groups[] = $row['group'];
 		}	
-
+	if(count($al_groups == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
+		$where2 = "WHERE `a`.`type` = 2";
+		} else {
 	if(isset($_SESSION['viewed_groups'])) {	//	6/10/11
 		$curr_viewed= explode(",",$_SESSION['viewed_groups']);
 		}
@@ -553,6 +556,7 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 			}
 	}
 	$where2 .= "AND `a`.`type` = 2";	//	6/10/11		
+		}
 		
 	$query = "SELECT *, 
 		`updated` AS `updated`,
@@ -1487,7 +1491,9 @@ if(get_num_groups() > 1) {
 		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{	// 6/10/11
 			$al_groups[] = $row['group'];
 			}	
-		
+		if(count($al_groups == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
+			$where2 = "AND `$GLOBALS[mysql_prefix]allocates`.`type` = 1";
+			} else {		
 		if(isset($_SESSION['viewed_groups'])) {		//	6/10/11
 			$curr_viewed= explode(",",$_SESSION['viewed_groups']);
 			}
@@ -1512,6 +1518,7 @@ if(get_num_groups() > 1) {
 				}
 			}
 		$where2 .= "AND `$GLOBALS[mysql_prefix]allocates`.`type` = 1";	//	6/10/11				
+			}
 		
 		$query_t = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` 
 					LEFT JOIN `$GLOBALS[mysql_prefix]allocates` ON `$GLOBALS[mysql_prefix]ticket`.id=`$GLOBALS[mysql_prefix]allocates`.`resource_id`	

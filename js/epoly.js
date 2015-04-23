@@ -4,7 +4,7 @@
 *                                                                     *
 * A Google Maps API Extension                                         *
 *                                                                     *
-* Adds various Methods to GPolygon and GPolyline                      *
+* Adds various Methods to google.maps.Polygon and google.maps.Polyline                      *
 *                                                                     *
 * .Contains(latlng) returns true is the poly contains the specified   *
 *                   GLatLng                                           *

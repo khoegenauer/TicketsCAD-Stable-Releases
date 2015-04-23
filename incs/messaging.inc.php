@@ -282,6 +282,7 @@ function clean_hdr_fm_text($thetext) {
 
 // Xpertmailer version
 function get_emails($url, $user, $password, $port, $ssl="", $timeout=10 ) {	//	Called from AJAX file to get emails in background - AJAX file called by top.php
+	$no_whitelist = intval(get_msg_variable('no_whitelist'));
 	$counter = 0;
 	$now = mysql_format_date(time() - (intval(get_variable('delta_mins'))*60));	
 	$ret = array();
@@ -375,7 +376,7 @@ function get_emails($url, $user, $password, $port, $ssl="", $timeout=10 ) {	//	C
 				$to = $the_message[$z]['to'];	
 				$subject = $the_message[$z]['subject'];
 				$text = $the_message[$z]['text'];				
-				if((in_array($from_address, $the_list)) || ($the_message[$z]['from'] == "")) {
+				if((in_array($from_address, $the_list)) || ($the_message[$z]['from'] == "") || ($no_whitelist == 1)) {
 					if((isset($the_message[$z]['date'])) && ($the_message[$z]['date'] != "")) {
 					$date = date_parse($the_message[$z]['date']);				
 					$datepart = $date['year'] . "-" . $date['month'] . "-" . $date['day'];
@@ -390,9 +391,10 @@ function get_emails($url, $user, $password, $port, $ssl="", $timeout=10 ) {	//	C
 						}
 					}			
 				}
+			if(get_msg_variable('email_del') == '1') {		//optional, you can delete this message from server
+				POP3::pDele($c, $i);
+				}				
 			}
-		// optional, you can delete this message from server
-		//	POP3::pDele($c, $i);
 		}
 	$ret[0] = $i;
 	$ret[1] = $counter;
