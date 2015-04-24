@@ -1473,7 +1473,7 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 	}			// end if (broadcast)
 ?>				
 			find_warnings(theForm.frm_lat.value, theForm.frm_lng.value);	//	9/10/13		
-//			return true;
+			return true;	//	11/18/13
 			}
 		}				// end function validate(theForm)
 	

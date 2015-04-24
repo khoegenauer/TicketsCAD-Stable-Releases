@@ -770,6 +770,10 @@ Changes for Tickets 2.41C
 
 236.  4 Fixes to Callboard and notifies.
 
+Changes for Tickets 2.41D
+
+237.  4 Fixes to Units, top bar, messaging, notifies, new Incident and Responder Mobile page.
+
 Let us know if the above is too terse and where further expansion wd be useful.
 <A NAME = 'bottom'></A>
 

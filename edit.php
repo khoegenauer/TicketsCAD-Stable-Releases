@@ -90,6 +90,7 @@ $zoom_tight = FALSE;		// default is FALSE (no tight zoom); replace with a decima
 6/2/2013 reverse_geo operation added.
 7/3/2013 - socket2me conditioned on internet and broadcast settings, reverse geo field size limits corrected
 9/10/13 - Added "Address About" and "To Address" fields and File storage
+11/18/13 - Fix for notifies on edit.
 */
 	$addrs = FALSE;										// notifies address array doesn't exist
 
@@ -323,6 +324,7 @@ $zoom_tight = FALSE;		// default is FALSE (no tight zoom); replace with a decima
 	$addrs = notify_user($id,$GLOBALS['NOTIFY_TICKET_CHG']);		// returns array or FALSE
 
 	unset ($_SESSION['active_ticket']);								// 5/4/11
+	return($addrs);	//	11/18/13
 
 	}				// end function edit ticket() 
 
@@ -369,6 +371,7 @@ $dis =  ($disallow)? "DISABLED ": "";				// 4/1/11 -
 	<SCRIPT  SRC="./js/lat_lng.js" TYPE="text/javascript"></SCRIPT>	<!-- 11/8/11 -->
 	<SCRIPT  SRC="./js/geotools2.js" TYPE="text/javascript"></SCRIPT>	<!-- 11/8/11 -->
 	<SCRIPT  SRC="./js/osgb.js" TYPE="text/javascript"></SCRIPT>	<!-- 11/8/11 -->		
+	<SCRIPT SRC="./js/misc_function.js" TYPE="text/javascript"></SCRIPT>	<!-- 11/18/13 -->	
 
 <SCRIPT>
 
@@ -686,14 +689,14 @@ $dis =  ($disallow)? "DISABLED ": "";				// 4/1/11 -
 		$('the_file_list').innerHTML = "Please Wait, loading files";
 		randomnumber=Math.floor(Math.random()*99999999);
 		var url ="./ajax/file_list.php?ticket_id=<?php print $_GET['id'];?>&version=" + randomnumber;
-		theRequest (url, filelist_cb, "");
+		sendRequest (url, filelist_cb, "");	//	11/18/13
 		function filelist_cb(req) {
 			var theFiles=req.responseText;
 			$('the_file_list').innerHTML = theFiles;		
 			}
 		}
 		
-	function theRequest(url,callback,postData) {										// 9/10/13
+	function sendRequest(url,callback,postData) {	// 9/10/13, 11/14/13, 11/18/13
 		var req = createXMLHTTPObject();
 		if (!req) return;
 		var method = (postData) ? "POST" : "GET";
@@ -711,10 +714,27 @@ $dis =  ($disallow)? "DISABLED ": "";				// 4/1/11 -
 		req.send(postData);
 		}
 		
+	var XMLHttpFactories = [
+		function () {return new XMLHttpRequest()	},
+		function () {return new ActiveXObject("Msxml2.XMLHTTP")	},
+		function () {return new ActiveXObject("Msxml3.XMLHTTP")	},
+		function () {return new ActiveXObject("Microsoft.XMLHTTP")	}
+		];
+
+	function createXMLHTTPObject() {	//	11/18/13
+		var xmlhttp = false;
+		for (var i=0;i<XMLHttpFactories.length;i++) {
+			try { xmlhttp = XMLHttpFactories[i](); }
+			catch (e) { continue; }
+			break;
+			}
+		return xmlhttp;
+		}
+		
 	function find_warnings(tick_lat, tick_lng) {	//	9/10/13
 		randomnumber=Math.floor(Math.random()*99999999);
 		var theurl ="./ajax/loc_warn_list.php?version=" + randomnumber + "&lat=" + tick_lat + "&lng=" + tick_lng;
-		theRequest (theurl, loc_w, "");
+		sendRequest (theurl, loc_w, "");	//	11/18/13
 		function loc_w(req) {
 			var the_warnings=JSON.decode(req.responseText);
 			var the_count = the_warnings[0]
@@ -796,7 +816,81 @@ $dis =  ($disallow)? "DISABLED ": "";				// 4/1/11 -
 			print "<FONT CLASS=\"warn\">Invalid Ticket ID: '$id'</FONT>";
 			}
 		else {
-			edit_ticket($id);									// post updated data
+			$the_addrs = edit_ticket($id);	// post updated data	11/18/13
+?>			
+<SCRIPT>
+<?php
+			if ($the_addrs) {	//	11/18/13
+?>
+				function do_notify() {	//	11/18/13
+					var theAddresses = '<?php print implode("|", array_unique($the_addrs));?>';		// drop dupes
+					var theText= "TICKET-Update: ";
+					var theId = '<?php print $id;?>';
+					var params = "frm_to="+ escape(theAddresses) + "&frm_text=" + escape(theText) + "&frm_ticket_id=" + theId + "&text_sel=1" ;		// ($to_str, $text, $ticket_id)   10/15/08
+					sendRequest ('mail_it.php',handleResult, params);	// ($to_str, $text, $ticket_id)   10/15/08
+					}			// end function do notify()
+				
+				function handleResult(req) {				// the 'called-back' function, 11/18/13
+					}
+
+				function sendRequest(url,callback,postData) {	//	11/18/13
+					var req = createXMLHTTPObject();
+					if (!req) return;
+					var method = (postData) ? "POST" : "GET";
+					req.open(method,url,true);
+					if (postData)
+						req.setRequestHeader('Content-type','application/x-www-form-urlencoded');
+					req.onreadystatechange = function () {
+						if (req.readyState != 4) return;
+						if (req.status != 200 && req.status != 304) {
+<?php
+							if($istest) {print "\t\t\talert('HTTP error ' + req.status + '" . __LINE__ . "');\n";}
+?>
+							return;
+							}
+						callback(req);
+						}
+					if (req.readyState == 4) return;
+					req.send(postData);
+					}
+	
+				var XMLHttpFactories = [
+					function () {return new XMLHttpRequest()	},
+					function () {return new ActiveXObject("Msxml2.XMLHTTP")	},
+					function () {return new ActiveXObject("Msxml3.XMLHTTP")	},
+					function () {return new ActiveXObject("Microsoft.XMLHTTP")	}
+					];
+				
+				function createXMLHTTPObject() {
+					var xmlhttp = false;
+					for (var i=0;i<XMLHttpFactories.length;i++) {
+						try {
+							xmlhttp = XMLHttpFactories[i]();
+							}
+						catch (e) {
+							continue;
+							}
+						break;
+						}
+					return xmlhttp;
+					}
+	
+<?php
+
+				} else {
+?>		
+				function do_notify() {
+					return;
+					}			// end function do notify()
+<?php		
+				}			
+			
+?>
+</SCRIPT>
+			<script type="text/javascript">
+			do_notify();
+			</script>
+<?php
 			}
 		}
 	else if (isset($_GET['delete'])) {							//delete ticket
@@ -833,7 +927,7 @@ $dis =  ($disallow)? "DISABLED ": "";				// 4/1/11 -
 			
 			$row = stripslashes_deep(mysql_fetch_array($result));
 ?>
-			<BODY onLoad = "do_notify(); ck_frames(); find_warnings(<?php print $row['lat'];?>, <?php print $row['lng'];?>); get_files();">	<!-- 628 -->
+			<BODY onLoad = "ck_frames(); find_warnings(<?php print $row['lat'];?>, <?php print $row['lng'];?>); get_files();">	<!-- 628, 11/18/13 -->
 			<SCRIPT TYPE="text/javascript" src="./js/wz_tooltip.js"></SCRIPT>
 			<SCRIPT SRC="./js/misc_function.js"></SCRIPT>				
 <?php				
@@ -1840,10 +1934,6 @@ if (!$disallow) {
 		var theAddresses = '<?php print implode("|", array_unique($addrs));?>';		// drop dupes
 		var theText= "TICKET-Update: ";
 		var theId = '<?php print $_GET['id'];?>';
-
-//			 		 ($to_str, $text, $ticket_id, $text_sel=1;, $txt_only = FALSE)
-// 12/10/2012
-//		var params = "frm_to="+ escape(theAddresses) + "&frm_text=" + escape(theText) + "&frm_ticket_id=" + theId ;		// ($to_str, $text, $ticket_id)   10/15/08
 		var params = "frm_to="+ escape(theAddresses) + "&frm_text=" + escape(theText) + "&frm_ticket_id=" + theId + "&text_sel=1" ;		// ($to_str, $text, $ticket_id)   10/15/08
 		sendRequest ('mail_it.php',handleResult, params);	// ($to_str, $text, $ticket_id)   10/15/08
 		}			// end function do notify()
@@ -1856,7 +1946,6 @@ if (!$disallow) {
 		if (!req) return;
 		var method = (postData) ? "POST" : "GET";
 		req.open(method,url,true);
-//		req.setRequestHeader('User-Agent','XMLHTTP/1.0');
 		if (postData)
 			req.setRequestHeader('Content-type','application/x-www-form-urlencoded');
 		req.onreadystatechange = function () {
