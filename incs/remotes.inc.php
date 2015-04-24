@@ -27,6 +27,7 @@ error_reporting(E_ALL);
 7/9/2013 - applied now_ts() as update time to all device handlers
 1/30/2014 - Added function do_xastir
 2/14/2014 - redid instam IAW revised API, no master key usage
+5/12/2014 - revised to handle movement detection
 */
 
 $thirty_days = 30*24*60*60;							// seconds - 7/4/2013
@@ -118,9 +119,9 @@ function get_instam_device($key) {				// 2/14/2014
 										0,
 											quote_smart($lat),
 											quote_smart($lng),
-											quote_smart($altitude),
-											round($speed),
 										quote_smart($heading),
+										round($speed),
+											quote_smart($altitude),
 										quote_smart(now_ts()),
 										$GLOBALS['TRACK_INSTAM']) ;										
 					$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(),basename( __FILE__), __LINE__);					
@@ -397,7 +398,6 @@ function do_aprs() {				// 7/2/2013 - populates the APRS tracks table and update
 			$sep = ",";
 			}
 		$the_url = "http://api.aprs.fi/api/get?name={$call_str}&what=loc&apikey={$the_key}&format=json";
-//		dump($the_url);
 		
 		$data=get_remote($the_url);				// returns JSON-decoded values
 		if ((!(is_array($data))) && (!(is_object($data)))) {				// 4/29/12
@@ -564,10 +564,14 @@ function do_ogts() {			// 3/24/12
 				AND  (`callsign` LIKE '%{$ogts_id}')
 				AND (`updated` <> '{$updated}'))";	
 				
-			$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-
-			if ((is_resource($result)) && (mysql_affected_rows ($result) > 0)) {			// any update?
-
+				@mysql_query ($query);							// 5/12/2014
+				switch (intval(mysql_affected_rows ()) ) {
+					case -1:
+						do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+						break;
+					case 0:					// no change == no movement
+						break;						
+					default:				// movement - good to go		
 				$query = "DELETE FROM `$GLOBALS[mysql_prefix]tracks_hh` WHERE `source` LIKE '%{$ogts_id}'";		// remove prior track this device  
 				$result = mysql_query($query);	// 7/28/10
 				
@@ -579,7 +583,8 @@ function do_ogts() {			// 3/24/12
 				
 				$query = "INSERT INTO `$GLOBALS[mysql_prefix]tracks` (`source`, `latitude`, `longitude`,`packet_date`, `updated`) VALUES ('$ogts_id', '$lat', '$lng', '$updated', '$updated')";
 				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-				}			// end if ( msql_affected_rows ($result) > 0)
+						}			// end switch ()
+					
 			}			// end if (!(empty($device['EventData'])))
 	}			// end foreach() ... as $device
 
@@ -657,7 +662,6 @@ function do_xastir() {				// 1/30/14 - track responder locations with Xastir ser
 		WHERE (	( `mobile`= 1 )
 		AND  	(`xastir_tracker`= 1 )
 		AND 	(`callsign` <> ''))";  	
-
 	$result1 = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
 	while ($row1 = mysql_fetch_assoc($result1)) {
 		$callsign_in = $row1['callsign'];

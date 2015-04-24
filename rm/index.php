@@ -227,7 +227,8 @@ $logged_in_load = ($logged_in == 1) ? "get_conditions(); get_ticket_markers(" . 
 </style>
 <script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
 <script src="../js/leaflet/leaflet.js"></script>
-<script src="./js/misc_function.js" type="text/javascript"></script>
+<script src="../js/misc_function.js" type="text/javascript"></script>
+<script src="./js/mobile_functions.js" type="text/javascript"></script>
 <SCRIPT SRC="../js/usng.js" TYPE="text/javascript"></SCRIPT>
 <SCRIPT SRC='../js/jscoord.js' TYPE="text/javascript"></SCRIPT>
 <SCRIPT SRC="../js/lat_lng.js" TYPE="text/javascript"></SCRIPT>
@@ -438,7 +439,7 @@ function get_recfac() {
 	}		// end function get_recfac()
 	
 function get_recfac_cb(req) {
-	var recfac_str=JSON1.decode(req.responseText);
+	var recfac_str=JSON.decode(req.responseText);
 	$('recfac_but').innerHTML = recfac_str[0];
 	}			// end function get_recfac_cb()	
 	
@@ -449,7 +450,7 @@ function update_recfac(tick_id, recfac) {
 	}		// end function update_recfac()
 	
 function up_recfac_cb(req) {
-	var up_str=JSON1.decode(req.responseText);
+	var up_str=JSON.decode(req.responseText);
 	if(up_str[0] == 100) {
 		alert("Update Applied");
 		} else {
@@ -489,7 +490,7 @@ function get_latest_ids() {				// get latest chat invites and new assignments
 function get_latest_id_cb(req) {					// get_latest_id callback()
 	var arr_lgth_good = 3;								// size of a valid returned array
 	try {
-		var the_id_arr=JSON1.decode(req.responseText);
+		var the_id_arr=JSON.decode(req.responseText);
 		}
 	catch (e) {
 		return;
@@ -593,7 +594,7 @@ function get_latest_messages() {
 
 function get_latest_messages_cb(req) {
 	try {
-		var the_msg_arr=JSON1.decode(req.responseText);
+		var the_msg_arr=JSON.decode(req.responseText);
 		}
 	catch (e) {
 		return;
@@ -616,7 +617,7 @@ function do_sub(the_status,the_button) {				// form submitted
 	params += "&frm_vals="+ the_status;
 	sendRequest ('./ajax/update_assigns.php',handleSubmit, params);			// does the work
 	function handleSubmit(req) {
-		var theResponse=JSON1.decode(req.responseText);
+		var theResponse=JSON.decode(req.responseText);
 		if($(the_button)) {
 			$(the_button).innerHTML += "<BR />" + theResponse[0]; 
 			$(the_button).style.backgroundColor = "#66FF00"; 
@@ -632,7 +633,7 @@ function start_miles() {
 	url ='./ajax/update_mileage.php?type=start_miles&value=' + value + '&assigns_id=' + the_assigns_id + '&version=' + randomnumber;
 	sendRequest (url, st_miles_cb, "");
 	function st_miles_cb(req) {
-		var theResponse=JSON1.decode(req.responseText);	
+		var theResponse=JSON.decode(req.responseText);	
 		if(theResponse == 100) {
 			$('mileage_start_but').innerHTML = "Start Miles<BR />" + value; 
 			$('mileage_start_but').style.backgroundColor = "#66FF00"; 
@@ -647,7 +648,7 @@ function end_miles() {
 	url ='./ajax/update_mileage.php?type=end_miles&value=' + value + '&assigns_id=' + the_assigns_id + '&version=' + randomnumber;
 	sendRequest (url, end_miles_cb, "");
 	function end_miles_cb(req) {
-		var theResponse=JSON1.decode(req.responseText);	
+		var theResponse=JSON.decode(req.responseText);	
 		if(theResponse == 100) {
 			$('mileage_end_but').innerHTML = "End Miles<BR />" + value; 
 			$('mileage_end_but').style.backgroundColor = "#66FF00"; 
@@ -662,7 +663,7 @@ function os_miles() {
 	url ='./ajax/update_mileage.php?type=on_scene_miles&value=' + value + '&assigns_id=' + the_assigns_id + '&version=' + randomnumber;
 	sendRequest (url, os_miles_cb, "");
 	function os_miles_cb(req) {
-		var theResponse=JSON1.decode(req.responseText);	
+		var theResponse=JSON.decode(req.responseText);	
 		if(theResponse == 100) {
 			$('mileage_os_but').innerHTML = "On Scene Miles<BR />" + value; 
 			$('mileage_os_but').style.backgroundColor = "#66FF00"; 
@@ -678,7 +679,7 @@ function notes() {
 	url ='./ajax/update_notes.php?notes=' + value + '&user_id=' + user_id + '&assigns_id=' + the_assigns_id + '&ticket_id=' + tick_id + '&version=' + randomnumber;
 	sendRequest (url, notes_cb, "");
 	function notes_cb(req) {
-		var theResponse=JSON1.decode(req.responseText);	
+		var theResponse=JSON.decode(req.responseText);	
 		if(theResponse == 100) {
 			$('notes_but').style.backgroundColor = "#66FF00"; 
 			$('notes_but').style.color = "#707070";			
@@ -723,7 +724,7 @@ function update_position() {
 		url ='./ajax/update_position.php?responder=' + responder_id + '&lat=' + the_lat + '&lng=' + the_lng + '&altitude=' + theAltitude + '&heading=' + theHeading + '&speed=' + theSpeed + '&version=' + randomnumber;
 		sendRequest (url, pos_cb, "");
 		function pos_cb(req) {
-			var success=JSON1.decode(req.responseText);
+			var success=JSON.decode(req.responseText);
 			}
 		}
 	}
@@ -758,7 +759,7 @@ function get_ticket_markers(user_id) {
 	url ='./ajax/ticket_markers.php?user_id=' + user_id + '&version=' + randomnumber;
 	sendRequest (url, ticketMarkers_cb, "");
 	function ticketMarkers_cb(req) {
-		var the_tickets=JSON1.decode(req.responseText);
+		var the_tickets=JSON.decode(req.responseText);
 		for(var key in the_tickets) {
 			var tkt_id = the_tickets[key][0];
 			var tkt_scope = the_tickets[key][1];
@@ -786,7 +787,7 @@ function get_ticket(ticket_id) {
 	url ='./ajax/ticket_detail.php?ticket_id=' + ticket_id + '&user_id=' + user_id + '&version=' + randomnumber;
 	sendRequest (url, ticket_cb, "");
 	function ticket_cb(req) {
-		var the_ticket=JSON1.decode(req.responseText);
+		var the_ticket=JSON.decode(req.responseText);
 		the_assigns_id = the_ticket[0];
 		$('ticket_list').style.display = "none";
 		$('ticket_detail').style.display = "block";				
@@ -841,7 +842,7 @@ function get_message(message_id) {
 	url ='./ajax/message_detail.php?message_id=' + message_id + '&version=' + randomnumber;
 	sendRequest (url, message_cb, "");
 	function message_cb(req) {
-		var the_message=JSON1.decode(req.responseText);
+		var the_message=JSON.decode(req.responseText);
 		var the_return_add = the_message[0];
 		var tickets_address = "<?php print get_variable('email_reply_to');?>";
 		$('message_list').style.display = "none";
@@ -860,7 +861,7 @@ function update_msgread(message_id) {
 	url ='./ajax/update_message_read.php?responder_id=' +  user_id + '&uid=' + message_id + '&version=' + randomnumber;
 	sendRequest (url, message_cb, "");
 	function message_cb(req) {
-		var the_success=JSON1.decode(req.responseText);
+		var the_success=JSON.decode(req.responseText);
 		}
 	}	
 	
@@ -870,7 +871,7 @@ function chat_invite_off() {
 	url ='./ajax/chat_invite_del.php?responder_id=' +  chat_user + '&version=' + randomnumber;
 	sendRequest (url, message_cb, "");
 	function message_cb(req) {
-		var the_success=JSON1.decode(req.responseText);
+		var the_success=JSON.decode(req.responseText);
 		chat_signal_r_off();	
 		}
 	}	
@@ -880,7 +881,7 @@ function get_tkt_message(message_id) {
 	url ='./ajax/message_detail2.php?message_id=' + message_id + '&version=' + randomnumber;
 	sendRequest (url, message_cb, "");
 	function message_cb(req) {
-		var the_message=JSON1.decode(req.responseText);
+		var the_message=JSON.decode(req.responseText);
 		var the_return_add = the_message[0];
 		var tickets_address = "<?php print get_variable('email_reply_to');?>";
 		$('tkt_message_list').style.display = "none";
@@ -995,7 +996,7 @@ function get_conditions() {
 	var url ="./ajax/infolist2.php?version=" + randomnumber;
 	sendRequest (url, info_cb, "");
 	function info_cb(req) {
-		var cond_response=JSON1.decode(req.responseText);
+		var cond_response=JSON.decode(req.responseText);
 		for(var key in cond_response) {
 			if(cond_response[key][0] == 100) {	
 				alert("error");
@@ -1023,7 +1024,7 @@ function sub_data(title,address,lat,lng,type) {
 	var url ="./ajax/submit_entry.php?id=0&version=" + randomnumber + "&type=" + type + "&address=" + address + "&title=" + title + "&lat=" + lat + "&lng=" + lng;
 	sendRequest (url, sub_cb, "");
 	function sub_cb(req) {
-		var response=JSON1.decode(req.responseText);
+		var response=JSON.decode(req.responseText);
 		if(response[0] == 100) {
 			msg = "Report Submitted - Thank You";
 			} else {
@@ -1327,7 +1328,7 @@ function send_message() {
 	url ='./ajax/send_email.php?resp_id=' + responder_id + '&ticket_id=' + theTicket + '&from_address=' + theFrom + '&fromname=' + responder_name + '&subject=' + theSubject + '&message=' + theMessage + '&version=' + randomnumber;
 	sendRequest (url, send_msg_cb, "");
 	function send_msg_cb(req) {
-		var the_response=JSON1.decode(req.responseText);
+		var the_response=JSON.decode(req.responseText);
 		if(the_response[0] == 100) {
 			$('message_alert').innerHTML = "Reply Sent";
 			can_reply();
@@ -1651,7 +1652,7 @@ function get_chatusers() {
 	var url ="./ajax/chat_wl.php?version=" + randomnumber;
 	sendRequest (url, cu_cb, "");
 	function cu_cb(req) {
-		var chatusers=JSON1.decode(req.responseText);
+		var chatusers=JSON.decode(req.responseText);
 		$('whos_chatting').innerHTML = chatusers[0];
 		}
 	}

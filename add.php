@@ -114,6 +114,7 @@ if($istest) {print "_POST"; dump($_POST);}
 10/11/2013 - corrected auto incident numbering - relocated else {} closure
 3/29/2014 - added buildings operations
 4/7/2014 - revised per nm operation
+4/27/2014 - correction re bldg per YG email, also do_reset() kml re-arrangement
 */
 
 if (empty($_GET)) {
@@ -529,7 +530,6 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 		if (!req) return;
 		var method = (postData) ? "POST" : "GET";
 		req.open(method,url,true);
-////		req.setRequestHeader('User-Agent','XMLHTTP/1.0');
 		if (postData)
 			req.setRequestHeader('Content-type','application/x-www-form-urlencoded');
 		req.onreadystatechange = function () {
@@ -655,6 +655,7 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 <SCRIPT TYPE="text/javascript" SRC="<?php print $gmaps_url;?>"></SCRIPT>
 <script type="text/javascript" src="./js/geoxml_v3.js"></script>
 <SCRIPT SRC="./js/graticule_V3.js" type="text/javascript"></SCRIPT>
+<SCRIPT SRC="./js/gmaps_v3_init.js"	TYPE="text/javascript" ></SCRIPT>
 <?php
 		}
 ?>	
@@ -665,7 +666,7 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 <SCRIPT  SRC="./js/osgb.js" TYPE="text/javascript"></SCRIPT>	<!-- 11/8/11 -->	
 <SCRIPT SRC="./js/misc_function.js" TYPE="text/javascript"></SCRIPT> 	<!-- 7/22/10 -->
 <SCRIPT SRC="./js/suggest.js" TYPE="text/javascript"></SCRIPT>			<!-- 2/20/11 -->
-<SCRIPT SRC="./js/gmaps_v3_init.js"	TYPE="text/javascript" ></SCRIPT>
+
 
 <SCRIPT>
 
@@ -855,7 +856,7 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 	var grid_bool = false;		
 	function toglGrid() {						// toggle
 		grid_bool = !grid_bool;
-		if (grid_bool)	{ grid = new Graticule(map_obj); }
+		if (grid_bool)	{ grid = new Graticule(map); }
 		else 			{ grid.setMap(null); }
 		}		// end function toglGrid()
 
@@ -865,7 +866,7 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 		print "\n\t return;\n";
 		}
 ?>
-		map.clearOverlays();
+//		map.clearOverlays();
 		load(<?php echo get_variable('def_lat'); ?>, <?php echo get_variable('def_lng'); ?>, <?php echo get_variable('def_zoom'); ?>);
 //		if (grid) {map.addOverlay(new LatLonGraticule());}
 		}
@@ -881,7 +882,7 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 		
 
 //										some globals		
-		var map_obj = null;				// the map object - note GLOBAL
+		var map = null;				// the map object - note GLOBAL
 		var myMarker;					// the marker object
 		var lat_var;					// see init.js
 		var lng_var;
@@ -915,7 +916,7 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 ?>
 		}			// end callback function
 
-		map_obj = gmaps_v3_init(call_back, 'map_canvas', 
+		map = gmaps_v3_init(call_back, 'map_canvas', 
 			<?php echo get_variable('def_lat');?>, 
 			<?php echo get_variable('def_lng');?>, 
 			<?php echo get_variable('def_zoom');?>, 
@@ -1078,7 +1079,6 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 		if (!req) return;
 		var method = (postData) ? "POST" : "GET";
 		req.open(method,url,true);
-////		req.setRequestHeader('User-Agent','XMLHTTP/1.0');
 		if (postData)
 			req.setRequestHeader('Content-type','application/x-www-form-urlencoded');
 		req.onreadystatechange = function () {
@@ -1177,7 +1177,7 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 		if(loc == 1) { my_form.frm_ngs.value=LLtoOSGB(lat, lng, 5); }
 		if(loc == 2) { my_form.frm_ngs.value=LLtoUTM(lat, lng, 5); }
 	
-		map_obj.setCenter(new google.maps.LatLng(lat, lng), <?php print get_variable('def_zoom');?>);
+		map.setCenter(new google.maps.LatLng(lat, lng), <?php print get_variable('def_zoom');?>);
 
 		var iconImg = new Image();														// obtain icon dimensions
 		iconImg.src ='./markers/crosshair.png';
@@ -1188,9 +1188,9 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 			position: dp_latlng,
 			icon: myIcon, 
 			draggable: true,
-			map: map_obj
+			map: map
 			});
-		myMarker.setMap(map_obj);		// add marker with icon
+		myMarker.setMap(map);		// add marker with icon
 			}				// end function pt_to_map ()
 		
 	function loc_lkup(my_form) {		   						// 7/5/10
@@ -1523,8 +1523,8 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 		do_unlock_pe(theForm);								// problemend values
 		}
 	
-	function do_reset(theForm) {				// disable run-end date/time inputs
-		clearmap();
+	function do_reset(theForm) {				// disable run-end date/time inputs - 4/27/2014
+//		clearmap();
 		do_lock_ps(theForm);				// hskp problem start date
 		do_lock_pe(theForm);				// hskp problem end date
 		$("runend1").visibility = "hidden";
@@ -1542,7 +1542,9 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 		$('tr_misc').style.display='none';
 		user_inc_name = false;							// no incident name input 4/21/10
 		$('proto_cell').innerHTML = "";					// 8/7/10
-
+		$('bldg_info').innerHTML = "";					// 4/27/2014
+		theForm.reset();
+		clearmap();		
 		}		// end function reset()
 
 	function do_problemstart(theForm, theBool) {							// 8/10/08
@@ -1823,7 +1825,7 @@ $onload_str .= (is_float($cid_lat))? " pt_to_map( add, {$cid_lat} ,{$cid_lng});"
   <div class="content" style="width:auto;">
   		<INPUT TYPE="button" VALUE="History"  onClick="do_hist_win();" STYLE = 'margin-top: 0px;'><BR />
   		<INPUT TYPE="button" VALUE="<?php print get_text("Cancel"); ?>"  onClick="do_cancel(document.add);" STYLE = 'margin-top:4px;'><BR />
-  		<INPUT TYPE="reset" VALUE="<?php print get_text("Reset"); ?>" onclick= "do_reset(this.form);"  STYLE = 'margin-top:4px;'><BR />
+  		<INPUT TYPE="reset" VALUE="<?php print get_text("Reset"); ?>" onclick= " do_reset(document.add);"  STYLE = 'margin-top:4px;'><BR />
   		<INPUT TYPE="button" VALUE="<?php print get_text("Next"); ?>"  onClick="validate(document.add);" STYLE = 'margin-top:4px;'><BR />
 <?php if (!($in_win )) { ?>
   		<INPUT TYPE="button" VALUE="<?php print get_text("Action"); ?>"  onClick="do_act_window('action_w.php?ticket_id=<?php echo $ticket_id;?>');" STYLE = 'margin-top:4px;'> <BR /> 
@@ -1985,9 +1987,10 @@ if (mysql_num_rows($result_bldg) > 0) {
 	$sel_str .= "\t<option value = '' selected>Select building</option>\n";
 	echo "\n\t var bldg_arr = new Array();\n";
 	while ($row_bldg = stripslashes_deep(mysql_fetch_assoc($result_bldg))) {
-		extract ($row_bldg);
-		$sel_str .= "\t<option value = {$i} >{$name}</option>\n";		
-		echo "\t var bldg={ bldg_name:\"{$name}\", bldg_street:\"{$street}\", bldg_city:\"{$city}\", bldg_state:\"{$state}\", bldg_lat:\"{$lat}\", bldg_lon:\"{$lon}\", bldg_info:\"{$information}\"};\n";
+//			4/27/2014
+		$sel_str .= "\t<option value = {$i} >{$row_bldg['name']}</option>\n";		
+		echo "\t var bldg={ bldg_name:\"{$row_bldg['name']}\", bldg_street:\"{$row_bldg['street']}\", bldg_city:\"{$row_bldg['city']}\", 
+			bldg_state:\"{$row_bldg['state']}\", bldg_lat:\"{$row_bldg['lat']}\", bldg_lon:\"{$row_bldg['lon']}\", bldg_info:\"{$row_bldg['information']}\"};\n";
 		echo "\t bldg_arr.push(bldg);\n";		// object onto array
 		$i++;
 		}		// end while ()
