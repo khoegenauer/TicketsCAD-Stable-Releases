@@ -31,4 +31,5 @@ $ret_arr[11] = $row['person_capabilities'];
 $ret_arr[12] = $row['person_notes'];
 
 print json_encode($ret_arr);
+exit();
 ?>

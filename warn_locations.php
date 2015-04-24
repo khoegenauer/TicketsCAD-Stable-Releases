@@ -262,7 +262,7 @@ $key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : "";
 		ShowLayer(elid, "block");
 		}
 
-	function validate(theForm) {						// Facility form contents validation
+	function validate(theForm) {						// form contents validation
 		if (theForm.frm_remove) {
 			if (theForm.frm_remove.checked) {
 				var str = "Please confirm removing '" + theForm.frm_name.value + "'";
@@ -821,7 +821,7 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 	$i=1;				// counter
 // =============================================================================
 	$utc = gmdate ("U");
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {		// ==========  major while() for Facility ==========
+	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {		// ==========  major while() for Location ==========
 		$the_bg_color = 	$GLOBALS['LOC_TYPES_BG'];
 		$the_text_color = 	$GLOBALS['LOC_TYPES_TEXT'];
 		$the_on_click = (my_is_float($row['lat']))? " onClick = myclick({$i}); " : " onClick = myclick_nm({$row['id']}); ";
@@ -833,8 +833,6 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 			}
 		else {
 			$toedit = "&nbsp;&nbsp;&nbsp;&nbsp;<A HREF='{$_SESSION['warnlocationsfile']}?func=location&edit=true&id=" . $row['id'] . "'><U>Edit</U></A>" ;
-			$tomail = "&nbsp;&nbsp;&nbsp;&nbsp;<SPAN onClick = 'do_mail_in_win({$row['id']})'><U><B>Email</B></U></SPAN>" ;
-			$toroute = "&nbsp;<A HREF='{$_SESSION['facroutesfile']}?loc_id=" . $row['id'] . "'><U>Route To Facility</U></A>";	
 			}		
 
 		if (!($got_point) && ((my_is_float($row['lat'])))) {
@@ -916,7 +914,7 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 			print "\tdo_sidebar_nm (\" {$sidebar_line} \" , i, {$row['id']}, loc_id);\n";	// sidebar only - no map
 			}
 	$i++;				// zero-based
-	}				// end  ==========  while() for Facility ==========
+	}				// end  ==========  while() for Location ==========
 
 ?>
 	if (!(map_is_fixed)) {
@@ -968,10 +966,10 @@ var buttons_html = "";
 
 	$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
 	$caption = "";
-	if ($_postfrm_remove == 'yes') {					//delete Facility - checkbox
-		$query = "DELETE FROM $GLOBALS[mysql_prefix]facilities WHERE `id`=" . $_POST['frm_id'];
+	if ($_postfrm_remove == 'yes') {					//delete Location - checkbox
+		$query = "DELETE FROM $GLOBALS[mysql_prefix]warnings WHERE `id`=" . $_POST['frm_id'];
 		$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
-		$caption = "<B>Facility <I>" . stripslashes_deep($_POST['frm_name']) . "</I> has been deleted from database.</B><BR /><BR />";
+		$caption = "<B>Location <I>" . stripslashes_deep($_POST['frm_name']) . "</I> has been deleted from database.</B><BR /><BR />";
 		}
 	else {
 		if ($_getgoedit == 'true') {
@@ -1068,7 +1066,7 @@ var buttons_html = "";
 		<TR CLASS='odd'><TD CLASS="td_label"><A CLASS="td_label" HREF="#" TITLE="City - defaults to default city set in configuration. Type in City if required"><?php print get_text("City"); ?></A>:&nbsp;&nbsp;&nbsp;&nbsp;<button type="button" onClick="Javascript:loc_lkup(document.loc_add_form);"><img src="./markers/glasses.png" alt="Lookup location." /></button></TD> <!-- 7/5/10 -->
 		<TD><INPUT SIZE="32" TYPE="text" NAME="frm_city" VALUE="<?php print get_variable('def_city'); ?>" MAXLENGTH="32" onChange = "this.value=capWords(this.value)"> <!-- 7/5/10 -->
 		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A CLASS="td_label" HREF="#" TITLE="State - US State or non-US Country code e.g. UK for United Kingdom">St</A>:&nbsp;&nbsp;<INPUT SIZE="<?php print $st_size;?>" TYPE="text" NAME="frm_state" VALUE="<?php print get_variable('def_st'); ?>" MAXLENGTH="<?php print $st_size;?>"></TD></TR> <!-- 7/5/10 -->
-		<TR CLASS = "even"><TD CLASS="td_label"><A CLASS="td_label" HREF="#" TITLE="Facility Description - additional details about unit">Description</A>:&nbsp;<font color='red' size='-1'>*</font></TD>	<TD COLSPAN=3 ><TEXTAREA NAME="frm_descr" COLS=60 ROWS=2></TEXTAREA></TD></TR>
+		<TR CLASS = "even"><TD CLASS="td_label"><A CLASS="td_label" HREF="#" TITLE="Description - additional details about unit">Description</A>:&nbsp;<font color='red' size='-1'>*</font></TD>	<TD COLSPAN=3 ><TEXTAREA NAME="frm_descr" COLS=60 ROWS=2></TEXTAREA></TD></TR>
 		<TR CLASS = "odd"><TD CLASS="td_label"><A CLASS="td_label" HREF="#" TITLE="Latitude and Longitude - set from map click">
 			<SPAN onClick = 'javascript: do_coords(document.loc_add_form.frm_lat.value ,document.loc_add_form.frm_lng.value)'>
 				<?php print get_text("Lat/Lng"); ?></A></SPAN>:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
@@ -1192,7 +1190,7 @@ var buttons_html = "";
 		<TR CLASS='odd'><TD CLASS="td_label"><A CLASS="td_label" HREF="#" TITLE="City - defaults to default city set in configuration. Type in City if required"><?php print get_text("City"); ?></A>:&nbsp;&nbsp;&nbsp;&nbsp;<button type="button" onClick="Javascript:loc_lkup(document.res_edit_Form);"><img src="./markers/glasses.png" alt="Lookup location." /></button></TD> <!-- 7/5/10 -->
 		<TD><INPUT SIZE="32" TYPE="text" NAME="frm_city" VALUE="<?php print $row['city'] ;?>" MAXLENGTH="32" onChange = "this.value=capWords(this.value)"> <!-- 7/5/10 -->
 		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A CLASS="td_label" HREF="#" TITLE="State - US State or non-US Country code e.g. UK for United Kingdom">St</A>:&nbsp;&nbsp;<INPUT SIZE="<?php print $st_size;?>" TYPE="text" NAME="frm_state" VALUE="<?php print $row['state'] ;?>" MAXLENGTH="<?php print $st_size;?>"></TD></TR> <!-- 7/5/10 -->
-		<TR CLASS = "even"><TD CLASS="td_label"><A CLASS="td_label" HREF="#" TITLE="Facility Description - additional details about unit">Description</A>:&nbsp;<font color='red' size='-1'>*</font></TD>	<TD COLSPAN=3><TEXTAREA NAME="frm_descr" COLS=60 ROWS=2><?php print $row['description'];?></TEXTAREA></TD></TR>
+		<TR CLASS = "even"><TD CLASS="td_label"><A CLASS="td_label" HREF="#" TITLE="Description - additional details about unit">Description</A>:&nbsp;<font color='red' size='-1'>*</font></TD>	<TD COLSPAN=3><TEXTAREA NAME="frm_descr" COLS=60 ROWS=2><?php print $row['description'];?></TEXTAREA></TD></TR>
 <?php
 		$map_capt = "<BR /><BR /><CENTER><B><FONT CLASS = 'normal_text'>Click Map to revise location</FONT></B>";
 		$lock_butt ="<IMG ID='lock_p' BORDER=0 SRC='./markers/unlock2.png' STYLE='vertical-align: middle' onClick = 'do_unlock_pos(document.res_edit_Form);'>";
@@ -1233,7 +1231,7 @@ var buttons_html = "";
 		}
 ?>
 		<TR><TD>&nbsp;</TD></TR>
-		<TR CLASS="even" VALIGN='baseline'><TD CLASS="td_label"><A CLASS="td_label" HREF="#" TITLE="Delete Facility from system">Remove Facility</A>:&nbsp;</TD><TD><INPUT TYPE="checkbox" VALUE="yes" NAME="frm_remove" <?php print $dis_rmv; ?>>
+		<TR CLASS="even" VALIGN='baseline'><TD CLASS="td_label"><A CLASS="td_label" HREF="#" TITLE="Delete Location from system">Remove Location</A>:&nbsp;</TD><TD><INPUT TYPE="checkbox" VALUE="yes" NAME="frm_remove" <?php print $dis_rmv; ?>>
 		</TD></TR>
 		<TR CLASS = "odd">
 			<TD ALIGN='center'><BR>
@@ -1502,7 +1500,7 @@ var buttons_html = "";
 							</TR>
 							<TR class = 'odd'>
 								<TD ALIGN='center' class='td_label'>
-									<SPAN CLASS="legend" STYLE="font-size: 14px; text-align: center; vertical-align: middle; width: <?php print get_variable('map_width');?>-25px;"><B>Facility Legend:</B></SPAN>
+									<SPAN CLASS="legend" STYLE="font-size: 14px; text-align: center; vertical-align: middle; width: <?php print get_variable('map_width');?>-25px;"><B>Legend:</B></SPAN>
 								</TD>
 							</TR>  <!-- 3/15/11 -->
 						</TABLE>

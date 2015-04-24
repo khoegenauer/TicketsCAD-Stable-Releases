@@ -65,5 +65,5 @@ if (($result) && (mysql_num_rows($result) >=1)) {
 	}	//	end else
 		
 print $print;
-
+exit();
 ?>

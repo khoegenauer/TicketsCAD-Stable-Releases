@@ -91,4 +91,5 @@ $ret_arr[14] = $closed_year;
 $ret_arr[15] = $closed;
 
 print json_encode($ret_arr);
+exit();
 ?>

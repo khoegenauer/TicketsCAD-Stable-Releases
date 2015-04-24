@@ -42,4 +42,5 @@ if (mysql_affected_rows() == 0) {
 	}	//	end else
 	
 print $return;
+exit();
 ?>

@@ -3307,7 +3307,7 @@ function orig_map($mode, $lat, $lng, $icon) {						// Responder add, edit, view 
 			</DIV>
 <?php
 			$alloc_groups = implode(',', get_allocates(4, $_SESSION['user_id']));	//	4/18/11
-			print get_user_group_butts_readonly(get_allocates(4, $_SESSION['user_id']));	//	4/18/11		
+			print get_user_group_butts_readonly($_SESSION['user_id']);	//	4/18/11		
 ?>	
 			</TD></TR>
 <?php
@@ -3546,8 +3546,6 @@ function orig_map($mode, $lat, $lng, $icon) {						// Responder add, edit, view 
 //		if (!(document.res_add_Form.frm_lat.value=="")){
 //			do_ngs();		// 1/24/09
 //			}
-
-
 		</SCRIPT>
 		</HTML>
 <?php

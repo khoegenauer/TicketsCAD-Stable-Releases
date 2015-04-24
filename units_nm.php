@@ -1180,7 +1180,7 @@ if(get_num_groups()) {
 			</DIV>
 <?php
 			$alloc_groups = implode(',', get_allocates(4, $_SESSION['user_id']));	//	4/18/11
-			print get_user_group_butts_readonly(get_allocates(4, $_SESSION['user_id']));	//	4/18/11		
+			print get_user_group_butts_readonly($_SESSION['user_id']);	//	4/18/11		
 ?>	
 			</TD></TR>
 <?php

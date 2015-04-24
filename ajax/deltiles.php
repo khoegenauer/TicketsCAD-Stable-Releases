@@ -32,4 +32,5 @@ if((isset($_GET['deltiles'])) && ($_GET['deltiles'] == "yes")) {
 	$completed = "Completed";
 	print json_encode($completed);
 	}
+exit();
 ?>

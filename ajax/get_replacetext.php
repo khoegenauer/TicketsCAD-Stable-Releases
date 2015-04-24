@@ -119,6 +119,26 @@ function tkt_summary($id) {
 	return $the_text;
 	}
 
+function tkt_shortSummary($id) {
+	$thetxt = "";
+	if($id != 0) {
+		$query	= "SELECT `t`.`scope` AS `scope`,
+					`t`.`id` AS `t_id`,
+					`t`.`contact` AS `contact`,
+					`t`.`street` AS `street`,
+					`t`.`city` AS `city`,
+					`t`.`phone` AS `phone`
+					FROM `$GLOBALS[mysql_prefix]ticket` `t` 
+					WHERE `t`.`id`='$id' LIMIT 1";
+		$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);
+		$row = stripslashes_deep(mysql_fetch_assoc($result));
+		$thestreet = ($row['street'] != "") ? $row['street'] . ", " : "";
+		$the_text = get_text('Scope') . ": " . $row['scope'] . "\n";
+		$the_text .= get_text('Patient') . ": " . $row['contact'] . ", " . $row['phone'] . "\n";
+		$the_text .= get_text('Address') . ": " . $thestreet . $row['city'] . "\n";
+		}
+	return $the_text;
+	}
 
 function get_replacement_text($val) {
 	$return = array();
@@ -132,8 +152,8 @@ function get_replacement_text($val) {
 		$return[] = $row['add_user_unit'];
 		$return[] = $row['add_time'];	
 		$return[] = $row['add_date'];
-		$return[] = $row['add_date'];
 		$return[] = $row['app_summ'];
+		$return[] = $row['app_shortsumm'];
 		return $return;
 		} else {
 		return false;
@@ -155,12 +175,14 @@ if($rep_val) {
 	$the_replaced_text .= ($rep_val[4] == "Yes") ? " " . $time : "";	
 	$the_replaced_text .= ($rep_val[5] == "Yes") ? " " . $date : "";
 	$thesummary = ($rep_val[6] == "Yes") ? "TKT Summary\n" . tkt_summary($ticket) : "";	
+	$theshortsummary = ($rep_val[7] == "Yes") ? "TKT Summary\n" . tkt_shortSummary($ticket) : "";	
 	$the_output = replace_content_inside_delimiters($start_tag, $end_tag, $the_replaced_text, $text_to_replace);
-	$ret_arr[0] = $the_output . "\n" . $thesummary;
+	$ret_arr[0] = $the_output . "\n" . $thesummary . "\n" . $theshortsummary;
 	} else {
 	$ret_arr[0] = "";
 	}
 
 print json_encode($ret_arr);
-	
+exit();
+?>
 

@@ -57,4 +57,5 @@ if($result) {
 	}
 
 print json_encode($ret_arr);
-
+exit();
+?>

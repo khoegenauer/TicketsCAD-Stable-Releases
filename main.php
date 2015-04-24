@@ -198,6 +198,19 @@ if (is_guest()) {													// 8/25/10
 			}
 		}
 	
+	function set_marker_position(id, theLat, theLng) {
+		if(rmarkers) {
+			var theCurrent = rmarkers[id].getPosition();
+			var currentLat = theCurrent.lat().toPrecision(6);
+			var currentLng = theCurrent.lng().toPrecision(6);	
+			var newLat = theLat.toPrecision(6);
+			var newLng = theLng.toPrecision(6);			
+			if((currentLat != newLat) || (currentLng != newLng)) {
+				rmarkers[id].setPosition( new google.maps.LatLng( theLat, theLng ) );
+				}
+			}
+		}
+	
 	function logged_in() {								// returns boolean
 		var temp = parent.frames["upper"].$("whom").innerHTML==NOT_STR;
 		return !temp;
@@ -951,6 +964,7 @@ if (is_guest()) {													// 8/25/10
 		ticket_id = ticket_id;
 /*		get_main_messagelist(ticket_id,'',sortby, sort, filter, 'ticket');	3/26/2013  */
 		get_all_messagelist(ticket_id,'',sortby, sort, filter, 'ticket');
+
 		}
 <?php
 	$do_blink_str = ($do_blink)? "start_blink();" : "";

@@ -3366,6 +3366,12 @@ function get_index_str ($in_str) {
 		else 							{ return date(get_variable("date_format"), intval($date_wk)); }
 		}
 
+	function format_dateonly($date_in){								// 12/3/13
+		$date_wk = (strlen(trim($date_in))== 19)? strtotime(trim($date_in)) : trim($date_in) ;			// force to integer
+		if (get_variable('locale')==0)	{ return date("n/j/y", intval($date_wk));}					//
+		else 							{ return date("j/n/y", intval($date_wk));}
+		}
+
 	function log_error($err_arg) {							// reports non-fatal error - 11/29/2012
 		@session_start();											//
 		if ( ! ( array_key_exists ( $err_arg, $_SESSION ) ) ) {		// limit to once per session to avoid log overload

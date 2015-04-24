@@ -1099,6 +1099,37 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 			return marker;
 			}				// end function create Marker()
 			
+	function createUnitMarker(point, tabs, color, stat, id, sym, category, region, tip) {		// 12/23/13
+		var group = category || 0;			// if absent from call
+		var region = region || 0;
+		var tip_val = tip || "";		// if absent from call
+		got_points = true;				// 6/21/12
+		
+		var origin = ((sym.length)>3)? (sym.length)-3: 0;			// pick low-order three chars 3/22/11
+		var iconStr = sym.substring(origin);						// icon string
+		var image_file = "./our_icons/gen_icon.php?blank=" + escape(icons[color]) + "&text=" + iconStr;
+		var marker = new google.maps.Marker({position: point, map: map, icon: image_file});		
+		marker.id = color;				// for hide/unhide
+		marker.category = category;		// 12/03/10 for show / hide by status
+		marker.region = region;			// 12/03/10 for show / hide by status		
+		marker.stat = stat;				// 10/21/09
+
+		google.maps.event.addListener(marker, "click", function() {		// 1811 - here for both side bar and icon click
+			try  {open_iw.close()} catch (e) {;}
+//			if (open_iw) {open_iw.close();} 							// another IW possibly open
+			map.setCenter(point, 8);
+
+			var infowindow = new google.maps.InfoWindow({ content: tabs, maxWidth: 400});	 
+			infowindow.open(map, marker);
+			open_iw = infowindow;
+			which = id;
+			});							// end add Listener( ... function())
+		rmarkers[id] = marker;							// marker to array for side_bar click function
+		rmarkers[id]['x'] = "y";							// ????
+		rinfoTabs[id] = tabs;							// tabs to array
+		bounds.extend(point);
+		return marker;
+		}				// end function create Marker()
 
 	function createdummyMarker(point, tabs, color, id, unit_id) {
 		got_points = true;											// 6/18/12
@@ -1247,8 +1278,10 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 	
 		var ticket_ids = [];
 		var gmarkers = [];
+		var rmarkers = [];
 		var fmarkers = [];
 		var infoTabs = [];
+		var rinfoTabs = [];
 		var facinfoTabs = [];
 		var which;
 		var i = 0;			// sidebar/icon index
@@ -2365,9 +2398,7 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 			} else {
 ?>
 				var the_group = '<?php print $the_group;?>';
-				
-				var marker = createMarker(point, myinfoTabs, <?php print $the_color;?>, <?php print $hide_unit;?>,  <?php print $sb_indx; ?>, sym, the_group); // 7/28/10
-//				map.addOverlay(marker);
+				var marker = createUnitMarker(point, myinfoTabs, <?php print $the_color;?>, <?php print $hide_unit;?>,  <?php print $row['unit_id']; ?>, sym, the_group); // 7/28/10, 3/15/11, 12/23/13
 				marker.setMap(map);
 
 <?php
@@ -2685,7 +2716,6 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 					} 
 ?>				        
 						polyline.setMap(map);
-
 <?php				
 					break;
 			

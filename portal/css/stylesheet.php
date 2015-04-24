@@ -100,16 +100,17 @@ TD {
 	font-style: normal; 
 	font-family: Verdana, Arial, Helvetica, sans-serif; 
 	text-decoration: none;
+	width: 40%;
 	}
 	
 .td_data { 
-	white-space:nowrap; 
 	background-color: inherit;
 	font-size: 1em; 
 	color: #000000; 
 	font-style: normal; 
 	font-family: Verdana, Arial, Helvetica, sans-serif; 
 	text-decoration: none; 
+	width: 50%;
 	}
 	
 #td_wrapper {
@@ -652,7 +653,9 @@ select.sit {
 	}
 
 .infowindow-content {
+	scrollbar-base-color:#369;
 	width: 300px;
+	height: 200px;
 	padding: 10px;
 	overflow: auto;
 	}

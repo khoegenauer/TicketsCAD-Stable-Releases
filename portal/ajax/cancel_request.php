@@ -39,6 +39,8 @@ if(mysql_num_rows($result) == 0) {
 	$row = stripslashes_deep(mysql_fetch_assoc($result));
 	$the_user = $row['requester'];
 	$the_scope = $row['scope'];
+	$the_ticket = (($row['ticket_id'] != NULL) AND ($row['ticket_id'] != 0) AND ($row['ticket_id'] != "")) ? $row['ticket_id'] : 0;
+	$the_description = $row['description'];
 	}
 
 $theDetails = get_requester_details($by);
@@ -49,7 +51,7 @@ $query = "UPDATE `$GLOBALS[mysql_prefix]requests` SET `status` = 'Closed', `clos
 $result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
 if(mysql_affected_rows() > 0) {
 	$ret_arr[0] = 100;
-	do_log($GLOBALS['LOG_CANCEL_REQUEST'], $_GET['id']);
+	do_log($GLOBALS['LOG_CANCEL_REQUEST'], $_SESSION['user_id']);
 	if ($the_email != "") {				// any addresses?
 		$to_str = $the_email;
 		$smsg_to_str = "";
@@ -68,8 +70,15 @@ if(mysql_affected_rows() > 0) {
 		$text_str .= "The Service User email address is " . $the_email . "\n\n";
 		do_send ($to_str, $smsg_to_str, $subject_str, $text_str, 0, 0);	
 		}				// end if/else ($addrs)				
+	if($the_ticket != 0) {
+		$new_scope = "CANCELLED " . $the_scope;
+		$new_description = "CANCELLED \r\n" . $the_description . "\r\n";
+		$query = "UPDATE `$GLOBALS[mysql_prefix]ticket` SET `scope` = '" . $new_scope . "', `description` = '" . $new_description . "' WHERE `id` = " . $the_ticket;
+		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+		}
 	} else {
 	$ret_arr[0] = 999;
 	}
 print json_encode($ret_arr);
+exit();
 ?>

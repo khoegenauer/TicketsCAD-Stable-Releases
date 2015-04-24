@@ -16,4 +16,5 @@ $ret_arr = array();
 $ret_arr[0] = $temp["results"][0]["geometry"]["location"]["lat"];
 $ret_arr[1] = $temp["results"][0]["geometry"]["location"]["lng"];
 print json_encode($ret_arr);
+exit();
 ?>

@@ -25,3 +25,5 @@ if (mysql_num_rows($result)==0) {
 
 $ret_arr[0] = $the_users;
 print json_encode($ret_arr);
+exit();
+?>

@@ -120,7 +120,6 @@ Sequence numbering: SELECT a.id, @num := @num + 1 seqno from ticket a, (SELECT @
 1/10/2013 function my_gregoriantojd added, gregoriantojd being absent from some config's
 7/12/2013 revised for zero frame height in case of frames and no assigns
 7/16/2013 corrections applied to do_assgn_reset()
-11/21/2013 correction per BI email; intrusive close-parens
 */
 
 @session_start();
@@ -1838,7 +1837,7 @@ setTimeout('do_post()', 1000);
 		</HEAD>
 		<BODY><CENTER>		<!-- <?php echo __LINE__; ?> -->
 <?php	
-														// if (!empty($row['clear'])) ?????? 11/21/2013
+														// if (!empty($row['clear'])) ??????
 			extract($_POST);
 
 			$query = "SELECT *,
@@ -1849,7 +1848,7 @@ setTimeout('do_post()', 1000);
 			`u2fenr` AS `u2fenr`, 
 			`u2farr` AS `u2farr`, 
 			`clear` AS `clear`,  
-			`problemstart` AS `problemstart`,  
+			`problemstart`) AS `problemstart`,  
 			`$GLOBALS[mysql_prefix]assigns`.`id` AS `assign_id` , 
 			`$GLOBALS[mysql_prefix]assigns`.`comments` AS `assign_comments`,
 			`u`.`user` AS `theuser`,

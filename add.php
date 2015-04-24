@@ -1158,7 +1158,7 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 		
 // *********************************************************************
 	function pt_to_map (my_form, lat, lng) {						// 7/5/10
-		myMarker.setMap(null);			// destroy predecessor
+		if(myMarker) { myMarker.setMap(null);}			// destroy predecessor
 			my_form.frm_lat.value=lat;	
 			my_form.frm_lng.value=lng;		
 			
@@ -1177,7 +1177,7 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 		myIcon.anchor= new google.maps.Point(iconImg.width/2, iconImg.height/2);		// 8/11/12 - center offset = half icon width and height
 		var dp_latlng = new google.maps.LatLng(lat, lng);
 
-		myMarker = new google.maps.Marker({
+		var myMarker = new google.maps.Marker({
 			position: dp_latlng,
 			icon: myIcon, 
 			draggable: true,
@@ -1207,10 +1207,10 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 	function find_warnings(tick_lat, tick_lng) {	//	9/10/13
 		randomnumber=Math.floor(Math.random()*99999999);
 		var theurl ="./ajax/loc_warn_list.php?version=" + randomnumber + "&lat=" + tick_lat + "&lng=" + tick_lng;
-		theRequest (theurl, loc_w, "");
+		theRequest(theurl, loc_w, "");
 		function loc_w(req) {
 			var the_warnings=JSON.decode(req.responseText);
-			var the_count = the_warnings[0]
+			var the_count = the_warnings[0];
 			if(the_count != 0) {
 				alert("There is at least one location nearby with a warning registered for it\r\nPlease view the Ticket to see the warnings");
 				document.add.submit();
@@ -1428,7 +1428,7 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 ?>		
 		if (theForm.frm_contact.value == "")		{errmsg+= "\tReported-by is required\n";}
 		if (theForm.frm_scope.value == "")			{errmsg+= "\tIncident name is required\n";}
-//		if (theForm.frm_description.value == "")	{errmsg+= "\tSynopsis is required\n";}
+//		if (theForm.frm_description.value == "")	{errmsg+= "\t<?php print get_text("Synopsis");?> is required\n";}
 //		theForm.frm_lat.disabled=false;														// 9/9/08
 <?php
 	if (($gmaps) && (!($in_win))) {
