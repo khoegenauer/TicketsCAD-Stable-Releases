@@ -643,8 +643,14 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 <?php
 	if (($gmaps) && (!($in_win))) {
 		$api_key = get_variable('gmaps_api_key');
+		$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : "";
+	if((array_key_exists('HTTPS', $_SERVER)) && ($_SERVER['HTTPS'] == 'on')) {
+		$gmaps_url =  "https://maps.google.com/maps/api/js?" . $key_str . "sensor=false";
+		} else {
+		$gmaps_url =  "http://maps.google.com/maps/api/js?" . $key_str . "sensor=false";
+		}
 ?>	
-<SCRIPT TYPE="text/javascript" SRC="http://maps.google.com/maps/api/js?sensor=false"></SCRIPT>
+<SCRIPT TYPE="text/javascript" SRC="<?php print $gmaps_url;?>"></SCRIPT>
 <SCRIPT SRC="./js/graticule_V3.js" type="text/javascript"></SCRIPT>
 <?php
 		}
@@ -1360,6 +1366,7 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 <?php
 	}				// end if ($gmaps)  -  6/4/2013
 ?>
+
 	var tbd_str = "TBD";									// 1/11/09
 	var user_inc_name = false;							// 4/21/10
 	function do_inc_name(str, indx) {								// 10/4/08, 7/7/09

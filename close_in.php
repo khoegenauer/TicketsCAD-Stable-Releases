@@ -16,7 +16,6 @@ error_reporting(E_ALL);
 require_once('incs/functions.inc.php');		//7/28/10
 
 if($istest) {
-//	dump(basename(__FILE__));
 	print "GET<br />\n";
 	dump($_GET);
 	print "POST<br />\n";
@@ -298,9 +297,6 @@ function do_is_start($in_row) {				// 3/22/10
 				}
 			}		// end foreach () ...
 
-
-		
-
 		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE `id` = " . quote_smart($_POST['frm_ticket_id'])  ." LIMIT 1";
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
 		$row = mysql_fetch_assoc($result);
@@ -323,10 +319,6 @@ function do_is_start($in_row) {				// 3/22/10
 				}			// end function do notify()
 			
 			function handleResult(req) {				// the 'called-back' function
-<?php
-
-			if($istest) {print "\t\t\talert('HTTP error ' + req.status + '" . __LINE__ . "');\n";}
-?>
 			}
 
 			function sendRequest(url,callback,postData) {
@@ -339,9 +331,6 @@ function do_is_start($in_row) {				// 3/22/10
 				req.onreadystatechange = function () {
 					if (req.readyState != 4) return;
 					if (req.status != 200 && req.status != 304) {
-<?php
-				if($istest) {print "\t\t\talert('HTTP error ' + req.status + '" . __LINE__ . "');\n";}
-?>
 						return;
 						}
 					callback(req);

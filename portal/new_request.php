@@ -65,7 +65,7 @@ body {overflow:hidden}
 </style>
 <SCRIPT SRC="../js/misc_function.js" TYPE="text/javascript"></SCRIPT>
 <SCRIPT TYPE="text/javascript" SRC="../js/domready.js"></script>
-<SCRIPT TYPE="text/javascript" src="http://maps.google.com/maps/api/js?<?php echo $key_str;?>&libraries=geometry,weather&sensor=false"></SCRIPT>
+<SCRIPT TYPE="text/javascript" src="http://maps.google.com/maps/api/js?<?php echo $key_str;?>libraries=geometry,weather&sensor=false"></SCRIPT>
 <SCRIPT>
 var randomnumber;
 var the_string;
@@ -200,6 +200,7 @@ function sub_request() {
 		theAddAddress += "\r\n";
 		}
 	var err_msg = "";
+	var appEmail = theForm.frm_app_email.value;
 	var street = theForm.frm_street.value;
 	var city = theForm.frm_city.value;
 	var postcode = theForm.frm_postcode.value;
@@ -291,6 +292,7 @@ function sub_request() {
 			theLat = theForm.frm_lat.value;
 			theLng = theForm.frm_lng.value
 			var params = "frm_street=" + street;
+			params += "&frm_app_email=" + appEmail
 			params += "&frm_city=" + city;
 			params += "&frm_postcode=" + postcode;			
 			params += "&frm_state=" + state;
@@ -513,6 +515,9 @@ $orig_fac_menu .= "<SELECT>";
 					</TR>							
 					<TR class='even'>	
 						<TD class='td_label' style='text-align: left;' TITLE='Your name as the service approver'><?php print get_text('Approver');?>:&nbsp;<FONT COLOR='RED' SIZE='-1'>*</FONT></TD><TD class='td_data' style='text-align: left;'><INPUT NAME='frm_approver' TYPE='TEXT' SIZE='24' MAXLENGTH='64' VALUE=""></TD>
+					</TR>
+					<TR class='even'>	
+						<TD class='td_label' style='text-align: left;' TITLE='Your contact email, all updates will be provided to this address'><?php print get_text('Your Email');?>:</TD><TD class='td_data' style='text-align: left;'><INPUT NAME='frm_app_email' TYPE='TEXT' SIZE='24' MAXLENGTH='64' VALUE=""></TD>
 					</TR>
 					<TR class='odd'>	
 						<TD class='td_label' style='text-align: left;' TITLE='When job is required'>When Required:&nbsp;<FONT COLOR='RED' SIZE='-1'>*</FONT></TD><TD class='td_data' style='text-align: left;'><?php print generate_dateonly_dropdown('request_date',0,FALSE);?></TD>

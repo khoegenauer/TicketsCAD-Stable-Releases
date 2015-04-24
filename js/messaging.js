@@ -10,7 +10,6 @@ var the_selected_ticket = "";
 var the_ticket = "";
 var responder_id = "";
 var datewidth = "8%";
-var msgs_interval = 0;
 var the_filter = "";
 var theTicket;
 var theResponder;
@@ -20,9 +19,9 @@ var theOrder = "DESC";
 var theScreen;
 var thescreen;
 var theStatus;
-var msgs_interval = "";
-var sentmsgs_interval = "";
-var the_messages = "";
+var msgs_interval = false;
+var sentmsgs_interval = false;
+var all_msgs_interval = false;
 var folder = "";
 
 // Browser Window Size and Position
@@ -485,6 +484,10 @@ function startup() {
 	}
 	
 function get_arch_messagelist(ticket_id, responder_id, sortby, sort, filter, thescreen, archive) {
+	window.clearInterval(msgs_interval);
+	window.clearInterval(all_msgs_interval);
+	window.clearInterval(sentmsgs_interval);
+	$('message_list').innerHTML = "Loading Messages............";
 	if((sortby == '`ticket_id`') || (sortby == 'ticket_id')) {
 		theSort = 'ticket_id';
 		} else if((sortby == '`msg_type`') || (sortby == 'msg_type')) { 
@@ -532,7 +535,7 @@ function get_arch_messagelist(ticket_id, responder_id, sortby, sort, filter, the
 	var url ='./ajax/list_arch_msgs.php?filename='+archive+'&sort='+theSort+'&columns='+columns+'&way='+theOrder+thefilter+the_selected_ticket+the_selected_responder + "&screen=" + theScreen + "&version=" + randomnumber;
 	sendRequest (url, arch_mess_cb, "");
 	function arch_mess_cb(req) {
-		the_messages=JSON.decode(req.responseText);
+		var the_messages=JSON.decode(req.responseText);
 		var theClass = "background-color: #CECECE";
 		for(var key in the_messages) {
 			if(the_messages[key][0] == "No Messages") {
@@ -570,45 +573,63 @@ function get_arch_messagelist(ticket_id, responder_id, sortby, sort, filter, the
 				}
 			}
 			the_string += "</TABLE>";
-			$('message_list').innerHTML = "Loading Messages............";
 			setTimeout(function() {$('message_list').innerHTML = the_string;},1000);
 		}
 	}		
 	
+function get_message_totals() {
+	var randomnumber=Math.floor(Math.random()*99999999);
+	var url ='./ajax/list_message_totals.php?version=' + randomnumber;
+	sendRequest (url, msg_tots_cb, "");
+	function msg_tots_cb(req) {
+		var the_message_totals=JSON.decode(req.responseText);
+			var new_in = the_message_totals[0][0];
+			var new_out = the_message_totals[0][1];
+			$('inbox_new').innerHTML = "(" + new_in + ")";
+			$('sent_new').innerHTML = "(" + new_out + ")";
+		}
+	}			
+	
 function get_main_messagelist(ticket_id, responder_id, sortby, sort, filter, thescreen) {
 	window.clearInterval(msgs_interval);
+	window.clearInterval(all_msgs_interval);
 	window.clearInterval(sentmsgs_interval);
+	$('message_list').innerHTML = "Loading Messages............";
 	theTicket = ticket_id;
 	theResponder = responder_id;
 	theSort = sortby;
 	theOrder = sort;
+	theOrder = sort;
 	theFilter = filter;
 	theScreen = thescreen;
 	folder = "inbox";
+	var the_string = "";	
+	var randomnumber=Math.floor(Math.random()*99999999);
+	var theSortstring = (theSort) ? "sort=" + theSort : "sort=`date`";
+	var theScreenstring = (theScreen) ? "&screen=" + theScreen : "";	
 	if(theScreen == "ticket") {
 		datewidth = "10%";
 		}
-	var the_string = "";	
-	var randomnumber=Math.floor(Math.random()*99999999);
-	if((theTicket != "") && (theTicket != 0)) { 
+	if((theTicket) && (theTicket != "") && (theTicket != 0)) { 
 		the_selected_ticket = "&ticket_id=" + theTicket;
 		} else {
 		the_selected_ticket = "";
 		}
-	if((theResponder != "") && (theResponder != 0)) { 
+	if((theResponder) && (theResponder != "") && (theResponder != 0)) { 
 		the_selected_responder = "&responder_id=" + theResponder;
 		} else {
 		the_selected_responder = "";
 		}		
-	if(theFilter != "") {
+	if((theFilter) && (theFilter != "")) {
 		thefilter = "&filter=" + theFilter;
 		} else {
 		thefilter = "";
 		}
-	var url ='./ajax/list_messages.php?sort='+theSort+'&columns='+columns+'&way='+theOrder+thefilter+the_selected_ticket+the_selected_responder + "&screen=" + theScreen + "&version=" + randomnumber;
+	var url ='./ajax/list_messages.php?'+theSortstring+'&columns='+columns+'&way='+theOrder+thefilter+the_selected_ticket+the_selected_responder+theScreenstring+"&version=" + randomnumber;
 	sendRequest (url, main_mess_cb, "");
 	function main_mess_cb(req) {
-		the_messages=JSON.decode(req.responseText);
+		var theNew = 0;
+		var the_messages=JSON.decode(req.responseText);
 		var theClass = "background-color: #CECECE";
 		for(var key in the_messages) {
 			if(the_messages[key][0] == "No Messages") {
@@ -621,6 +642,7 @@ function get_main_messagelist(ticket_id, responder_id, sortby, sort, filter, the
 				if(the_record_id) {	
 					if(the_messages[key][9] == 0) {
 						theStatus = "font-weight: bold; font-style: normal;";
+						theNew++;
 						} else {
 						theStatus = "font-weight: normal; font-style: normal;";
 						}
@@ -673,9 +695,9 @@ function get_main_messagelist(ticket_id, responder_id, sortby, sort, filter, the
 				}
 			}
 			the_string += "</TABLE>";
-			$('message_list').innerHTML = "Loading Messages............";
-			setTimeout(function() {$('message_list').innerHTML = the_string;},1000);
-			main_messagelist_get(theTicket, theResponder, theSort, theOrder, theFilter, theScreen);			
+			get_message_totals();
+			setTimeout(function() {$('message_list').innerHTML = the_string;},2000);
+			setTimeout(function() {main_messagelist_get(theTicket, theResponder, theSort, theOrder, theFilter, theScreen);},60000);	
 		}
 	}		
 	
@@ -691,32 +713,36 @@ function main_messagelist_get(ticket_id, responder_id, sortby, sort, filter, the
 	
 function do_main_msgs_loop(ticket_id, responder_id, sortby, sort, filter, thescreen) {
 	folder = "inbox";
-	if(thescreen == "ticket") {
+	$('message_list').innerHTML = "Loading Messages............";
+	var randomnumber=Math.floor(Math.random()*99999999);
+	var theSortstring = (theSort) ? "sort=" + theSort : "sort=`date`";
+	var theScreenstring = (theScreen) ? "&screen=" + theScreen : "";	
+	if(theScreen == "ticket") {
 		datewidth = "10%";
 		}
-	var randomnumber=Math.floor(Math.random()*99999999);
-	if((theTicket != "") && (theTicket != 0)) { 
+	if((theTicket) && (theTicket != "") && (theTicket != 0)) { 
 		the_selected_ticket = "&ticket_id=" + theTicket;
 		} else {
 		the_selected_ticket = "";
 		}
-	if((theResponder != "") && (theResponder != 0)) { 
+	if((theResponder) && (theResponder != "") && (theResponder != 0)) { 
 		the_selected_responder = "&responder_id=" + theResponder;
 		} else {
 		the_selected_responder = "";
 		}		
-	if(theFilter != "") {
+	if((theFilter) && (theFilter != "")) {
 		thefilter = "&filter=" + theFilter;
 		} else {
 		thefilter = "";
 		}
-		var url = './ajax/list_messages.php?sort='+theSort+'&columns='+columns+'&way='+theOrder+thefilter+the_selected_ticket+the_selected_responder + "&screen=" + theScreen + "&version=" + randomnumber;
-	sendRequest (url, main_msg_cb, "");
+	var url = './ajax/list_messages.php?'+theSortstring+'&columns='+columns+'&way='+theOrder+thefilter+the_selected_ticket+the_selected_responder+theScreenstring+"&version=" + randomnumber;
+	sendRequest (url, main_msg_cb2, "");
 	}
 
-function main_msg_cb(req) {
+function main_msg_cb2(req) {
 	var the_string = "";	
-	the_messages=JSON.decode(req.responseText);
+	var theNew = 0
+	var the_messages=JSON.decode(req.responseText);
 	var theClass = "background-color: #CECECE";
 	for(var key in the_messages) {
 		if(the_messages[key][0] == "No Messages") {
@@ -729,6 +755,7 @@ function main_msg_cb(req) {
 			if(the_record_id) {	
 				if(the_messages[key][9] == 0) {
 					theStatus = "font-weight: bold; font-style: normal;";
+					theNew++;
 					} else {
 					theStatus = "font-weight: normal; font-style: normal;";
 					}		
@@ -758,7 +785,7 @@ function main_msg_cb(req) {
 			}
 		}
 		the_string += "</TABLE>";
-		$('message_list').innerHTML = "Loading Messages............";
+		get_message_totals();
 		setTimeout(function() {$('message_list').innerHTML = the_string;},1000);
 	}
 	
@@ -809,13 +836,17 @@ function do_filter(folder) {
 	
 function clear_filter(folder) {
 	if(folder == "inbox") {
+		if(msgs_interval) {
 		get_main_messagelist(theTicket,theResponder,theSort, theOrder,'', theScreen);		
+			}
 		$('the_clear').style.display = "none";	
 		$('filter_box').style.display = "inline";			
 		document.the_filter.frm_filter.value = "";
 		theFilter = "";
 		} else if(folder == "sent") {
+		if(sentmsgs_interval) {
 		get_sent_messagelist(theTicket, theResponder, theSort, theOrder, '', theScreen);
+			}
 		$('the_clear').style.display = "none";	
 		$('filter_box').style.display = "inline";			
 		document.the_filter.frm_filter.value = "";
@@ -833,13 +864,15 @@ function clear_filter(folder) {
 		document.the_filter.frm_filter.value = "";
 		theFilter = "";
 		} else if(folder == "all") {
+		if(all_msgs_interval) {
 		get_all_messagelist(theTicket, theResponder, theSort, theOrder, '', theScreen);
+			}
 		$('the_clear').style.display = "none";	
 		$('filter_box').style.display = "inline";			
 		document.the_filter.frm_filter.value = "";
 		theFilter = "";		
 		} else {	
-		get_main_messagelist(theTicket,theResponder,theSort, theOrder,'', theScreen);		
+//		get_main_messagelist(theTicket,theResponder,theSort, theOrder,'', theScreen);		
 		$('the_clear').style.display = "none";	
 		$('filter_box').style.display = "inline";			
 		document.the_filter.frm_filter.value = "";
@@ -856,13 +889,22 @@ function select_ticket(ticket_id, filter) {
 	}
 	
 function read_status(status, id, thescreen,ticket_id,responder_id) {
+	if((!folder) || (folder == "")) {
+		return false;
+		}
 	var randomnumber=Math.floor(Math.random()*99999999);
-	var url="./ajax/msg_status.php?status=" + status + "&id=" + id + "&version=" + randomnumber;
+	var url="./ajax/msg_status.php?status=" + status + "&id=" + id + "&folder=" + folder + "&version=" + randomnumber;
 	sendRequest (url, msgstat_cb, "");
 	function msgstat_cb(req) {
 		var theresp=JSON.decode(req.responseText);
 		if(theresp[0] == 100) {
+			if(folder == 'inbox') {
+				get_inbox();
+				} else if(folder == 'sent') {
+				get_sent();
+				} else {
 			get_inbox();
+				}
 			} else {
 			}
 		}
@@ -968,7 +1010,9 @@ function restore_msg(id, folder) {
 	
 function get_wastelist(ticket_id, responder_id, sortby, sort, filter, thescreen) {
 	window.clearInterval(msgs_interval);
+	window.clearInterval(all_msgs_interval);
 	window.clearInterval(sentmsgs_interval);
+	$('message_list').innerHTML = "Loading Messages............";
 	var datewidth = "8%";
 	if(screen == "ticket") {
 		datewidth = "10%";
@@ -994,7 +1038,7 @@ function get_wastelist(ticket_id, responder_id, sortby, sort, filter, thescreen)
 	sendRequest (url, waste_mess_cb, "");
 	function waste_mess_cb(req) {
 		var the_string = "";
-		the_messages=JSON.decode(req.responseText);
+		var the_messages=JSON.decode(req.responseText);
 		var theClass = "background-color: #CECECE";
 		var theStatus = "font-weight: normal";
 		for(var key in the_messages) {
@@ -1034,46 +1078,50 @@ function get_wastelist(ticket_id, responder_id, sortby, sort, filter, thescreen)
 				}
 			}
 		the_string += "</TABLE>";
-		$('message_list').innerHTML = "Loading Messages............";
 		setTimeout(function() {$('message_list').innerHTML = the_string;},1000);
 		}
 	}	
 
 function get_sent_messagelist(ticket_id, responder_id, sortby, sort, filter, thescreen) {
-	$('message_list').innerHTML = "";
 	var the_sentstring = "";	
 	window.clearInterval(msgs_interval);
+	window.clearInterval(all_msgs_interval);
 	window.clearInterval(sentmsgs_interval);
+	$('message_list').innerHTML = "";
+	$('message_list').innerHTML = "Loading Messages............";
 	theTicket = ticket_id;
 	theResponder = responder_id;
 	theSort = sortby;
+	var theSortstring = (theSort) ? "sort=" + theSort : "sort=`date`";
 	theOrder = sort;
 	theFilter = filter;
 	theScreen = thescreen;
+	var theScreenstring = (theScreen) ? "&screen=" + theScreen : "";	
 	if(theScreen == "ticket") {
 		datewidth = "10%";
 		}
 	var the_string = "";	
 	var randomnumber=Math.floor(Math.random()*99999999);
-	if((theTicket != "") && (theTicket != 0)) { 
+	if((theTicket) && (theTicket != "") && (theTicket != 0)) { 
 		the_selected_ticket = "&ticket_id=" + theTicket;
 		} else {
 		the_selected_ticket = "";
 		}
-	if((theResponder != "") && (theResponder != 0)) { 
+	if((theResponder) && (theResponder != "") && (theResponder != 0)) { 
 		the_selected_responder = "&responder_id=" + theResponder;
 		} else {
 		the_selected_responder = "";
 		}		
-	if(theFilter != "") {
+	if((theFilter) && (theFilter != "")) {
 		thefilter = "&filter=" + theFilter;
 		} else {
 		thefilter = "";
 		}
-	var url ='./ajax/list_sent_messages.php?sort='+theSort+'&columns='+columns+'&way='+theOrder+thefilter+the_selected_ticket+the_selected_responder + "&screen=" + theScreen + "&version=" + randomnumber;
+	var url ='./ajax/list_sent_messages.php?'+theSortstring+'&columns='+columns+'&way='+theOrder+thefilter+the_selected_ticket+the_selected_responder+theScreenstring+"&version=" + randomnumber;
 	sendRequest (url, sent_mess_cb, "");
 	function sent_mess_cb(req) {
-		the_messages=JSON.decode(req.responseText);
+		var theNew = 0;
+		var the_messages=JSON.decode(req.responseText);
 		var theClass = "background-color: #CECECE";
 		for(var key in the_messages) {
 			if(the_messages[key][0] == "No Messages") {
@@ -1086,6 +1134,7 @@ function get_sent_messagelist(ticket_id, responder_id, sortby, sort, filter, the
 				if(the_record_id) {	
 					if(the_messages[key][9] == 0) {
 						theStatus = "font-weight: bold; font-style: normal;";
+						theNew++;
 						} else {
 						theStatus = "font-weight: normal; font-style: normal;";
 						}
@@ -1137,8 +1186,7 @@ function get_sent_messagelist(ticket_id, responder_id, sortby, sort, filter, the
 				}
 			}
 			the_sentstring += "</TABLE>";
-			$('message_list').innerHTML = "";
-			$('message_list').innerHTML = "Loading Messages............";
+			get_message_totals();
 			setTimeout(function() {$('message_list').innerHTML = the_sentstring ;},1000);
 			sent_messagelist_get(theTicket, theResponder, theSort, theOrder, theFilter, theScreen);			
 		}
@@ -1156,33 +1204,36 @@ function sent_messagelist_get(ticket_id, responder_id, sortby, sort, filter, the
 	
 function do_sent_msgs_loop(ticket_id, responder_id, sortby, sort, filter, thescreen) {
 	folder = "sent";
+	$('message_list').innerHTML = "Loading Messages............";
+	var theSortstring = (theSort) ? "sort=" + theSort : "sort=`date`";
+	var theScreenstring = (theScreen) ? "&screen=" + theScreen : "";	
 	if(thescreen == "ticket") {
 		datewidth = "10%";
 		}
 	var randomnumber=Math.floor(Math.random()*99999999);
-	if((theTicket != "") && (theTicket != 0)) { 
+	if((theTicket) && (theTicket != "") && (theTicket != 0)) { 
 		the_selected_ticket = "&ticket_id=" + theTicket;
 		} else {
 		the_selected_ticket = "";
 		}
-	if((theResponder != "") && (theResponder != 0)) { 
+	if((theResponder) && (theResponder != "") && (theResponder != 0)) { 
 		the_selected_responder = "&responder_id=" + theResponder;
 		} else {
 		the_selected_responder = "";
 		}		
-	if(theFilter != "") {
+	if((theFilter) && (theFilter != "")) {
 		thefilter = "&filter=" + theFilter;
 		} else {
 		thefilter = "";
 		}
-		var url = './ajax/list_sent_messages.php?sort='+theSort+'&columns='+columns+'&way='+theOrder+thefilter+the_selected_ticket+the_selected_responder + "&screen=" + theScreen + "&version=" + randomnumber;
+		var url = './ajax/list_sent_messages.php?sort='+theSort+'&columns='+columns+'&way='+theOrder+thefilter+the_selected_ticket+the_selected_responder+theScreenstring+"&version=" + randomnumber;
 	sendRequest (url, sent_msg_cb2, "");
 	}
 
 function sent_msg_cb2(req) {
-	$('message_list').innerHTML = "";
+	var theNew = 0;
 	var the_sentstring = "";	
-	the_messages=JSON.decode(req.responseText);
+	var the_messages=JSON.decode(req.responseText);
 	var theClass = "background-color: #CECECE";
 	for(var key in the_messages) {
 		if(the_messages[key][0] == "No Messages") {
@@ -1195,6 +1246,7 @@ function sent_msg_cb2(req) {
 			if(the_record_id) {	
 				if(the_messages[key][9] == 0) {
 					theStatus = "font-weight: bold; font-style: normal;";
+					theNew++;
 					} else {
 					theStatus = "font-weight: normal; font-style: normal;";
 					}		
@@ -1224,12 +1276,13 @@ function sent_msg_cb2(req) {
 			}
 		}
 		the_sentstring += "</TABLE>";
-		$('message_list').innerHTML = "Loading Messages............";
-		setTimeout(function() {$('message_list').innerHTML = the_string;},1000);
+		get_message_totals();
+		setTimeout(function() {$('message_list').innerHTML = the_sentstring;},1000);
 	}
 	
 function get_all_messagelist(ticket_id, responder_id, sortby, sort, filter, thescreen) {
-	folder="all"
+	folder="all";
+	window.clearInterval(all_msgs_interval);
 	window.clearInterval(msgs_interval);
 	window.clearInterval(sentmsgs_interval);
 	theTicket = ticket_id;
@@ -1261,7 +1314,7 @@ function get_all_messagelist(ticket_id, responder_id, sortby, sort, filter, thes
 	var url ='./ajax/list_all_messages.php?sort='+theSort+'&columns='+columns+'&way='+theOrder+thefilter+the_selected_ticket+the_selected_responder + "&screen=" + theScreen + "&version=" + randomnumber;
 	sendRequest (url, all_mess_cb, "");
 	function all_mess_cb(req) {
-		the_messages=JSON.decode(req.responseText);
+		var the_messages=JSON.decode(req.responseText);
 		var theClass = "background-color: #CECECE";
 		for(var key in the_messages) {
 			if(the_messages[key][0] == "No Messages") {
@@ -1332,7 +1385,7 @@ function all_messagelist_get(ticket_id, responder_id, sortby, sort, filter, thes
 	theOrder = sort;
 	theFilter = filter;
 	theScreen = thescreen;
-	msgs_interval = window.setInterval('do_all_msgs_loop(\''+theTicket+'\',\''+theResponder+'\',\''+theSort+'\',\''+theOrder+'\',\''+theFilter+'\',\''+theScreen+'\')', 60000);
+	all_msgs_interval = window.setInterval('do_all_msgs_loop(\''+theTicket+'\',\''+theResponder+'\',\''+theSort+'\',\''+theOrder+'\',\''+theFilter+'\',\''+theScreen+'\')', 60000);
 	}	
 	
 function do_all_msgs_loop(ticket_id, responder_id, sortby, sort, filter, thescreen) {
@@ -1363,7 +1416,7 @@ function do_all_msgs_loop(ticket_id, responder_id, sortby, sort, filter, thescre
 function all_msg_cb(req) {
 	folder="all";
 	var the_string = "";	
-	the_messages=JSON.decode(req.responseText);
+	var the_messages=JSON.decode(req.responseText);
 	var theClass = "background-color: #CECECE";
 	for(var key in the_messages) {
 		if(the_messages[key][0] == "No Messages") {

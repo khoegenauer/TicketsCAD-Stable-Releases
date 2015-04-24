@@ -123,8 +123,16 @@ function do_glat_test($user) {				// given user id,  returns Google Latitude id,
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
     <title>Google Maps JavaScript API Example: Simple Map</title>
-    <script src="http://maps.google.com/maps?file=api&amp;v=2&amp;sensor=false&amp;key=<?php print $api_key;?>"
-            type="text/javascript"></script>
+<?php
+	$api_key = trim(get_variable('gmaps_api_key'));
+	$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : "";
+	if((array_key_exists('HTTPS', $_SERVER)) && ($_SERVER['HTTPS'] == 'on')) {
+		$gmaps_url =  "https://maps.google.com/maps/api/js?" . $key_str . "libraries=geometry,weather&sensor=false";
+		} else {
+		$gmaps_url =  "http://maps.google.com/maps/api/js?" . $key_str . "libraries=geometry,weather&sensor=false";
+		}
+?>
+	<SCRIPT TYPE="text/javascript" src="<?php print $gmaps_url;?>"></SCRIPT>
     <script type="text/javascript">
 
     function initialize() {

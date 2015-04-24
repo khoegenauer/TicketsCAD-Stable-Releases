@@ -43,12 +43,14 @@ function get_facname($id) {
 	return $the_ret;
 	}
 
-$theDetails = get_requester_details($_SESSION['user_id']);
-$the_email = $theDetails[0];
 if($_GET['frm_patient'] == "") {
 	$ret_arr[0] = 999;
 	} else {
+	$theDetails = get_requester_details($_SESSION['user_id']);
+	$userEmail = $theDetails[0];
 	$now = mysql_format_date(time() - (intval(get_variable('delta_mins')*60))); // 6/20/10
+	$appEmail = ($_GET['frm_app_email'] != "") ? $_GET['frm_app_email'] : NULL;
+	$the_email = (($appEmail != NULL) && (is_email($appEmail))) ? $appEmail : $theDetails[0];
 	$where = $_SERVER['REMOTE_ADDR'];
 	$scope = $_GET['frm_scope'];
 	$comments = $_GET['frm_comments'];
@@ -73,6 +75,7 @@ if($_GET['frm_patient'] == "") {
 	$query = "INSERT INTO `$GLOBALS[mysql_prefix]requests` (
 				`org`,
 				`contact`, 
+				`email`,
 				`street`, 
 				`city`, 
 				`postcode`,
@@ -103,6 +106,7 @@ if($_GET['frm_patient'] == "") {
 				) VALUES (
 				" . 0 . ",
 				'" . addslashes($userName) . "',
+				'" . addslashes($appEmail) . "',
 				'" . addslashes($street) . "',	
 				'" . addslashes($city) . "',	
 				'" . addslashes($postcode) . "',	
@@ -168,6 +172,14 @@ if($_GET['frm_patient'] == "") {
 			$text_str .= "Request Summary\n\n" . $the_summary;
 			do_send ($to_str, $smsg_to_str, $subject_str, $text_str, 0, 0);	
 			}				// end if/else ($the_email)	
+		if ($userEmail != "") {				// any addresses?
+			$to_str = $userEmail;
+			$smsg_to_str = "";
+			$subject_str = "Your request " . $scope . " has been registered";
+			$text_str = "Your Request " . $scope . " has been registered\r\n"; 
+			$text_str .= "Request Summary\n\n" . $the_summary;
+			do_send ($to_str, $smsg_to_str, $subject_str, $text_str, 0, 0);	
+			}				// end if/else ($userEmail)	
 		$ret_arr[0] = 100;
 		} else {
 		$ret_arr[0] = 999;

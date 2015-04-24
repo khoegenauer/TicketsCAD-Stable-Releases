@@ -143,6 +143,7 @@ $the_resp_id = (isset($_GET['id']))? $_GET['id']: 0;	//	11/18/13
 9/10/13 Added Unit Log functions
 11/18/13 Fix to include previously removed (in error) messaging code
 11/18/13 Fixed extra spurious assigned count at top of units list.
+1/30/14 Added tracking for APRS via XASTIR.
 */
 
 @session_start();	
@@ -255,8 +256,13 @@ function get_user_details($rosterID) {	//	9/6/13
 <?php
 $api_key = trim(get_variable('gmaps_api_key'));
 $key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : "";
+if((array_key_exists('HTTPS', $_SERVER)) && ($_SERVER['HTTPS'] == 'on')) {
+	$gmaps_url =  "https://maps.google.com/maps/api/js?" . $key_str . "libraries=geometry,weather&sensor=false";
+	} else {
+	$gmaps_url =  "http://maps.google.com/maps/api/js?" . $key_str . "libraries=geometry,weather&sensor=false";
+	}
 ?>
-	<SCRIPT TYPE="text/javascript" src="http://maps.google.com/maps/api/js?<?php echo $key_str;?>&libraries=geometry,weather&sensor=false"></SCRIPT>
+	<SCRIPT TYPE="text/javascript" src="<?php print $gmaps_url;?>"></SCRIPT>
 	<SCRIPT  SRC="./js/usng.js" TYPE="text/javascript"></SCRIPT>	<!-- 8/23/08 -->
 	<SCRIPT  SRC="./js/lat_lng.js" TYPE="text/javascript"></SCRIPT>	<!-- 11/8/11 -->
 	<SCRIPT  SRC="./js/geotools2.js" TYPE="text/javascript"></SCRIPT>	<!-- 11/8/11 -->
@@ -1387,7 +1393,7 @@ $key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : "";
 
 	var track_captions = ["", "Callsign", "Device key", "Userid ", "Userid ", "Badge", "Device", "Userid", "Automatic"];	//	9/6/13
 	function do_tracking(theForm, theVal) {							// 7/10/09, 7/24/09 added specific code to switch off unselected,
-		theForm.frm_aprs.value=theForm.frm_instam.value=theForm.frm_locatea.value=theForm.frm_gtrack.value= theForm.frm_glat.value= theForm.frm_ogts.value = theForm.frm_t_tracker.value = theForm.frm_mob_tracker = 0;		//	 9/6/13
+		theForm.frm_aprs.value=theForm.frm_instam.value=theForm.frm_locatea.value=theForm.frm_gtrack.value=theForm.frm_glat.value=theForm.frm_ogts.value=theForm.frm_t_tracker.value=theForm.frm_mob_tracker.value=theForm.frm_xastir_tracker.value=0;		//	 9/6/13
 		switch(parseInt(theVal)) {
 			case <?php print $GLOBALS['TRACK_NONE'];?>:		 break;
 			case <?php print $GLOBALS['TRACK_APRS'];?>:		 theForm.frm_aprs.value=1;	 break;
@@ -1398,6 +1404,7 @@ $key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : "";
 			case <?php print $GLOBALS['TRACK_T_TRACKER'];?>:	theForm.frm_t_tracker.value=1;	break;
 			case <?php print $GLOBALS['TRACK_OGTS'];?>:		 theForm.frm_ogts.value=1;	 break;
 			case <?php print $GLOBALS['TRACK_MOBILE'];?>:	 theForm.frm_mob_tracker.value=1;	 break;	//	9/6/13
+			case <?php print $GLOBALS['TRACK_XASTIR'];?>:	 theForm.frm_xastir_tracker.value=1;	 break;	//	1/30/14
 			default:  alert("error <?php print __LINE__;?>");
 			}		// end switch()
 		}				// end function do tracking()
@@ -2632,7 +2639,7 @@ function map($mode, $lat, $lng, $icon) {						// Responder add, edit, view 9/2/1
 ?>
 		var the_zoom = <?php print get_variable('def_zoom');?>;
 
-		var is_mobile = ((document.forms[0].frm_mobile.value==1) && ((document.forms[0].frm_aprs.value==1) || (document.forms[0].frm_instam.value==1) || (document.forms[0].frm_locatea.value==1) || (document.forms[0].frm_gtrack.value==1) || (document.forms[0].frm_glat.value==1) || (document.forms[0].frm_ogts.value==1) || (document.forms[0].frm_t_tracker.value==1) || (document.forms[0].frm_mob_tracker.value==1)));	//	9/6/13
+		var is_mobile = ((document.forms[0].frm_mobile.value==1) && ((document.forms[0].frm_aprs.value==1) || (document.forms[0].frm_instam.value==1) || (document.forms[0].frm_locatea.value==1) || (document.forms[0].frm_gtrack.value==1) || (document.forms[0].frm_glat.value==1) || (document.forms[0].frm_ogts.value==1) || (document.forms[0].frm_t_tracker.value==1) || (document.forms[0].frm_mob_tracker.value==1) || (document.forms[0].frm_xastir_tracker.value==1)));	//	9/6/13
 		if ((mode=="a") || (mode=="e")){
 	//		marker = new google.maps.Marker({position: myLatlng, map: map, icon: icon_file, draggable: true});
 
@@ -2919,7 +2926,7 @@ function orig_map($mode, $lat, $lng, $icon) {						// Responder add, edit, view 
 	var the_zoom = <?php print get_variable('def_zoom');?>;
 
 //	map.enableScrollWheelZoom();
-	var is_mobile = ((document.forms[0].frm_mobile.value==1) && ((document.forms[0].frm_aprs.value==1) || (document.forms[0].frm_instam.value==1) || (document.forms[0].frm_locatea.value==1) || (document.forms[0].frm_gtrack.value==1) || (document.forms[0].frm_glat.value==1) || (document.forms[0].frm_ogts.value==1) || (document.forms[0].frm_t_tracker.value==1) || (document.forms[0].frm_mob_tracker.value==1)));	//	 9/6/13
+	var is_mobile = ((document.forms[0].frm_mobile.value==1) && ((document.forms[0].frm_aprs.value==1) || (document.forms[0].frm_instam.value==1) || (document.forms[0].frm_locatea.value==1) || (document.forms[0].frm_gtrack.value==1) || (document.forms[0].frm_glat.value==1) || (document.forms[0].frm_ogts.value==1) || (document.forms[0].frm_t_tracker.value==1) || (document.forms[0].frm_mob_tracker.value==1) || (document.forms[0].frm_xastir_tracker.value==1)));	//	 9/6/13
 	if ((mode=="a") || (mode=="e")){
 		marker = new google.maps.Marker({position: latlng, map: map, draggable: true});
 
@@ -3051,6 +3058,7 @@ function orig_map($mode, $lat, $lng, $icon) {						// Responder add, edit, view 
 				`t_tracker`= " . 		quote_smart(trim($_POST['frm_t_tracker'])) . ",	
 				`ogts`= " . 		quote_smart(trim($_POST['frm_ogts'])) . ",
 				`mob_tracker`= " . 	quote_smart(trim($_POST['frm_mob_tracker'])) . ",
+				`xastir_tracker`= " . 	quote_smart(trim($_POST['frm_xastir_tracker'])) . ",
 				`ring_fence`= " . 		quote_smart(trim($_POST['frm_ringfence'])) . ",		
 				`excl_zone`= " . 		quote_smart(trim($_POST['frm_excl_zone'])) . ",						
 				`direcs`= " . 		quote_smart(trim($_POST['frm_direcs'])) . ",
@@ -3063,8 +3071,7 @@ function orig_map($mode, $lat, $lng, $icon) {						// Responder add, edit, view 
 				`user_id`= " . 		quote_smart(trim($_SESSION['user_id'])) . ",
 				`updated`= " . 		quote_smart(trim($now)) . ",
 				`status_updated`= '" . $status_updated . "'
-				WHERE `id`= " . 	quote_smart(trim($_POST['frm_id'])) . ";";	//	5/11/11 added internal Tickets tracker, 6/21/13 added field status_updated for auto status function. 9/6/13, 11/18/13
-
+				WHERE `id`= " . 	quote_smart(trim($_POST['frm_id'])) . ";";	//	5/11/11 added internal Tickets tracker, 6/21/13 added field status_updated for auto status function. 9/6/13, 11/18/13, 1/30/14 added xastir tracker
 			$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(),basename( __FILE__), __LINE__);
 			if (!empty($_POST['frm_log_it'])) { do_log($GLOBALS['LOG_UNIT_STATUS'], 0, $_POST['frm_id'], $_POST['frm_un_status_id']);}	// 6/2/08
 			
@@ -3106,11 +3113,12 @@ function orig_map($mode, $lat, $lng, $icon) {						// Responder add, edit, view 
 		$t_tracker = (empty($_POST['frm_t_tracker']))? 		0: quote_smart(trim($_POST['frm_t_tracker'])) ;	//	5/11/11
 		$ogts = 	(empty($_POST['frm_ogts']))? 		0: quote_smart(trim($_POST['frm_ogts'])) ;
 		$mob_tracker = 	(empty($_POST['frm_mob_tracker']))? 		0: quote_smart(trim($_POST['frm_mob_tracker'])) ;	//	9/6/13
+		$xastir_tracker = 	(empty($_POST['frm_xastir_tracker']))? 		0: quote_smart(trim($_POST['frm_xastir_tracker'])) ;	//	1/30/14
 		$now = mysql_format_date(time() - (get_variable('delta_mins')*60));							// 1/27/09
 
 		$query = "INSERT INTO `$GLOBALS[mysql_prefix]responder` (
 			`roster_user`, `name`, `street`, `city`, `state`, `phone`, `handle`, `icon_str`, `description`, `capab`, `un_status_id`, `status_about`, `callsign`, `mobile`, `multi`, `aprs`, 
-			`instam`, `locatea`, `gtrack`, `glat`, `t_tracker`, `ogts`, `mob_tracker`, `ring_fence`, `excl_zone`, `direcs`, `contact_name`, `contact_via`, `smsg_id`, `lat`, `lng`, `type`, `user_id`, `updated`, `status_updated` )
+			`instam`, `locatea`, `gtrack`, `glat`, `t_tracker`, `ogts`, `mob_tracker`, `xastir_tracker`, `ring_fence`, `excl_zone`, `direcs`, `contact_name`, `contact_via`, `smsg_id`, `lat`, `lng`, `type`, `user_id`, `updated`, `status_updated` )
 			VALUES (" .
 				quote_smart(trim($_POST['frm_roster_id'])) . "," .
 				quote_smart(trim($_POST['frm_name'])) . "," .
@@ -3135,6 +3143,7 @@ function orig_map($mode, $lat, $lng, $icon) {						// Responder add, edit, view 
 				quote_smart(trim($_POST['frm_t_tracker'])) . "," .	
 				quote_smart(trim($_POST['frm_ogts'])) . "," .
 				quote_smart(trim($_POST['frm_mob_tracker'])) . "," .
+				quote_smart(trim($_POST['frm_xastir_tracker'])) . "," .
 				quote_smart(trim($_POST['frm_ringfence'])) . "," .	
 				quote_smart(trim($_POST['frm_excl_zone'])) . "," .					
 				quote_smart(trim($_POST['frm_direcs'])) . "," .
@@ -3373,6 +3382,7 @@ function orig_map($mode, $lat, $lng, $icon) {						// Responder add, edit, view 
 					<OPTION VALUE='<?php print $GLOBALS['TRACK_T_TRACKER'];?>'>Tickets Tracker</OPTION>					
 					<OPTION VALUE='<?php print $GLOBALS['TRACK_OGTS'];?>'>OpenGTS</OPTION>
 					<OPTION VALUE='<?php print $GLOBALS['TRACK_MOBILE'];?>'>Mobile Tracking</OPTION>	<!-- 9/6/13 -->
+					<OPTION VALUE='<?php print $GLOBALS['TRACK_XASTIR'];?>'>Xastir</OPTION>	<!-- 9/6/13 -->
 					</SELECT>&nbsp;&nbsp;
 <SCRIPT>				
 				var track_info = "APRS:   callsign\nInstamapper:   Device key\nLocateA:   Userid\nGtrack:   Userid\nLatitude:   Badge\nOpenGTS:   Device\nMobile Tracking: automatic\n";
@@ -3514,6 +3524,7 @@ function orig_map($mode, $lat, $lng, $icon) {						// Responder add, edit, view 
 		<INPUT TYPE='hidden' NAME = 'frm_t_tracker' VALUE=0 />	  <!-- 5/11/11 -->	
 		<INPUT TYPE='hidden' NAME = 'frm_ogts' VALUE=0 />	<!-- 7/6/11 -->
 		<INPUT TYPE='hidden' NAME = 'frm_mob_tracker' VALUE=0 />	<!-- 9/6/13 -->
+		<INPUT TYPE='hidden' NAME = 'frm_xastir_tracker' VALUE=0 />	<!-- 1/30/14 -->
 		<INPUT TYPE='hidden' NAME = 'frm_direcs' VALUE=1 />  <!-- note default -->
 		</FORM></TABLE> <!-- end inner left -->
 		</TD><TD ALIGN='center'>
@@ -3588,9 +3599,10 @@ function orig_map($mode, $lat, $lng, $icon) {						// Responder add, edit, view 
 			the_Form.frm_ogts.value = <?php echo $row['ogts'];?>;
 			the_Form.frm_t_tracker.value = <?php echo $row['t_tracker'];?>;			
 			the_Form.frm_mob_tracker.value = <?php echo $row['mob_tracker'];?>;				//	9/6/13
+			the_Form.frm_xastir_tracker.value = <?php echo $row['xastir_tracker'];?>;				//	9/6/13
 			}		// end function track reset()
 			
-	var track_captions = ["", "Callsign&nbsp;&raquo;", "Device key&nbsp;&raquo;", "Userid&nbsp;&raquo;", "Userid&nbsp;&raquo;", "Badge&nbsp;&raquo;", "Device&nbsp;&raquo;", "Userid&nbsp;&raquo;","Automatic&nbsp;&raquo;"];	//	 9/6/13
+	var track_captions = ["", "Callsign&nbsp;&raquo;", "Device key&nbsp;&raquo;", "Userid&nbsp;&raquo;", "Userid&nbsp;&raquo;", "Badge&nbsp;&raquo;", "Device&nbsp;&raquo;", "Userid&nbsp;&raquo;","Automatic&nbsp;&raquo;","Callsign&nbsp;&raquo;"];	//	 9/6/13
 </SCRIPT>
 		</HEAD>
 		<BODY onLoad = "ck_frames(); get_files();" > <!-- 2825 edit-->
@@ -3690,10 +3702,11 @@ function orig_map($mode, $lat, $lng, $icon) {						// Responder add, edit, view 
 	print "<OPTION VALUE={$GLOBALS['TRACK_OGTS']} 		{$selects[$GLOBALS['TRACK_OGTS']]} > 	{$GLOBALS['TRACK_NAMES'][$GLOBALS['TRACK_OGTS']]} </OPTION>";
 	print "<OPTION VALUE={$GLOBALS['TRACK_T_TRACKER']} 		{$selects[$GLOBALS['TRACK_T_TRACKER']]} > 	{$GLOBALS['TRACK_NAMES'][$GLOBALS['TRACK_T_TRACKER']]} </OPTION>";	
 	print "<OPTION VALUE={$GLOBALS['TRACK_MOBILE']} 	{$selects[$GLOBALS['TRACK_MOBILE']]} > 	{$GLOBALS['TRACK_NAMES'][$GLOBALS['TRACK_MOBILE']]} </OPTION>";		//	9/6/13
+	print "<OPTION VALUE={$GLOBALS['TRACK_XASTIR']} 	{$selects[$GLOBALS['TRACK_XASTIR']]} > 	{$GLOBALS['TRACK_NAMES'][$GLOBALS['TRACK_XASTIR']]} </OPTION>";		//	1/30/14
 ?>
 					</SELECT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <SCRIPT>				
-				var track_info = "APRS:   callsign\nInstamapper:   Device key\nLocateA:   Userid\nGtrack:   Userid\nLatitude:   Badge\nOpenGTS:   Device\nMobile Tracker:    Automatic\n";	//	9/6/13
+				var track_info = "APRS:   callsign\nInstamapper:   Device key\nLocateA:   Userid\nGtrack:   Userid\nLatitude:   Badge\nOpenGTS:   Device\nMobile Tracker:    Automatic\nXastir:    Callsign\n";	//	9/6/13
 </SCRIPT>
 				<INPUT TYPE = 'button' onClick = alert(track_info) value="?">&nbsp;&raquo;&nbsp;
 					
@@ -3862,6 +3875,7 @@ function orig_map($mode, $lat, $lng, $icon) {						// Responder add, edit, view 
 		<INPUT TYPE="hidden" NAME = "frm_t_tracker" VALUE=<?php print $row['t_tracker'] ;?> />	 <!-- 5/11/11 -->	
 		<INPUT TYPE="hidden" NAME = "frm_ogts" VALUE=<?php print $row['ogts'] ;?> />
 		<INPUT TYPE="hidden" NAME = "frm_mob_tracker" VALUE=<?php print $row['mob_tracker'] ;?> />	 <!-- 9/6/13 -->
+		<INPUT TYPE="hidden" NAME = "frm_xastir_tracker" VALUE=<?php print $row['xastir_tracker'] ;?> />	 <!-- 1/30/14 -->
 		<INPUT TYPE="hidden" NAME = "frm_direcs" VALUE=<?php print $row['direcs'] ;?> />
 		<INPUT TYPE="hidden" NAME="frm_exist_groups" VALUE="<?php print (isset($alloc_groups)) ? $alloc_groups : 1;?>">	 <!-- 6/10/11 -->
 		<INPUT TYPE="hidden" NAME = "frm_status_updated" VALUE="<?php print $row['status_updated'] ;?>" />	 <!-- 6/21/13 -->		

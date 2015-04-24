@@ -1848,7 +1848,7 @@ setTimeout('do_post()', 1000);
 			`u2fenr` AS `u2fenr`, 
 			`u2farr` AS `u2farr`, 
 			`clear` AS `clear`,  
-			`problemstart`) AS `problemstart`,  
+			`problemstart` AS `problemstart`,  
 			`$GLOBALS[mysql_prefix]assigns`.`id` AS `assign_id` , 
 			`$GLOBALS[mysql_prefix]assigns`.`comments` AS `assign_comments`,
 			`u`.`user` AS `theuser`,
