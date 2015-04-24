@@ -1,6 +1,7 @@
 <?php
 /*
 1/3/14 - new file, lists road condition alerts for plotting on situation screen map
+3/31/2015 - corrected field-name in initial sql 'on' clause
 */
 @session_start();
 require_once('../incs/functions.inc.php');
@@ -19,7 +20,7 @@ $query = "SELECT *,
 		`c`.`icon`AS `icon_url`,
 		`r`.`_on` AS `updated`
 		FROM `$GLOBALS[mysql_prefix]roadinfo` `r` 
-		LEFT JOIN `$GLOBALS[mysql_prefix]conditions` `c` ON `r`.`conditions`=`c`.`id` 
+		LEFT JOIN `$GLOBALS[mysql_prefix]conditions` `c` ON `r`.`description`=`c`.`id`
 		WHERE `r`.`_on` >= (NOW() - INTERVAL 2 DAY) ORDER BY `cond_id`";
 $result = mysql_query($query) or do_error('', 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 $z=0;

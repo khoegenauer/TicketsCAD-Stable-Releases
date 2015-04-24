@@ -165,8 +165,18 @@ $the_level = (isset($_SESSION['level'])) ? $_SESSION['level'] : 0 ;
 	
 		// perform db update
 		$now = mysql_format_date(time() - (get_variable('delta_mins')*60));
+			$datetime = format_date_2(strtotime($now));
 		$by = $_SESSION['user_id'];			// 12/7/10
 		if(empty($post_frm_owner)) {$post_frm_owner=0;}
+			if(!empty($_POST['frm_comments'])) {
+				if($_POST['frm_notes'] == "") {
+					$disp = $datetime . ": " . $_POST['frm_comments'];					
+					} else {
+					$disp = $_POST['frm_notes'] . "<BR />" . $datetime . ": " . $_POST['frm_comments'];
+					}
+				} else {
+				$disp = $_POST['frm_notes'];
+				}
 								// 8/23/08, 9/20/08, 9/22/09 (Facility), 10/1/09 (receiving facility), 6/26/10 (911), 6/10/11
 		$query = "UPDATE `$GLOBALS[mysql_prefix]ticket` SET 
 			`portal_user`= " .  quote_smart(trim($_POST['frm_portal_user'])) .",
@@ -189,7 +199,7 @@ $the_level = (isset($_SESSION['level'])) ? $_SESSION['level'] : 0 ;
 			`problemstart`=".	quote_smart(trim($frm_problemstart)) . ",
 			`problemend`=".		$frm_problemend . ",
 			`description`= " .	quote_smart(trim($_POST['frm_description'])) .",
-			`comments`= " . 	quote_smart(trim($_POST['frm_comments'])) .",
+				`comments`= " . 	quote_smart(trim($disp)) .",
 			`nine_one_one`= " . quote_smart(trim($_POST['frm_nine_one_one'])) .",
 			`booked_date`= 		{$frm_booked_date},
 			`_by` = 			{$by}, 
@@ -394,7 +404,11 @@ $the_level = (isset($_SESSION['level'])) ? $_SESSION['level'] : 0 ;
 
 			add_header($id, FALSE, TRUE);
 	print '<FONT CLASS="header">Ticket <I>' . $_POST['frm_scope'] . '</I> has been updated</FONT><BR /><BR />';		/* show updated ticket */
+			if($_SESSION['internet']) {
 			require_once('./forms/ticket_view_screen.php');
+				} else {
+				require_once('./forms/ticket_view_screen_NM.php');
+				}
 	$addrs = notify_user($id,$GLOBALS['NOTIFY_TICKET_CHG']);		// returns array or FALSE
 
 	unset ($_SESSION['active_ticket']);								// 5/4/11
@@ -443,7 +457,7 @@ $dis =  ($disallow)? "DISABLED ": "";				// 4/1/11 -
 	div.scrollableContainer { position: relative; padding-top: 2em; border: 1px solid #999; }
 	div.scrollableContainer2 { position: relative; padding-top: 2em; }
 	div.scrollingArea { max-height: 240px; overflow: auto; overflow-x: hidden; }
-	div.scrollingArea2 { max-height: 480px; overflow: auto; overflow-x: hidden; }
+	div.scrollingArea2 { max-height: 400px; overflow: auto; overflow-x: hidden; }
 	table.scrollable thead tr { left: -1px; top: 0; position: absolute; }
 	table.cruises th { text-align: left; border-left: 1px solid #999; background: #CECECE; color: black; font-weight: bold; overflow: hidden; }
 	.olPopupCloseBox{background-image:url(img/close.gif) no-repeat;cursor:pointer;}	
@@ -451,33 +465,27 @@ $dis =  ($disallow)? "DISABLED ": "";				// 4/1/11 -
 	.bar {background-color: #DEE3E7; color: transparent; cursor: move; font-weight: bold; padding: 2px 1em 2px 1em;}
 	.content {padding: 1em;}
 	</STYLE>	
-	<SCRIPT TYPE="text/javascript" SRC="./js/misc_function.js"></SCRIPT>
-	<SCRIPT SRC="./js/suggest.js" TYPE="text/javascript"></SCRIPT>
-	<SCRIPT TYPE="text/javascript" SRC="./js/domready.js"></script>
-	<SCRIPT SRC="./js/messaging.js" TYPE="text/javascript"></SCRIPT>
-<?php
-if ($_SESSION['internet']) {				// 8/22/10
-?>
-	<script src="./js/proj4js.js"></script>
-	<script src="./js/proj4-compressed.js"></script>
-	<script src="./js/leaflet/leaflet.js"></script>
-	<script src="./js/proj4leaflet.js"></script>
-	<script src="./js/leaflet/KML.js"></script>  
-	<script src="./js/leaflet-openweathermap.js"></script>
-	<script src="./js/esri-leaflet.js"></script>
-	<script src="./js/OSOpenspace.js"></script>
-	<script src="./js/Control.Geocoder.js"></script>
-	<SCRIPT SRC="./js/usng.js" TYPE="text/javascript"></SCRIPT>
-	<SCRIPT SRC='./js/jscoord.js' TYPE="text/javascript"></SCRIPT>			<!-- coordinate conversion 12/10/10 -->	
-	<SCRIPT SRC="./js/lat_lng.js" TYPE="text/javascript"></SCRIPT>	<!-- 11/8/11 -->
-	<SCRIPT SRC="./js/geotools2.js" TYPE="text/javascript"></SCRIPT>	<!-- 11/8/11 -->
-	<SCRIPT SRC="./js/osgb.js" TYPE="text/javascript"></SCRIPT>	<!-- 11/8/11 -->	
-	<script type="text/javascript" src="./js/osm_map_functions.js.php"></script>
-	<script type="text/javascript" src="./js/L.Graticule.js"></script>
-	<script type="text/javascript" src="./js/leaflet-providers.js"></script>
-<?php
-			}
-?>
+<SCRIPT TYPE="text/javascript" SRC="./js/misc_function.js"></SCRIPT>
+<SCRIPT SRC="./js/suggest.js" TYPE="text/javascript"></SCRIPT>
+<SCRIPT TYPE="text/javascript" SRC="./js/domready.js"></script>
+<SCRIPT SRC="./js/messaging.js" TYPE="text/javascript"></SCRIPT>
+<script src="./js/proj4js.js"></script>
+<script src="./js/proj4-compressed.js"></script>
+<script src="./js/leaflet/leaflet.js"></script>
+<script src="./js/proj4leaflet.js"></script>
+<script src="./js/leaflet/KML.js"></script>  
+<script src="./js/leaflet-openweathermap.js"></script>
+<script src="./js/esri-leaflet.js"></script>
+<script src="./js/osopenspace.js"></script>
+<script src="./js/Control.Geocoder.js"></script>
+<SCRIPT SRC="./js/usng.js" TYPE="text/javascript"></SCRIPT>
+<SCRIPT SRC='./js/jscoord.js' TYPE="text/javascript"></SCRIPT>			<!-- coordinate conversion 12/10/10 -->	
+<SCRIPT SRC="./js/lat_lng.js" TYPE="text/javascript"></SCRIPT>	<!-- 11/8/11 -->
+<SCRIPT SRC="./js/geotools2.js" TYPE="text/javascript"></SCRIPT>	<!-- 11/8/11 -->
+<SCRIPT SRC="./js/osgb.js" TYPE="text/javascript"></SCRIPT>	<!-- 11/8/11 -->	
+<script type="text/javascript" src="./js/osm_map_functions.js.php"></script>
+<script type="text/javascript" src="./js/L.Graticule.js"></script>
+<script type="text/javascript" src="./js/leaflet-providers.js"></script>
 <SCRIPT>
 window.onresize=function(){set_size();}
 	
@@ -566,6 +574,7 @@ function set_size() {
 	load_regions();
 	load_files();
 	get_mainmessages();
+	update_regions_text();
 	}
 
 	try {
@@ -936,27 +945,7 @@ function set_size() {
 			$theClass = $priorities[$row['severity']];
 			$exist_rec_fac = $row['rec_facility'];
 
-			$query_al = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `type`= 4 AND `resource_id` = '$_SESSION[user_id]' ORDER BY `id` ASC;";	// 6/10/11
-			$result_al = mysql_query($query_al);	// 6/10/11
-			$al_groups = array();
-			$al_names = "";	
-			while ($row_al = stripslashes_deep(mysql_fetch_assoc($result_al))) 	{	// 6/10/11
-				$al_groups[] = $row_al['group'];
-				$query_al2 = "SELECT * FROM `$GLOBALS[mysql_prefix]region` WHERE `id`= '$row_al[group]';";	// 6/10/11
-				$result_al2 = mysql_query($query_al2);	// 6/10/11
-				while ($row_al2 = stripslashes_deep(mysql_fetch_assoc($result_al2))) 	{	// 6/10/11		
-						$al_names .= $row_al2['group_name'] . ", ";
-					}
-				}
-			if(is_super()) {
-				$al_names .= "&nbsp;&nbsp;Superadmin Level";
-			}	
-			
-			if((get_num_groups()) && (COUNT(get_allocates(4, $_SESSION['user_id'])) > 1))  {	//	6/10/11		
-				$heading = "Edit Ticket - " . get_variable('map_caption') . "&nbsp;-----------&nbsp;Groups:&nbsp;&nbsp; " . $al_names;	//	6/10/11		
-			} else {
 				$heading = "Edit Ticket - " . get_variable('map_caption');	//	6/10/11		
-			}			
 				
 			echo "\n<SCRIPT>\n";
 			$query_bldg = "SELECT * FROM `$GLOBALS[mysql_prefix]places` WHERE `apply_to` = 'bldg' ORDER BY `name` ASC";		// types in use
@@ -978,19 +967,19 @@ function set_size() {
 				}		// end if (mysql... )
 			echo "\n</SCRIPT>\n";
 
-			print "<TABLE BORDER='0' ID = 'outer' ALIGN='left' CLASS = 'BGCOLOR'>\n";
+			print "<TABLE BORDER='0' ID = 'outer' ALIGN='left'>\n";
 			if($gmaps) {	//	6/10/11		
 				print "<TR CLASS='header'><TD COLSPAN='99' ALIGN='center'><FONT CLASS='header' STYLE='background-color: inherit;'>" . $heading . "</FONT></TD></TR>";	//	6/10/11	
-				print "<TR CLASS='spacer'><TD CLASS='spacer' COLSPAN=99 ALIGN='center'>&nbsp;</TD></TR><TR><TD>";	//	6/10/11					
-				print "<TR CLASS='odd'><TD ALIGN='left' COLSPAN='2'>";
+				print "<TR CLASS='spacer'><TD CLASS='spacer' COLSPAN=99 ALIGN='center'>&nbsp;</TD></TR>";	//	6/10/11					
+				print "<TR CLASS='odd'><TD ALIGN='left' COLSPAN=99>";
 				} else {
 				print "<TR CLASS='header'><TD ALIGN='center'><FONT CLASS='header' STYLE='background-color: inherit;'>" . $heading . "</FONT></TD></TR>";	//	6/10/11	
-				print "<TR CLASS='spacer'><TD CLASS='spacer' ALIGN='center'>&nbsp;</TD></TR><TR><TD>";	//	6/10/11						
-				print "<TR CLASS='odd'><TD ALIGN='left'>";	
+				print "<TR CLASS='spacer'><TD CLASS='spacer' ALIGN='center'>&nbsp;</TD></TR>";	//	6/10/11						
+				print "<TR CLASS='odd'><TD COLSPAN=99 ALIGN='left'>";	
 				}
 			print add_header($tick_id, TRUE);
 			print "</TD></TR>\n";
-			print "<TR CLASS='odd'><TD>&nbsp;</TD></TR>\n";	
+			print "<TR CLASS='odd'><TD COLSPAN=99>&nbsp;</TD></TR>\n";	
 			if($gmaps) {	//	6/10/11
 			print "<TR CLASS='even' valign='top'><TD CLASS='print_TD' ALIGN='left'>";
 			} else {
@@ -1018,7 +1007,7 @@ function set_size() {
 
 			print "<TR CLASS='even'>
 					<TD CLASS='td_label'  COLSPAN=2 onmouseout='UnTip()' onmouseover=\"Tip('{$titles['_loca']}');\">" . get_text("Location") . ": </TD><TD><INPUT SIZE='48' TYPE='text' NAME='frm_street' VALUE=\"{$row['street']}\" MAXLENGTH='48' {$dis}></TD></TR>\n";
-			print "<TR CLASS='odd'><TD CLASS='td_label' onmouseout='UnTip()' onmouseover='Tip(\"Anout Address, for instance round the back or building number\");'>" . get_text('Address About') . "</A>:</TD>
+			print "<TR CLASS='odd'><TD CLASS='td_label' onmouseout='UnTip()' onmouseover='Tip(\"About Address, for instance round the back or building number\");'>" . get_text('Address About') . "</A>:</TD>
 					<TD></TD>
 					<TD><INPUT NAME='frm_address_about' tabindex=1 SIZE='72' TYPE='text' VALUE=\"{$row['address_about']}\" MAXLENGTH='512'></TD>
 					</TR>";	//	9/10/13
@@ -1090,7 +1079,9 @@ function set_size() {
 					}			
 				print "<OPTION VALUE=" . $row2['id'] . $sel . ">" . $row2['type'] . "</OPTION>";
 				if (!(empty($row2['protocol']))) {				// 7/7/09 - note string key
-					print "\n<SCRIPT>protocols[{$row2['id']}] = '{$row2['protocol']}';</SCRIPT>\n";		// 5/6/10
+					$temp = preg_replace("/[\n\r]/"," ",$temp_row['protocol']); 
+					$temp = addslashes($temp);
+					print "\n<SCRIPT>protocols[{$row2['id']}] = '" . $temp . "';</SCRIPT>\n";		// 5/6/10
 					}
 				$i++;
 				}
@@ -1114,32 +1105,32 @@ function set_size() {
 			if(get_num_groups()) {	//	3/28/12 - fixes incorrect display of Regions.		
 			if((is_super()) && (COUNT(get_allocates(4, $_SESSION['user_id'])) > 1)) {		//	6/10/11
 					print "<TR CLASS='even' VALIGN='top'>";
-					print "<TD CLASS='td_label' onmouseout='UnTip()' onmouseover=\"Tip('Sets groups that Incident is allocated to - click + to expand, - to collapse');\">" . get_text('Group') . "</A>: </TD>";
+					print "<TD CLASS='td_label' onmouseout='UnTip()' onmouseover=\"Tip('Sets regions that Incident is allocated to - click + to expand, - to collapse');\">" . get_text('Regions') . "</A>: </TD>";
 					print "<TD><SPAN id='expand_gps' onClick=\"$('groups_sh').style.display = 'inline-block'; $('expand_gps').style.display = 'none'; $('collapse_gps').style.display = 'inline-block';\" style = 'display: inline-block; font-size: 16px; border: 1px solid;'><B>+</B></SPAN>";
 					print "<SPAN id='collapse_gps' onClick=\"$('groups_sh').style.display = 'none'; $('collapse_gps').style.display = 'none'; $('expand_gps').style.display = 'inline-block';\" style = 'display: none; font-size: 16px; border: 1px solid;'><B>-</B></SPAN></TD>";
 					print "<TD>";
-					$alloc_groups = implode(',', get_allocates(1, $id));	//	6/10/11
-					print get_sub_group_butts(($_SESSION['user_id']), 1, $id) ;	//	6/10/11		
+					$alloc_groups = implode(',', get_allocates(1, $tick_id));	//	6/10/11
+					print get_sub_group_butts(($_SESSION['user_id']), 1, $tick_id) ;	//	6/10/11		
 					print "</DIV></TD></TR>";		// 6/10/11
 					
 				} elseif((is_admin()) && (COUNT(get_allocates(4, $_SESSION['user_id'])) > 1)) {	//	6/10/11	
 					print "<TR CLASS='even' VALIGN='top'>";
-					print "<TD CLASS='td_label' onmouseout='UnTip()' onmouseover=\"Tip('Sets groups that Incident is allocated to - click + to expand, - to collapse');\">" . get_text('Group') . "</A>: </TD>";
+					print "<TD CLASS='td_label' onmouseout='UnTip()' onmouseover=\"Tip('Sets regions that Incident is allocated to - click + to expand, - to collapse');\">" . get_text('Regions') . "</A>: </TD>";
 					print "<TD><SPAN id='expand_gps' onClick=\"$('groups_sh').style.display = 'inline-block'; $('expand_gps').style.display = 'none'; $('collapse_gps').style.display = 'inline-block';\" style = 'display: inline-block; font-size: 16px; border: 1px solid;'><B>+</B></SPAN>";
 					print "<SPAN id='collapse_gps' onClick=\"$('groups_sh').style.display = 'none'; $('collapse_gps').style.display = 'none'; $('expand_gps').style.display = 'inline-block';\" style = 'display: none; font-size: 16px; border: 1px solid;'><B>-</B></SPAN></TD>";
 					print "<TD>";
-					$alloc_groups = implode(',', get_allocates(1, $id));	//	6/10/11
-					print get_sub_group_butts(($_SESSION['user_id']), 1, $id) ;	//	6/10/11			
+					$alloc_groups = implode(',', get_allocates(1, $tick_id));	//	6/10/11
+					print get_sub_group_butts(($_SESSION['user_id']), 1, $tick_id) ;	//	6/10/11			
 					print "</DIV></TD></TR>";		// 6/10/11	
 					
 				} else {
 					print "<TR CLASS='even' VALIGN='top'>";
-					print "<TD CLASS='td_label' onmouseout='UnTip()' onmouseover=\"Tip('Sets groups that Incident is allocated to - click + to expand, - to collapse');\">" . get_text('Group') . "</A>: </TD>";
+					print "<TD CLASS='td_label' onmouseout='UnTip()' onmouseover=\"Tip('Sets regions that Incident is allocated to - click + to expand, - to collapse');\">" . get_text('Regions') . "</A>: </TD>";
 					print "<TD><SPAN id='expand_gps' onClick=\"$('groups_sh').style.display = 'inline-block'; $('expand_gps').style.display = 'none'; $('collapse_gps').style.display = 'inline-block';\" style = 'display: inline-block; font-size: 16px; border: 1px solid;'><B>+</B></SPAN>";
 					print "<SPAN id='collapse_gps' onClick=\"$('groups_sh').style.display = 'none'; $('collapse_gps').style.display = 'none'; $('expand_gps').style.display = 'inline-block';\" style = 'display: none; font-size: 16px; border: 1px solid;'><B>-</B></SPAN></TD>";
 					print "<TD>";
-					$alloc_groups = implode(',', get_allocates(1, $id));	//	6/10/11
-					print get_sub_group_butts_readonly(($_SESSION['user_id']), 1, $id) ;	//	6/10/11			
+					$alloc_groups = implode(',', get_allocates(1, $tick_id));	//	6/10/11
+					print get_sub_group_butts_readonly(($_SESSION['user_id']), 1, $tick_id) ;	//	6/10/11			
 					print "</DIV></TD></TR>";		// 6/10/11	
 				}
 			} else {
@@ -1391,13 +1382,16 @@ function set_size() {
 
 			print "<TR CLASS='even' VALIGN='top'>
 				<TD CLASS='td_label' COLSPAN=2 onmouseout='UnTip()' onmouseover=\"Tip('{$titles['_disp']}');\">{$disposition}:</TD>";				// 10/21/08, 8/8/09
-			print 	"<TD><TEXTAREA NAME='frm_comments' COLS='45' ROWS='2' {$dis} >" . $row['comments'] . "</TEXTAREA></TD></TR>\n";
+			print 	"<TD style='background-color: #DEDEDE; color: #000000; border: 1px inset #707070;'>" . $row['comments'] . "</TD></TR>\n";
+			print "<TR CLASS='even' VALIGN='top'>
+				<TD CLASS='td_label' COLSPAN=2>&nbsp;</TD>";				// 10/21/08, 8/8/09
+			print 	"<TD><TEXTAREA style='width: 98%;' NAME='frm_comments' {$dis} ></TEXTAREA></TD></TR>\n";			
 			$query_sigs = "SELECT * FROM `$GLOBALS[mysql_prefix]codes` ORDER BY `sort` ASC, `code` ASC";
 			$result_sigs = mysql_query($query_sigs) or do_error($query_sigs, 'mysql query_sigs failed', mysql_error(),basename( __FILE__), __LINE__);
 
 			if (mysql_num_rows($result_sigs)>0) {				// 2/11/11			
 ?>
-		<TR VALIGN = 'TOP' CLASS='even'>		<!-- 12/18/10 -->
+		<TR VALIGN = 'TOP' CLASS='odd'>		<!-- 12/18/10 -->
 			<TD COLSPAN=2 ></TD><TD CLASS="td_label">Signal &raquo; 
 
 				<SELECT NAME='signals' <?php print $dis; ?> onChange = 'set_signal2(this.options[this.selectedIndex].text); this.options[0].selected=true;'>	<!--  11/17/10 -->
@@ -1412,7 +1406,7 @@ function set_size() {
 <?php
 				}						// end if (mysql_num_rows($result_sigs)>0)
 
-			print "<TR CLASS='odd'>
+			print "<TR CLASS='even'>
 				<TD CLASS='td_label' COLSPAN=2 onClick = 'javascript: do_coords(document.edit.frm_lat.value ,document.edit.frm_lng.value  )'><U><A HREF=\"#\" TITLE=\"Position - Lat and Lng for Incident position. Click to show all position data.\">Position</A></U>:</TD><TD>";
 			print	 "<INPUT SIZE='13' TYPE='text' NAME='show_lat' VALUE='" . get_lat($row['lat']) . "' DISABLED>\n";
 			print 	 "<INPUT SIZE='13' TYPE='text' NAME='show_lng' VALUE='" . get_lng($row['lng']) . "' DISABLED>&nbsp;&nbsp;";
@@ -1438,11 +1432,11 @@ function set_size() {
 
 			print "</TD></TR>\n";
 			$by_str = "&nbsp;&nbsp;&nbsp;by '{$row['tick_user']}'";				// 4/1/11
-			print "<TR CLASS='even'>
+			print "<TR CLASS='odd'>
 				<TD CLASS='td_label'  COLSPAN=2 onmouseout='UnTip()' onmouseover=\"Tip('{$titles['_asof']}');\">Updated:</TD><TD>" . format_date($row['updated']) . "{$by_str}</TD></TR>\n";		// 10/21/08
 			print "<TR class='spacer'><TD COLSPAN='3' class='spacer'>&nbsp;</TD></TR>";
 			print "<TR class='heading'><TD COLSPAN='3' class='heading' style='text-align: center;'>File Upload</TD></TR>";
-			print "<TR class='even'><TD class='td_label' COLSPAN='2' style='text-align: left;'>Choose a file to upload:</TD>
+			print "<TR class='odd'><TD class='td_label' COLSPAN='2' style='text-align: left;'>Choose a file to upload:</TD>
 				<TD class='td_data' style='text-align: left;'><INPUT NAME='frm_file' TYPE='file' /></TD></TR>";
 			print "<TR class='odd'><TD class='td_label' COLSPAN='2' style='text-align: left;'>File Name</TD>
 				<TD class='td_data' style='text-align: left;'><INPUT NAME='frm_file_title' TYPE='text' SIZE='48' MAXLENGTH='128' VALUE=''></TD></TR>";
@@ -1466,6 +1460,7 @@ function set_size() {
 			<INPUT TYPE="hidden" NAME="frm_exist_rec_fac" VALUE="<?php print $exist_rec_fac;?>">
 			<INPUT TYPE="hidden" NAME="frm_exist_groups" VALUE="<?php print (isset($alloc_groups)) ? $alloc_groups : 1;?>">			
 			<INPUT TYPE="hidden" NAME="frm_fac_chng" VALUE="0">		<!-- 3/25/10 -->
+			<INPUT TYPE="hidden" NAME="frm_notes" VALUE="<?php print $row['comments'];?>">
 <?php
 			print "<TR CLASS='even'>
 				<TD COLSPAN='10' ALIGN='center'><BR /><B><U><A HREF='#' TITLE='List of all actions and patients atached to this Incident'>Actions and Patients</A></U></B><BR /></TD></TR>";	//8/7/09
@@ -1474,19 +1469,23 @@ function set_size() {
 			print "<BR /><BR /></TD></TR>";																//8/7/09
 			print "</TABLE>";		// end data 8/7/09
 															//8/7/09
-			print "</TD><TD style='background-color: transparent;'>";		
-			print "<TABLE ID='mymap' border = 0><TR class='odd'><TD ALIGN='center'><DIV ID='map_canvas' STYLE='WIDTH: " . get_variable('map_width') . "PX; HEIGHT:" . get_variable('map_height') . "PX;  z-index: 1;'></DIV>";
+			print "</TD>";
+			if($gmaps) {
+				print "<TD style='background-color: transparent;'>";		
+				print "<TABLE ID='mymap' border = 0><TR class='odd'><TD><DIV ID='map_canvas' STYLE='WIDTH: " . get_variable('map_width') . "PX; HEIGHT:" . get_variable('map_height') . "PX;  z-index: 1;'></DIV>";
 				print ($zoom_tight)? "<SPAN  onClick= 'zoom_in({$lat}, {$lng}, {$zoom_tight});' STYLE = 'margin-left:20px'><U>Zoom</U></SPAN>\n" : "";	// 3/27/10
 					
 			print "</TD></TR></TABLE>\n";
-			print "</TD></TR>";
+				print "</TD>";
+				}
+			print "</TR>";
 			print "</FORM>";
 			print "</TABLE>";		// bottom of outer
 			
 			$from_left = 450;
 			$from_top = 220;
 			$allow_filedelete = ($the_level == $GLOBALS['LEVEL_SUPER']) ? TRUE : FALSE;
-			print add_sidebar(TRUE, TRUE, TRUE, TRUE, $allow_filedelete, $tick_id, 0, 0, 0);
+			print add_sidebar(FALSE, TRUE, TRUE, FALSE, $allow_filedelete, $tick_id, 0, 0, 0);
 ?>			
 			<FORM NAME='can_Form' ACTION="main.php">
 			<INPUT TYPE='hidden' NAME = 'id' VALUE = "<?php print $_GET['id'];?>">
@@ -1692,23 +1691,23 @@ if (!$disallow) {
 <?php
 			}			// end  sanity check 
 		}
-
+if($gmaps) {
 ?>
-<SCRIPT>
-var latLng;
-var in_local_bool = "0";
-var mapWidth = <?php print get_variable('map_width');?>+20;
-var mapHeight = <?php print get_variable('map_height');?>+20;
-$('map_canvas').style.width = mapWidth + "px";
-$('map_canvas').style.height = mapHeight + "px";
-var theLocale = <?php print get_variable('locale');?>;
-var useOSMAP = <?php print get_variable('use_osmap');?>;
-init_map(3, <?php print $lat;?>, <?php print $lng;?>, "", 13, theLocale, useOSMAP, "tr");
-map.setView([<?php print $lat;?>, <?php print $lng;?>], 13);
-var bounds = map.getBounds();	
-var zoom = map.getZoom();
+	<SCRIPT>
+	var latLng;
+	var in_local_bool = "0";
+	var mapWidth = <?php print get_variable('map_width');?>+20;
+	var mapHeight = <?php print get_variable('map_height');?>+20;
+	$('map_canvas').style.width = mapWidth + "px";
+	$('map_canvas').style.height = mapHeight + "px";
+	var theLocale = <?php print get_variable('locale');?>;
+	var useOSMAP = <?php print get_variable('use_osmap');?>;
+	init_map(3, <?php print $lat;?>, <?php print $lng;?>, "", 13, theLocale, useOSMAP, "tr");
+	map.setView([<?php print $lat;?>, <?php print $lng;?>], 13);
+	var bounds = map.getBounds();	
+	var zoom = map.getZoom();
 
-function onMapClick(e) {
+	function onMapClick(e) {
 	if(marker) {map.removeLayer(marker); }
 	var iconurl = "./our_icons/yellow.png";
 	icon = new baseIcon({iconUrl: iconurl});	
@@ -1717,8 +1716,14 @@ function onMapClick(e) {
 	newGetAddress(e.latlng, "ei");
 	};
 
-map.on('click', onMapClick);
-</SCRIPT>
+	map.on('click', onMapClick);
+<?php
+	do_kml();
+?>
+	</SCRIPT>
+<?php
+	}
+?>
 </BODY>
 <?php
 

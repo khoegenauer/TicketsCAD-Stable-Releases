@@ -52,7 +52,7 @@ $lng = $row['lng'];
 		div.scrollableContainer { position: relative; padding-top: 2em; border: 1px solid #999; }
 		div.scrollableContainer2 { position: relative; padding-top: 2em; }
 		div.scrollingArea { max-height: 240px; overflow: auto; overflow-x: hidden; }
-		div.scrollingArea2 { max-height: 480px; overflow: auto; overflow-x: hidden; }
+		div.scrollingArea2 { max-height: 400px; overflow: auto; overflow-x: hidden; }
 		table.scrollable thead tr { left: -1px; top: 0; position: absolute; }
 		table.cruises th { text-align: left; border-left: 1px solid #999; background: #CECECE; color: black; font-weight: bold; overflow: hidden; }
 		div.tabBox {}

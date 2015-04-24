@@ -206,7 +206,7 @@ function collect(){				// constructs a string of id's for deletion
 			</TR>
 			<TR CLASS = "even">
 				<TD CLASS="td_label"><A CLASS="td_label" HREF="#" TITLE="Major Incident Name">End Date/Time</A>:&nbsp;<FONT COLOR='red' SIZE='-1'>*</FONT>&nbsp;</TD>
-				<TD COLSPAN=3 ><?php print generate_date_dropdown('inc_endtime', 0, TRUE);?></TD>
+				<TD COLSPAN=3 ><?php print generate_date_dropdown('inc_endtime', 0, FALSE);?></TD>
 			</TR>
 			<TR CLASS='odd' VALIGN="top">	<!--  6/10/11 -->
 				<TD CLASS="td_label"><A CLASS="td_label" HREF="#" TITLE="Type of Major Incident"><?php print get_text("MI Type");?></A>:</TD>
@@ -417,7 +417,7 @@ function collect(){				// constructs a string of id's for deletion
 						<TD>
 							<DIV>
 <?php
-								$query = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE `$GLOBALS[mysql_prefix]ticket`.`status`='{$GLOBALS['STATUS_OPEN']}' ORDER BY `id` ASC";
+								$query = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE `$GLOBALS[mysql_prefix]ticket`.`status`='{$GLOBALS['STATUS_OPEN']}' OR `$GLOBALS[mysql_prefix]ticket`.`status`='{$GLOBALS['STATUS_SCHEDULED']}' ORDER BY `id` ASC";
 								$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
 								while ($row	= stripslashes_deep(mysql_fetch_assoc($result))) {
 									$the_id = $row['id'];

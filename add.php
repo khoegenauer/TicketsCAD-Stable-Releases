@@ -11,6 +11,7 @@ require_once('incs/functions.inc.php');		//7/28/10
 do_login(basename(__FILE__));
 $gmaps = $_SESSION['internet'];
 $in_win = array_key_exists ("mode", $_GET);		// in
+$from_mi = array_key_exists ("mi", $_GET);
 
 if($istest) {print "_GET"; dump($_GET);}
 if($istest) {print "_POST"; dump($_POST);}
@@ -659,7 +660,7 @@ table.cruises td {overflow: hidden; }
 div.scrollableContainer { position: relative; padding-top: 2em; border: 1px solid #999; }
 div.scrollableContainer2 { position: relative; padding-top: 2em; }
 div.scrollingArea { max-height: 240px; overflow: auto; overflow-x: hidden; }
-div.scrollingArea2 { max-height: 480px; overflow: auto; overflow-x: hidden; }
+div.scrollingArea2 { max-height: 400px; overflow: auto; overflow-x: hidden; }
 table.scrollable thead tr { left: -1px; top: 0; position: absolute; }
 table.cruises th { text-align: left; border-left: 1px solid #999; background: #CECECE; color: black; font-weight: bold; overflow: hidden; }
 .olPopupCloseBox{background-image:url(img/close.gif) no-repeat;cursor:pointer;}	
@@ -675,7 +676,7 @@ table.cruises th { text-align: left; border-left: 1px solid #999; background: #C
 	<script src="./js/leaflet/KML.js"></script>  
 	<script src="./js/leaflet-openweathermap.js"></script>
 	<script src="./js/esri-leaflet.js"></script>
-	<script src="./js/OSOpenspace.js"></script>
+	<script src="./js/osopenspace.js"></script>
 	<script src="./js/Control.Geocoder.js"></script>
 	<SCRIPT SRC="./js/usng.js" TYPE="text/javascript"></SCRIPT>
 	<SCRIPT SRC='./js/jscoord.js' TYPE="text/javascript"></SCRIPT>			<!-- coordinate conversion 12/10/10 -->	
@@ -1048,8 +1049,12 @@ table.cruises th { text-align: left; border-left: 1px solid #999; background: #C
 			broadcast(theMessage ) ;
 <?php
 	}			// end if (broadcast)
+			if ($gmaps) {
 ?>				
 			find_warnings(theForm.frm_lat.value, theForm.frm_lng.value);	//	9/10/13		
+<?php
+				}
+?>
 			return true;	//	11/18/13
 			}
 		}				// end function validate(theForm)
@@ -1552,11 +1557,22 @@ if (mysql_num_rows($result_bldg) > 0) {
 <TABLE BORDER="0" ID = "form_outer" >
 <TR CLASS='header'><TD COLSPAN='99' ALIGN='center'><FONT CLASS='header' STYLE='background-color: inherit;'><?php print $heading; ?> </FONT></TD></TR>	<!-- 6/10/11 -->
 <TR CLASS='spacer'><TD CLASS='spacer' COLSPAN='99' ALIGN='center'>&nbsp;</TD></TR>				<!-- 6/10/11 -->	
-<TR><TD>
-<TABLE BORDER="0"><BR />
-<TR><TD ALIGN='center' COLSPAN='3'><FONT CLASS='header'><FONT COLOR='green'>New Call</FONT></FONT><BR />
-	<FONT SIZE=-1>(mouseover caption for help information)</FONT></FONT><BR /><BR /></TD>
-	</TR>
+<TR CLASS='even'><TD CLASS='print_TD' ALIGN='left'>
+<TABLE style='width: 100%; BORDER="0"><BR />
+<TR CLASS='even'>
+	<TD CLASS='odd' ALIGN='center' COLSPAN='3'>
+		<FONT SIZE=4>
+			<FONT COLOR='green'>New Call</FONT>
+		</FONT>
+		<BR />
+		<FONT SIZE=-1>(mouseover caption for help information)</FONT>
+		<BR />
+		<BR />
+	</TD>
+</TR>
+<TR CLASS='spacer'>
+	<TD CLASS='spacer' COLSPAN='3' ALIGN='center'>&nbsp;</TD>
+</TR>
 <FORM NAME="add" METHOD="post" ENCTYPE="multipart/form-data" ACTION="<?php print basename(__FILE__);?>?add=true" onSubmit="return validate(document.add)">
 <!--  new bldg stuff  -->
 <?php
@@ -1584,7 +1600,15 @@ if (mysql_num_rows($result_bldg) > 0) {
 	</TR>
 <TR CLASS='even'>
 	<TD CLASS="td_label" onmouseout="UnTip()" onmouseover="Tip('<?php print $titles["_city"];?>')"><?php print get_text("City");?>:</TD>
-	<TD ALIGN='center' ><BUTTON type="button" onClick="Javascript:loc_lkup(document.add);return false;"><img src="./markers/glasses.png" alt="Lookup location." /></BUTTON>&nbsp;&nbsp;</TD>		
+	<TD ALIGN='center'>
+<?php
+	if($gmaps) {
+?>
+		<BUTTON type="button" onClick="Javascript:loc_lkup(document.add);return false;"><img src="./markers/glasses.png" alt="Lookup location." /></BUTTON>&nbsp;&nbsp;
+<?php
+		}
+?>
+	</TD>
 	<TD><INPUT ID="my_txt"  onFocus = "createAutoComplete();$('city_reset').visibility='visible';" NAME="frm_city" autocomplete="off" tabindex=2 SIZE="32" TYPE="text" VALUE="<?php print $city; ?>" MAXLENGTH="32" onChange = " $('city_reset').visibility='visible'; this.value=capWords(this.value)">
 		<span id="suggest" onmousedown="$('suggest').style.display='none'; $('city_reset').style.visibility='visible';" style="visibility:hidden;border:#000000 1px solid;width:150px;right:400px;" /></span>
 		<IMG ID = 'city_reset' SRC="./markers/reset.png" STYLE = "margin-left:20px; visibility:hidden;" onClick = "this.style.visibility='hidden'; document.add.frm_city.value=''; document.add.frm_city.focus(); obj_sugg = null; ">
@@ -1630,7 +1654,8 @@ if (mysql_num_rows($result_bldg) > 0) {
 
 			print "\t<OPTION VALUE=' {$temp_row['id']}'  CLASS='{$temp_row['group']}' title='{$temp_row['description']}'> {$temp_row['type']} </OPTION>\n";
 			if (!(empty($temp_row['protocol']))) {				// 7/7/09 - note string key
-				$temp = addslashes($temp_row['protocol']);
+				$temp = preg_replace("/[\n\r]/"," ",$temp_row['protocol']); 
+				$temp = addslashes($temp);
 				print "\n<SCRIPT>\n\t window.protocols[{$temp_row['id']}] = \"{$temp}\";\n</SCRIPT>\n";		// 7/16/09, 5/6/10
 				}
 			$i++;
@@ -1665,8 +1690,9 @@ if(get_num_groups()) {
 		</TD>
 		<TD>
 		<SPAN id='expand_gps' onClick="$('checkButts').style.display = 'inline-block'; $('groups_sh').style.display = 'inline-block'; $('expand_gps').style.display = 'none'; $('collapse_gps').style.display = 'inline-block';" style = 'display: inline-block; font-size: 16px; border: 1px solid;'><B>+</B></SPAN>
-		<SPAN id='collapse_gps' onClick="$('checkButts').style.display = 'none'; $('groups_sh').style.display = 'none'; $('collapse_gps').style.display = 'none'; $('expand_gps').style.display = 'inline-block';" style = 'display: none; font-size: 16px; border: 1px solid;'><B>-</B></SPAN></TD>
-		<TD>	
+			<SPAN id='collapse_gps' onClick="$('checkButts').style.display = 'none'; $('groups_sh').style.display = 'none'; $('collapse_gps').style.display = 'none'; $('expand_gps').style.display = 'inline-block';" style = 'display: none; font-size: 16px; border: 1px solid;'><B>-</B></SPAN>
+		</TD>
+		<TD style='width: 300px;'>
 			<DIV id='checkButts' style='display: none;'>
 				<SPAN id='checkbut' class='plain' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick='checkAll();'>Check All</SPAN>
 				<SPAN id='uncheckbut' class='plain' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick='uncheckAll();'>Uncheck All</SPAN>	
@@ -1684,8 +1710,9 @@ if(get_num_groups()) {
 		</TD>
 		<TD>
 		<SPAN id='expand_gps' onClick="$('checkButts').style.display = 'inline-block'; $('groups_sh').style.display = 'inline-block'; $('expand_gps').style.display = 'none'; $('collapse_gps').style.display = 'inline-block';" style = 'display: inline-block; font-size: 16px; border: 1px solid;'><B>+</B></SPAN>
-		<SPAN id='collapse_gps' onClick="$('checkButts').style.display = 'none'; $('groups_sh').style.display = 'none'; $('collapse_gps').style.display = 'none'; $('expand_gps').style.display = 'inline-block';" style = 'display: none; font-size: 16px; border: 1px solid;'><B>-</B></SPAN></TD>
-		<TD>	
+			<SPAN id='collapse_gps' onClick="$('checkButts').style.display = 'none'; $('groups_sh').style.display = 'none'; $('collapse_gps').style.display = 'none'; $('expand_gps').style.display = 'inline-block';" style = 'display: none; font-size: 16px; border: 1px solid;'><B>-</B></SPAN>
+		</TD>
+		<TD style='width: 300px;'>
 			<DIV id='checkButts' style='display: none;'>
 				<SPAN id='checkbut' class='plain' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick='checkAll();'>Check All</SPAN>
 				<SPAN id='uncheckbut' class='plain' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick='uncheckAll();'>Uncheck All</SPAN>	
@@ -1703,8 +1730,9 @@ if(get_num_groups()) {
 		</TD>
 		<TD>
 		<SPAN id='expand_gps' onClick="$('checkButts').style.display = 'inline-block'; $('groups_sh').style.display = 'inline-block'; $('expand_gps').style.display = 'none'; $('collapse_gps').style.display = 'inline-block';" style = 'display: inline-block; font-size: 16px; border: 1px solid;'><B>+</B></SPAN>
-		<SPAN id='collapse_gps' onClick="$('checkButts').style.display = 'none'; $('groups_sh').style.display = 'none'; $('collapse_gps').style.display = 'none'; $('expand_gps').style.display = 'inline-block';" style = 'display: none; font-size: 16px; border: 1px solid;'><B>-</B></SPAN></TD>
-		<TD>	
+			<SPAN id='collapse_gps' onClick="$('checkButts').style.display = 'none'; $('groups_sh').style.display = 'none'; $('collapse_gps').style.display = 'none'; $('expand_gps').style.display = 'inline-block';" style = 'display: none; font-size: 16px; border: 1px solid;'><B>-</B></SPAN>
+		</TD>
+		<TD style='width: 300px;'>
 			<DIV id='checkButts' style='display: none;'>
 				<SPAN id='checkbut' class='plain' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick='checkAll();'>Check All</SPAN>
 				<SPAN id='uncheckbut' class='plain' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick='uncheckAll();'>Uncheck All</SPAN>	
@@ -1976,17 +2004,32 @@ if($has_portal == 1) {
 	<TR class='even'>
 		<TD COLSPAN='3'>&nbsp;</TD>
 	</TR>	
+<?php
+	if($in_win) {
+		if($gmaps) {
+?>
+			<TR>
+				<TD COLSPAN=99>
+					<TABLE ID='four' border=0>
+						<TR>
+							<TD id='three'>
+								<div id='map_canvas' style='z-index:1; width: <?php print get_variable('map_width');?>px; height: <?php print get_variable('map_height');?>px'>
+								</div>
+								<BR /><CENTER><FONT CLASS='header'><?php echo get_variable('map_caption');?></FONT><BR /><BR />
+							</TD>
+						</TR>
 	</TABLE>	
-		<INPUT TYPE="hidden" NAME="frm_lat" VALUE="">				<!-- // 9/9/08 -->
-		<INPUT TYPE="hidden" NAME="frm_lng" VALUE="">
-		<INPUT TYPE="hidden" NAME="ticket_id" VALUE="<?php print $ticket_id;?>">	<!-- 1/25/09, 3/10/09 -->
-		<INPUT TYPE='hidden' NAME="frm_do_scheduled" VALUE=0>	<!-- 1/1/11 -->
-	</FORM>
+				</TD>
+			</TR>
 	</TD>
 <?php
-		if ($gmaps){
+			}
+		} else {
 ?>
-	
+		</TABLE></TD>
+<?php
+		if ($gmaps) {
+?>
 	<TD>
 		<TABLE ID='four' border=0>
 			<TR>
@@ -2000,7 +2043,16 @@ if($has_portal == 1) {
 	</TD>
 <?php
 	}
+		}
 ?>
+	</TR>
+	</TABLE>	
+		<INPUT TYPE="hidden" NAME="frm_lat" VALUE="">				<!-- // 9/9/08 -->
+		<INPUT TYPE="hidden" NAME="frm_lng" VALUE="">
+		<INPUT TYPE="hidden" NAME="ticket_id" VALUE="<?php print $ticket_id;?>">	<!-- 1/25/09, 3/10/09 -->
+		<INPUT TYPE='hidden' NAME="frm_do_scheduled" VALUE=0>	<!-- 1/1/11 -->
+	</FORM>
+	</TD>
 	</TR>
 	</TABLE></DIV>
 	
@@ -2010,46 +2062,49 @@ if($has_portal == 1) {
 ?>
 <FORM NAME='can_Form' ACTION="main.php">
 </FORM>	
-<SCRIPT>
-var map;				// make globally visible
-var thelevel = '<?php print $the_level;?>';
-var the_icon;
-var currentPopup;
-var marker;
-var myMarker;
-var markers;
-var zoom = <?php print get_variable('def_zoom');?>;
-var locale = <?php print get_variable('locale');?>;
-var my_Local = <?php print get_variable('local_maps');?>;
-var lon = <?php print get_variable('def_lng');?>;
-var lat = <?php print get_variable('def_lat');?>;
-var latLng;
-var in_local_bool = "0";
-var baseIcon = L.Icon.extend({options: {shadowUrl: './our_icons/shadow.png',
+<?php
+if ($gmaps) {
+?>
+	<SCRIPT>
+	var map;				// make globally visible
+	var thelevel = '<?php print $the_level;?>';
+	var the_icon;
+	var currentPopup;
+	var marker;
+	var myMarker;
+	var markers;
+	var zoom = <?php print get_variable('def_zoom');?>;
+	var locale = <?php print get_variable('locale');?>;
+	var my_Local = <?php print get_variable('local_maps');?>;
+	var lon = <?php print get_variable('def_lng');?>;
+	var lat = <?php print get_variable('def_lat');?>;
+	var latLng;
+	var in_local_bool = "0";
+	var baseIcon = L.Icon.extend({options: {shadowUrl: './our_icons/shadow.png',
 	iconSize: [20, 32],	shadowSize: [37, 34], iconAnchor: [10, 31],	shadowAnchor: [10, 32], popupAnchor: [0, -20]
 	}
 	});
-var baseFacIcon = L.Icon.extend({options: {iconSize: [28, 28], iconAnchor: [14, 29], popupAnchor: [0, -20]
+	var baseFacIcon = L.Icon.extend({options: {iconSize: [28, 28], iconAnchor: [14, 29], popupAnchor: [0, -20]
 	}
 	});
-var baseSqIcon = L.Icon.extend({options: {iconSize: [20, 20], iconAnchor: [10, 21], popupAnchor: [0, -20]
+	var baseSqIcon = L.Icon.extend({options: {iconSize: [20, 20], iconAnchor: [10, 21], popupAnchor: [0, -20]
 	}
 	});
-var basecrossIcon = L.Icon.extend({options: {iconSize: [40, 40], iconAnchor: [20, 41], popupAnchor: [0, -41]
+	var basecrossIcon = L.Icon.extend({options: {iconSize: [40, 40], iconAnchor: [20, 41], popupAnchor: [0, -41]
 	}
 	});
-var mapWidth = <?php print get_variable('map_width');?>;
-var mapHeight = <?php print get_variable('map_height');?>;;
-$('map_canvas').style.width = mapWidth + "px";
-$('map_canvas').style.height = mapHeight + "px";
-var theLocale = <?php print get_variable('locale');?>;
-var useOSMAP = <?php print get_variable('use_osmap');?>;
-init_map(2, <?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>, "", 13, theLocale, useOSMAP, "tr");
-map.setView([<?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>], 13);
-var bounds = map.getBounds();	
-var zoom = map.getZoom();
-var got_points = false;	// map is empty of points
-function onMapClick(e) {
+	var mapWidth = <?php print get_variable('map_width');?>;
+	var mapHeight = <?php print get_variable('map_height');?>;;
+	$('map_canvas').style.width = mapWidth + "px";
+	$('map_canvas').style.height = mapHeight + "px";
+	var theLocale = <?php print get_variable('locale');?>;
+	var useOSMAP = <?php print get_variable('use_osmap');?>;
+	init_map(2, <?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>, "", 13, theLocale, useOSMAP, "tr");
+	map.setView([<?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>], 13);
+	var bounds = map.getBounds();	
+	var zoom = map.getZoom();
+	var got_points = false;	// map is empty of points
+	function onMapClick(e) {
 	if(marker) {map.removeLayer(marker);}
 	if(myMarker) {map.removeLayer(myMarker);}
 	var iconurl = "./our_icons/yellow.png";
@@ -2059,6 +2114,12 @@ function onMapClick(e) {
 	newGetAddress(e.latlng, "ni");
 	};
 
-map.on('click', onMapClick);
-</SCRIPT>
+	map.on('click', onMapClick);
+<?php
+	do_kml();
+?>
+	</SCRIPT>
+<?php
+	}
+?>
 </BODY></HTML>

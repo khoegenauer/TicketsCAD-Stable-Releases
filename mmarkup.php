@@ -67,7 +67,7 @@ extract($_POST);
 		div.scrollableContainer { position: relative; padding-top: 2em; border: 1px solid #999; }
 		div.scrollableContainer2 { position: relative; padding-top: 2em; }
 		div.scrollingArea { max-height: 240px; overflow: auto; overflow-x: hidden; }
-		div.scrollingArea2 { max-height: 480px; overflow: auto; overflow-x: hidden; }
+		div.scrollingArea2 { max-height: 400px; overflow: auto; overflow-x: hidden; }
 		table.scrollable thead tr { left: -1px; top: 0; position: absolute; }
 		table.cruises th { text-align: left; border-left: 1px solid #999; background: #CECECE; color: black; font-weight: bold; overflow: hidden; }
 		.olPopupCloseBox{background-image:url(img/close.gif) no-repeat;cursor:pointer;}	
@@ -148,6 +148,7 @@ extract($_POST);
 	function do_add() {					// Responds to sidebar click, then triggers listener above -  note [i]
 		document.doit_form.id.value="";
 		document.doit_form.func.value='add';
+		document.doit_form.add.value='true';
 		document.doit_form.submit();
 		}
 		
@@ -472,8 +473,13 @@ extract($_POST);
 // add ==================================================================================================================
 
 	if ($func == 'add') {
+		if (!($_SESSION['internet'])) {
+			print "Not usable in No-Maps mode<BR />";
+			exit();
+			} else {
 		require_once('./incs/links.inc.php');
 		require_once('./forms/mmarkup_add_screen.php');
+			}
 		exit();
 		}		// end if ($_GET['add'])
 
@@ -482,8 +488,13 @@ extract($_POST);
 // edit =================================================================================================================
 
 	if ($func == 'edit') {
+		if (!($_SESSION['internet'])) {
+			print "Not usable in No-Maps mode<BR />";
+			exit();
+			} else {
 		require_once('./incs/links.inc.php');
 		require_once('./forms/mmarkup_edit_screen.php');
+			}
 		}		// end if ($_GET['edit'])
 		
 // view =================================================================================================================
@@ -491,16 +502,26 @@ extract($_POST);
 // view =================================================================================================================
 
 	if ($func == 'view') {
+		if (!($_SESSION['internet'])) {
+			print "Not usable in No-Maps mode<BR />";
+			exit();
+			} else {
 		require_once('./incs/links.inc.php');
 		require_once('./forms/mmarkup_view_screen.php');
+		}
 		}
 // Initial display ======================================================================================================
 // Initial display ======================================================================================================
 // Initial display ======================================================================================================
 
 	if (!isset($mapmode)) {$mapmode="a";}
+	if (!($_SESSION['internet'])) {
+		print "Not usable in No-Maps mode<BR />";
+		exit();
+		} else {
 	require_once('./incs/links.inc.php');
 	require_once('./forms/mmarkup_screen.php');
+		}
 	exit();
     break;
 ?>

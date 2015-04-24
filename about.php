@@ -845,10 +845,30 @@ Changes for 3.00A (almost too many changes to list)
 
 263.  Added ability to remove files in the file list for Superadmin.
 
+Changes for 3.01A bug fix release
+
+264.  Bug fix release, no major new functionality.
+
+Changes for 3.02A - bug fix release
+
+265.  Bug fix release, no major new functionality.
+
 Let us know if the above is too terse and where further expansion wd be useful.
+
+Changes for 3.03A - bug fix release plus enhancement to Major Incidents and addition of OS-Watch feature
+
+266.  Addition of OS-Watch feature which provides operators the ability to monitor if responders are on-scene
+      for an extended period which may indicate a problem.
+	 
+267.  Enhancements to Major Incidents.
+
+268.  Change to Incident Edit form so that new notes are added to the disposition box with timestamp and in an
+      ordered manner.
+	  
+269.  Various maintenance fixes.
 <A NAME = 'bottom'></A>
 
-March '15
+April '15
 Arnie Shore
 Andy Harvey, UK
 

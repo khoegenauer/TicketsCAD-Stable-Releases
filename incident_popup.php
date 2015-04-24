@@ -115,7 +115,7 @@ $temp = get_variable('auto_poll');
 $poll_val = ($temp==0)? "none" : $temp ;
 $id =	(array_key_exists('id', ($_GET)))?	$_GET['id']  :	NULL;
 
-$result = mysql_query("SELECT *,UNIX_TIMESTAMP(problemstart) AS problemstart ,UNIX_TIMESTAMP(problemend) AS problemend FROM `$GLOBALS[mysql_prefix]ticket` WHERE id='$id'");
+$result = mysql_query("SELECT *,`problemstart` AS problemstart ,`problemend` AS problemend FROM `$GLOBALS[mysql_prefix]ticket` WHERE id='$id'");
 $row = mysql_fetch_assoc($result);
 $title = $row['scope'];
 $ticket_severity = get_severity($row['severity']);
@@ -126,6 +126,11 @@ $ticket_addr = "{$row['street']}, {$row['city']} {$row['state']} ";
 $ticket_start = $row['problemstart'];		//
 $ticket_end = $row['problemend'];		//
 $ticket_start_str = format_date($row['problemstart']);		//
+if($row['status'] == $GLOBALS['STATUS_CLOSED']) {
+	$elapsed = my_date_diff($ticket_start, $ticket_end);
+	} else {
+	$elapsed = get_elapsed_time($row);
+	}
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -148,7 +153,7 @@ $ticket_start_str = format_date($row['problemstart']);		//
 		div.scrollableContainer { position: relative; padding-top: 2em; border: 1px solid #999; }
 		div.scrollableContainer2 { position: relative; padding-top: 2em; }
 		div.scrollingArea { max-height: 240px; overflow: auto; overflow-x: hidden; }
-		div.scrollingArea2 { max-height: 480px; overflow: auto; overflow-x: hidden; }
+		div.scrollingArea2 { max-height: 400px; overflow: auto; overflow-x: hidden; }
 		table.scrollable thead tr { left: -1px; top: 0; position: absolute; }
 		table.cruises th { text-align: left; border-left: 1px solid #999; background: #CECECE; color: black; font-weight: bold; overflow: hidden; }
 		div.tabBox {}
@@ -355,9 +360,9 @@ $colors[$GLOBALS['SEVERITY_HIGH']] = "yellow";
 			$result_cleared  = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
 			$num_rows_cleared = mysql_affected_rows();
 			$ticket_end = ($ticket_end > 1)? $ticket_end:  (time() - (get_variable('delta_mins')*60));
-			$elapsed = my_date_diff($ticket_start, $ticket_end);		// 5/13/10
-			echo "<BR /><B>Ticket:&nbsp;{$title}<BR />Opened:&nbsp;{$ticket_start_str},&nbsp;&nbsp;&nbsp;&nbsp;Status: {$ticket_status}</B><BR />";
-			$stats = "<B>Severity:&nbsp;{$ticket_severity}, <SPAN STYLE='background-color:white; color:black;'>&nbsp;age: $elapsed&nbsp;</SPAN>";
+
+			echo "<BR /><B>Ticket:&nbsp;{$title}<BR />Opened:&nbsp;{$ticket_start_str},&nbsp;&nbsp;<SPAN STYLE='background-color:white; color:black;'>&nbsp;&nbsp;Elapsed: $elapsed&nbsp;</SPAN><BR />Status: {$ticket_status}</B><BR />";
+			$stats = "<B>Severity:&nbsp;{$ticket_severity}";
 
 			echo $stats;
 
@@ -553,7 +558,6 @@ var zoom = map.getZoom();
 			$tab_1 .= "<TR CLASS='odd'><TD class='td_label' style='font-size: 80%;' ALIGN='left'>Phone:</TD><TD ALIGN='left'>" . format_phone($row['phone']) . "</TD></TR>";
 			$tab_1 .= "<TR CLASS='even'><TD class='td_label' style='font-size: 80%;' ALIGN='left'>Addr:</TD><TD ALIGN='left'>$address_street</TD></TR>";
 	
-			$elapsed = get_elapsed_time ($row);
 			$tab_1 .= "<TR CLASS='odd'><TD class='td_label' style='font-size: 80%;' ALIGN='left'>Status:</TD><TD ALIGN='left'>" . get_status($row['status']) . "&nbsp;&nbsp;&nbsp;($elapsed)</TD></TR>";	// 3/27/10
 			$tab_1 .= (empty($row['fac_name']))? "" : "<TR CLASS='even'><TD class='td_label' style='font-size: 80%;' ALIGN='left'>Receiving Facility:</TD><TD ALIGN='left'>" . replace_quotes(shorten($row['fac_name'], 30))  . "</TD></TR>";	//3/27/10, 3/15/11
 			$utm = get_variable('UTM');

@@ -98,7 +98,7 @@ function get_butts($ticket_id, $unit_id) {
 		} 		// end if ($can_edit())
 	if (is_administrator() || is_super() || is_unit()){
 		if (!is_closed($ticket_id)) {
-			print "<BR /><INPUT TYPE='button' CLASS = 'btn_smaller' VALUE = 'Action' onClick  = \"var actWindow = window.open('action_w.php?mode=1&ticket_id={$ticket_id}', 'ActWindow', 'resizable=1, scrollbars, height=480, width=900, left=250,top=50,screenX=250,screenY=50'); ActWindow.focus();\" />\n"; // 7/3/10
+			print "<BR /><INPUT TYPE='button' CLASS = 'btn_smaller' VALUE = 'Action' onClick  = \"var actWindow = window.open('action_w.php?mode=1&ticket_id={$ticket_id}', 'actWindow', 'resizable=1, scrollbars, height=480, width=900, left=250,top=50,screenX=250,screenY=50'); actWindow.focus();\" />\n"; // 7/3/10
 			print "<BR /><INPUT TYPE='button' CLASS = 'btn_smaller' VALUE = '{$patient}' onClick  = \"var patWindow = window.open('patient_w.php?mode=1&ticket_id={$ticket_id}', 'patWindow', 'resizable=1, scrollbars, height=480,width=720, left=250,top=50,screenX=250,screenY=50'); patWindow.focus();\" />\n"; // 7/3/10
 			}
 		print "<BR /><INPUT TYPE='button' CLASS = 'btn_smaller' VALUE = 'Notify' onClick  = \"var notWindow = window.open('config.php?mode=1&func=notify&id={$ticket_id}', 'NotWindow', 'resizable=1, scrollbars, height=400, width=600, left=250,top=50,screenX=250,screenY=50'); notWindow.focus();\" />\n"; // 7/3/10
@@ -397,12 +397,6 @@ function replaceButtonText(buttonId, text) {
 		return xmlhttp; 
 		}
 
-	var announce = true;
-	function handleResult(req) {			// the called-back function
-		if (announce) {alert('<?php echo __LINE__; ?>');}
-		}			// end function handle Result(
-
-	
 	var announce = true;
 	function handleResult(req) {			// the called-back function
 		}			// end function handle Result()

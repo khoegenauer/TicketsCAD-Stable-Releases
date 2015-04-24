@@ -111,18 +111,39 @@ $get_id = 				(array_key_exists('id', ($_GET)))?				$_GET['id']  :			NULL;
 $get_sort_by_field = 	(array_key_exists('sort_by_field', ($_GET)))?	$_GET['sort_by_field']:	NULL;
 $get_sort_value = 		(array_key_exists('sort_value', ($_GET)))?		$_GET['sort_value']:	NULL;	
 	if ($get_print) {
+		if((array_key_exists('internet', ($_SESSION))) && ($_SESSION['internet'])) {
 		require_once('./forms/ticket_view_screen.php');
 		print "<BR /><P ALIGN='left'>";
+			} else {
+			require_once('./forms/ticket_view_screen_NM.php');
+			print "<BR /><P ALIGN='left'>";
+			}
 		}
 	else if ($get_id) {
+		if((array_key_exists('internet', ($_SESSION))) && ($_SESSION['internet'])) {
 		add_header($get_id, FALSE, TRUE);
 		require_once('./forms/ticket_view_screen.php');
 		print "<BR /><P ALIGN='left'>";
+			} else {
+			add_header($get_id, FALSE, TRUE);
+			require_once('./forms/ticket_view_screen_NM.php');
+			print "<BR /><P ALIGN='left'>";
+			}
 		}
 	else if ($get_sort_by_field && $get_sort_value) {
+		if((array_key_exists('internet', ($_SESSION))) && ($_SESSION['internet'])) {
 		require_once('./forms/sit_screen.php');
+			} else {
+			require_once('./forms/sit_screen_NM.php');
+			}
 		}
 	else {
+		if((array_key_exists('internet', ($_SESSION))) && ($_SESSION['internet'])) {
 		require_once('./forms/sit_screen.php');
+			} else {
+			require_once('./forms/sit_screen_NM.php');
 		}
 
+		}
+exit();
+?>

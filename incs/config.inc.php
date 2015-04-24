@@ -43,6 +43,7 @@ error_reporting(E_ALL);		// 3/5/12
 10/23/12 Added code for messaging and added extra missing settings to reset function
 5/8/2013 date display corrected
 5/21/2013 ICS button title/mouseover, others added.
+3/25/2015 - added 'os_watch' hint
  */
 $colors = array ('odd', 'even');
 
@@ -500,7 +501,7 @@ function get_setting_help($setting){/* get help for settings */
 		case "local_maps": 			return "Use local maps (OSM) for Responder Mobile (rm) page. Requires download of map tiles from config page";	 break;	// 9/10/13	
 		case "cloudmade_api": 			return "Cloudmade API code. Used to provide night mode on Responder Mobile (rm) page.";	 break;	// 9/10/13	
 		case "responder_mobile_forcelogin": 			return "Booked/scheduled runs don&#39;t appear on the situation screen until they are this-many hours from 'now'.  (Default is 48 hours.)";	 break;	// 9/10/13	
-		case "use_disp_autostat": 		return "Use Automatic Status updates for Responder status based on changes in ispatch status - Needs setup through config page.";	 break;	// 9/10/13	
+		case "use_disp_autostat": 		return "Use Automatic Status updates for Responder status based on changes in dispatch status - Needs setup through config page.";	 break;	// 9/10/13
 		case "portal_contact_email": 	return "Contact Us email address that appears on the Portal Page";	 break;	// 9/10/13	
 		case "portal_contact_phone": 	return "Contact Us phone number that appears on the Portal Page.";	 break;	// 9/10/13	
 		case "notify_facilities": 		return "Do Notifies to specified address / address list when Receiving Facility or Incident at Facility set.";	 break;	// 9/10/13	
@@ -512,6 +513,7 @@ function get_setting_help($setting){/* get help for settings */
 		case "xastir_dbpass": 			return "For Xastir Database, the password for access";	 break;
 		case "xastir_dbuser": 			return "For Xastir Database the MySQL user id.";	 break;	
 		case "xastir_server": 			return "The address of the Xastir Database, localhost by default.";	 break;
+		case "os_watch": 				return "Example: 5/15/60, meaning units on-scene at priority calls are reported every 5 minutes, on-scene at normal calls every 15, and &#39;Others&#39; every 60 minutes.  See documentation re &#39;Others&#39;.";	 break;		// 4/14/2015
 
 		default: 						return "No help for '$setting'"; break;	//	 ics_top
 		}

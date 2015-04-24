@@ -264,7 +264,11 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 			$id = $_GET['ticket_id'];
 			print "<BR><BR><FONT CLASS='header'>" . get_text("Patient") ." record has been added</FONT><BR /><BR />";
 			print "<A HREF='main.php'><U>Continue</U></A>";
+			if($_SESSION['internet']) {
 			require_once('./forms/ticket_view_screen.php');
+				} else {
+				require_once('./forms/ticket_view_screen_NM.php');
+				}
 			print "</BODY>";				// 10/19/08
 			
 			$addrs = notify_user($_GET['ticket_id'],$GLOBALS['NOTIFY_PERSON_CHG']);		// returns array or FALSE

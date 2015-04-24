@@ -64,7 +64,7 @@ $osgb = get_text('OSGB');
 		div.scrollableContainer { position: relative; padding-top: 2em; border: 1px solid #999; }
 		div.scrollableContainer2 { position: relative; padding-top: 2em; }
 		div.scrollingArea { max-height: 240px; overflow: auto; overflow-x: hidden; }
-		div.scrollingArea2 { max-height: 480px; overflow: auto; overflow-x: hidden; }
+		div.scrollingArea2 { max-height: 400px; overflow: auto; overflow-x: hidden; }
 		table.scrollable thead tr { left: -1px; top: 0; position: absolute; }
 		table.cruises th { text-align: left; border-left: 1px solid #999; background: #CECECE; color: black; font-weight: bold; overflow: hidden; }
 		.olPopupCloseBox{background-image:url(img/close.gif) no-repeat;cursor:pointer;}	
@@ -235,28 +235,48 @@ if ($_SESSION['internet']) {				// 8/22/10
 
 // add ===========================================================================================================================
 	if ($_getadd == 'true') {
+		if (!($_SESSION['internet'])) {
+			print "Not usable in No-Maps mode<BR />";
+			exit();
+			} else {
 		require_once('./incs/links.inc.php');
 		require_once('./forms/wl_add_screen.php');
+			}
 		exit();
 		}		// end if ($_GET['add'])
 
 // edit =================================================================================================================
 	if ($_getedit == 'true') {
+		if (!($_SESSION['internet'])) {
+			print "Not usable in No-Maps mode<BR />";
+			exit();
+			} else {
 		require_once('./incs/links.inc.php');
 		require_once('./forms/wl_edit_screen.php');
+			}
 		exit();
 		}		// end if ($_GET['edit'])
 // view =================================================================================================================
 
 		if ($_getview == 'true') {
+		if (!($_SESSION['internet'])) {
+			print "Not usable in No-Maps mode<BR />";
+			exit();
+			} else {
 			require_once('./incs/links.inc.php');
 		require_once('./forms/wl_view_screen.php');
+			}
 			exit();
 			}		// end if ($_GET['view'])
 // ============================================= initial display =======================
 		if (!isset($mapmode)) {$mapmode="a";}
+	if (!($_SESSION['internet'])) {
+		print "Not usable in No-Maps mode<BR />";
+		exit();
+		} else {
 		require_once('./incs/links.inc.php');
 	require_once('./forms/wl_screen.php');
+		}
 		exit();
     break;
 ?>

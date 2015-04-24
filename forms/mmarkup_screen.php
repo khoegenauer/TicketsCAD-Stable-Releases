@@ -203,6 +203,7 @@ do_kml();
 <FORM NAME='doit_form' METHOD='get' ACTION='mmarkup.php'>
 <INPUT TYPE='hidden' NAME='func' VALUE=''>
 <INPUT TYPE='hidden' NAME='view' VALUE=''>
+<INPUT TYPE='hidden' NAME='add' VALUE=''>
 <INPUT TYPE='hidden' NAME='id' VALUE=''>
 </FORM>
 

@@ -627,7 +627,7 @@ function check_days(id) {
 				</TR>
 
 <?php
-				$map_capt = (!$is_mobile)? 	"<BR /><BR /><CENTER><B><FONT CLASS = 'normal_text'>Click Map to revise facility location</FONT></B>" : "";
+				$map_capt = "<BR /><BR /><CENTER><B><FONT CLASS = 'normal_text'>Click Map to revise facility location</FONT></B>";
 				$lock_butt = (!$is_mobile)? "<IMG ID='lock_p' BORDER=0 SRC='./markers/unlock2.png' STYLE='vertical-align: middle' onClick = 'do_unlock_pos(document.res_edit_Form);'>" : "" ;
 				$usng_link = (!$is_mobile)? "<SPAN ID = 'usng_link' onClick = 'do_usng_conv(res_edit_Form)'>{$usng}:</SPAN>": "{$usng}:";
 				$osgb_link = (!$is_mobile)? "<SPAN ID = 'osgb_link'>{$osgb}:</SPAN>": "{$osgb}:";		

@@ -14,6 +14,7 @@ SELECT DISTINCT year(`problemstart`) AS `the_year` FROM `$GLOBALS[mysql_prefix]t
 1/6/2013 XSS check corrected
 9/25/2014 JC-specific functions added, GMaps references removed.
 1/1/2015 - added year as search argument
+4/12/2015 -  added actions and patients to ticket display
 */
 error_reporting(E_ALL);
 
@@ -32,6 +33,7 @@ if(($_SESSION['level'] == $GLOBALS['LEVEL_UNIT']) && (intval(get_variable('restr
 	}
 
 $evenodd = array ("even", "odd");
+$jc_911 = mysql_table_exists("$GLOBALS[mysql_prefix]jc_911");
 
 ?> 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
@@ -96,7 +98,6 @@ $do_str = ( ( array_key_exists('search_type', $_POST) ) && ( $_POST['search_type
 ?>
 <BODY onLoad = "ck_frames(); <?php echo $do_str; ?>">
 <?php
-	$jc_911 = mysql_table_exists("$GLOBALS[mysql_prefix]jc_911");
 	if ($jc_911){
 ?>
 <script>
@@ -205,12 +206,27 @@ function do_po () {				// not implemented
 			}		
 		else {
 			$id_stack = array_unique($id_stack);		// at least one
-	
 			$in_str = $sep = "";
 			for ($i=0; $i< count($id_stack); $i++) {
+				if (isset($id_stack[$i])) {				// 4/12/2015
 				$in_str .= "{$sep}'{$id_stack[$i]}'";
 				$sep = ", ";
 				}			
+				}
+
+		$acts_ary = $pats_ary = array();				// 4/12/2015
+
+		$query = "SELECT `ticket_id`, COUNT(*) AS `the_count` FROM `$GLOBALS[mysql_prefix]action` WHERE year(`date`) = " . quote_smart($_POST["frm_year"] ) . " GROUP BY `ticket_id`";
+		$result_temp = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+		while ($row = stripslashes_deep(mysql_fetch_assoc($result_temp))) 	{
+			$acts_ary[$row['ticket_id']] = $row['the_count'];
+			}
+
+		$query = "SELECT `ticket_id`, COUNT(*) AS `the_count` FROM `$GLOBALS[mysql_prefix]patient` WHERE year(`date`) = " . quote_smart($_POST["frm_year"] ) . "  GROUP BY `ticket_id`";
+		$result_temp = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+		while ($row = stripslashes_deep(mysql_fetch_assoc($result_temp))) 	{
+			$pats_ary[$row['ticket_id']] = $row['the_count'];
+			}
 	
 //	1/1/2015
 			$query = "SELECT `id`, UNIX_TIMESTAMP(`problemstart`) AS `problemstart`, UNIX_TIMESTAMP(`updated`) AS `updated`, `scope`, `status`, `severity`,
@@ -249,7 +265,10 @@ function do_po () {				// not implemented
 					<TD CLASS='td_header'><SPAN STYLE = 'margin-left:2px;'>Ticket</SPAN></TD>
 					<TD CLASS='td_header'><SPAN STYLE = 'margin-left:20px;'>Opened</SPAN></TD>
 					<TD CLASS='td_header'><SPAN STYLE = 'margin-left:20px;'>Description</SPAN></TD>
-					<TD CLASS='td_header'><SPAN STYLE = 'margin-left:20px;'>Location</SPAN></TD></TR>";
+					<TD CLASS='td_header'><SPAN STYLE = 'margin-left:20px;'>Location</SPAN></TD>
+					<TD CLASS='td_header'><SPAN STYLE = 'margin-left:20px;'>A</SPAN></TD>
+					<TD CLASS='td_header'><SPAN STYLE = 'margin-left:20px;'>P</SPAN></TD>
+					</TR>";
 				$counter = 0;
 					
 				while($row = stripslashes_deep(mysql_fetch_assoc($result))){				// 8/28/08
@@ -263,11 +282,15 @@ function do_po () {				// not implemented
 						default: 				$severityclass='severity_normal'; break;
 						}
 	
+					$acts = (array_key_exists($row['id'], $acts_ary)) ? $acts_ary[$row['id']] : "";
+					$pats = (array_key_exists($row['id'], $pats_ary)) ? $pats_ary[$row['id']] : "";
 					print "<TR CLASS='{$evenodd[$counter%2]}' onClick = \"Javascript: self.location.href = 'main.php?id={$row['id']}';\">
 						<TD CLASS='$severityclass'>#{$row['id']}</TD>
 						<TD CLASS='$severityclass'><SPAN STYLE = 'margin-left:10px;'>" . format_date($row['problemstart'])."</SPAN></TD>
 						<TD CLASS='$severityclass'><SPAN STYLE = 'margin-left:10px;'>{$strike}" . shorten(highlight($_POST['frm_query'], $row['scope']), 120) . "{$strikend}</SPAN></TD>
 						<TD CLASS='$severityclass'><SPAN STYLE = 'margin-left:10px;'>{$strike}" . shorten(highlight($_POST['frm_query'], $row['addr']), 120) . "{$strikend}</SPAN></TD>
+						<TD >{$acts}</TD>
+						<TD >{$pats}</TD>
 						</TR>\n";				// 2/25/09
 					$counter++;
 					}			
@@ -332,6 +355,11 @@ function do_po () {				// not implemented
 
 </div>		<!-- end 'db' -->
 <!-- new jc_911 stuff - 9/25/2014 -->
+
+<?php
+	if ($jc_911) {
+?>
+
 <script>
 
 	function sendRequest(url,callback,postData) {
@@ -540,5 +568,8 @@ function do_po () {				// not implemented
 </html>
 
 </div> <!-- end "po" -->
+<?php
+	}		// end if (jc_911)
+?>
 
 </BODY></HTML>

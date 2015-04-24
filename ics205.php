@@ -206,9 +206,7 @@ $step = (array_key_exists( 'step', $_POST )) ?  $_POST['step']: 1;
 switch ($step) {
 
 	case 1 :
-
-//		$user_id = $_SESSION['user_id'];
-		$user_id =1;						// testing
+		$user_id = $_SESSION['user_id'];		//3/24/2015
 		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user` WHERE `id` = {$user_id} LIMIT 1";
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
 		$row = stripslashes_deep(mysql_fetch_assoc($result));

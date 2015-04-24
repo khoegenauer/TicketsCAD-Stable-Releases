@@ -60,13 +60,13 @@ $date_part .= substr($date_part, 0, -2);							//drop terminal separator pair
 
 $query = "UPDATE `$GLOBALS[mysql_prefix]assigns` SET `as_of`= " . quote_smart($now) .", " . $date_part ;
 $query .=  " WHERE `id` = " .$_POST['frm_id'] . " LIMIT 1";
-//snap(basename( __FILE__), $query);
 $result	= mysql_query($query) or do_error($query,'',mysql_error(), basename( __FILE__), __LINE__);
 
 set_u_updated ($_POST['frm_id']); 								// set unit 'updated' time - 9/1/10
 $use_status_update = get_variable("use_disp_autostat");
 // 8/22/13 - Update unit status to reflect dispatch status
 if($use_status_update == "1") {
-	auto_disp_status($disp_status, $frm_unit);
+	$theval = auto_disp_status($disp_status, $frm_unit);
+	do_log($GLOBALS['LOG_UNIT_STATUS'], $frm_tick, $frm_unit, $theval);
 	}
 ?>

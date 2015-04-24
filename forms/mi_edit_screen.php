@@ -256,19 +256,43 @@ while ($row_x = stripslashes_deep(mysql_fetch_assoc($result_x))) {
 						<TABLE>
 							<TR>
 								<TD class='td_label'>Email 1</TD>
-								<TD class='td_data'><?php print $comm_arr[$row['gold']][4];?></TD>
+								<TD class='td_data'>
+<?php 
+									if($comm_arr[$row['gold']]) {
+										print $comm_arr[$row['gold']][4];
+										}
+?>
+								</TD>
 							</TR>
 							<TR>
 								<TD class='td_label'>Email 2</TD>
-								<TD class='td_data'><?php print $comm_arr[$row['gold']][5];?></TD>
+								<TD class='td_data'>
+<?php 
+									if($comm_arr[$row['gold']]) {
+										print $comm_arr[$row['gold']][5];
+										}
+?>
+								</TD>
 							</TR>
 							<TR>
 								<TD class='td_label'>Phone 1</TD>
-								<TD class='td_data'><?php print $comm_arr[$row['gold']][6];?></TD>
+								<TD class='td_data'>
+<?php 
+									if($comm_arr[$row['gold']]) {
+										print $comm_arr[$row['gold']][6];
+										}
+?>
+								</TD>
 							</TR>
 							<TR>
 								<TD class='td_label'>Phone 2</TD>
-								<TD class='td_data'><?php print $comm_arr[$row['gold']][7];?></TD>
+								<TD class='td_data'>
+<?php 
+									if($comm_arr[$row['gold']]) {
+										print $comm_arr[$row['gold']][7];
+										}
+?>
+								</TD>
 							</TR>
 						</TABLE>
 					</DIV>
@@ -294,19 +318,43 @@ while ($row_x = stripslashes_deep(mysql_fetch_assoc($result_x))) {
 						<TABLE>
 							<TR>
 								<TD class='td_label'>Email 1</TD>
-								<TD class='td_data'><?php print $comm_arr[$row['silver']][4];?></TD>
+								<TD class='td_data'>
+<?php 
+									if($comm_arr[$row['silver']]) {
+										print $comm_arr[$row['silver']][4];
+										}
+?>
+								</TD>
 							</TR>
 							<TR>
 								<TD class='td_label'>Email 2</TD>
-								<TD class='td_data'><?php print $comm_arr[$row['silver']][5];?></TD>
+								<TD class='td_data'>
+<?php 
+									if($comm_arr[$row['silver']]) {
+										print $comm_arr[$row['silver']][5];
+										}
+?>
+								</TD>
 							</TR>
 							<TR>
 								<TD class='td_label'>Phone 1</TD>
-								<TD class='td_data'><?php print $comm_arr[$row['silver']][6];?></TD>
+								<TD class='td_data'>
+<?php 
+									if($comm_arr[$row['silver']]) {
+										print $comm_arr[$row['silver']][6];
+										}
+?>
+								</TD>
 							</TR>
 							<TR>
 								<TD class='td_label'>Phone 2</TD>
-								<TD class='td_data'><?php print $comm_arr[$row['silver']][7];?></TD>
+								<TD class='td_data'>
+<?php 
+									if($comm_arr[$row['silver']]) {
+										print $comm_arr[$row['silver']][7];
+										}
+?>
+								</TD>
 							</TR>
 						</TABLE>
 					</DIV>					
@@ -332,19 +380,43 @@ while ($row_x = stripslashes_deep(mysql_fetch_assoc($result_x))) {
 						<TABLE>
 							<TR>
 								<TD class='td_label'>Email 1</TD>
-								<TD class='td_data'><?php print $comm_arr[$row['bronze']][4];?></TD>
+								<TD class='td_data'>
+<?php 
+									if(isset($comm_arr[$row['bronze']])) {
+										print $comm_arr[$row['bronze']][4];
+										}
+?>
+								</TD>
 							</TR>
 							<TR>
 								<TD class='td_label'>Email 2</TD>
-								<TD class='td_data'><?php print $comm_arr[$row['bronze']][5];?></TD>
+								<TD class='td_data'>
+<?php 
+									if(isset($comm_arr[$row['bronze']])) {
+										print $comm_arr[$row['bronze']][5];
+										}
+?>
+								</TD>
 							</TR>
 							<TR>
 								<TD class='td_label'>Phone 1</TD>
-								<TD class='td_data'><?php print $comm_arr[$row['bronze']][6];?></TD>
+								<TD class='td_data'>
+<?php 
+									if(isset($comm_arr[$row['bronze']])) {
+										print $comm_arr[$row['bronze']][6];
+										}
+?>
+								</TD>
 							</TR>
 							<TR>
 								<TD class='td_label'>Phone 2</TD>
-								<TD class='td_data'><?php print $comm_arr[$row['bronze']][7];?></TD>
+								<TD class='td_data'>
+<?php 
+									if(isset($comm_arr[$row['bronze']])) {
+										print $comm_arr[$row['bronze']][7];
+										}
+?>
+								</TD>
 							</TR>
 						</TABLE>
 					</DIV>									
@@ -417,7 +489,7 @@ while ($row_x = stripslashes_deep(mysql_fetch_assoc($result_x))) {
 					<TD>
 						<DIV>
 <?php
-							$query_inc = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE `$GLOBALS[mysql_prefix]ticket`.`status`='{$GLOBALS['STATUS_OPEN']}' ORDER BY `id` ASC";
+							$query_inc = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE `$GLOBALS[mysql_prefix]ticket`.`status`='{$GLOBALS['STATUS_OPEN']}' OR `$GLOBALS[mysql_prefix]ticket`.`status`='{$GLOBALS['STATUS_SCHEDULED']}' ORDER BY `id` ASC";
 							$result_inc = mysql_query($query_inc) or do_error($query_inc, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
 							while ($row_inc	= stripslashes_deep(mysql_fetch_assoc($result_inc))) {
 								$sel = (in_array($row_inc['id'], $existing_incs, TRUE)) ? "CHECKED": "";

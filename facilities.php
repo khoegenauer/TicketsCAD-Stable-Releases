@@ -43,9 +43,9 @@ $iw_width= "300px";					// map infowindow with
 
 @session_start();	
 
-if (!($_SESSION['internet'])) {				// 12/6/10
+/* if (!($_SESSION['internet'])) {				// 12/6/10
 	header("Location: facilities_nm.php");
-	}
+	} */
 
 require_once($_SESSION['fip']);		//7/28/10
 do_login(basename(__FILE__));
@@ -141,7 +141,7 @@ function get_mailgroup_name($id) {	//	8/28/13
 		div.scrollableContainer { position: relative; padding-top: 2em; border: 1px solid #999; }
 		div.scrollableContainer2 { position: relative; padding-top: 2em; }
 		div.scrollingArea { max-height: 240px; overflow: auto; overflow-x: hidden; }
-		div.scrollingArea2 { max-height: 480px; overflow: auto; overflow-x: hidden; }
+		div.scrollingArea2 { max-height: 400px; overflow: auto; overflow-x: hidden; }
 		table.scrollable thead tr { left: -1px; top: 0; position: absolute; }
 		table.cruises th { text-align: left; border-left: 1px solid #999; background: #CECECE; color: black; font-weight: bold; overflow: hidden; }
 		.olPopupCloseBox{background-image:url(img/close.gif) no-repeat;cursor:pointer;}	
@@ -473,7 +473,11 @@ if ($_SESSION['internet']) {				// 8/22/10
 
 	if ($_getadd == 'true') {
 		require_once('./incs/links.inc.php');
+		if (!($_SESSION['internet'])) {
+			require_once('./forms/facilities_add_screen_NM.php');
+			} else {
 		require_once('./forms/facilities_add_screen.php');
+			}
 		exit();
 		}		// end if ($_GET['add'])
 
@@ -483,7 +487,11 @@ if ($_SESSION['internet']) {				// 8/22/10
 
 	if ($_getedit == 'true') {
 		require_once('./incs/links.inc.php');
+		if (!($_SESSION['internet'])) {
+			require_once('./forms/facilities_edit_screen_NM.php');
+			} else {
 		require_once('./forms/facilities_edit_screen.php');
+			}
 		}		// end if ($_GET['edit'])
 
 // view =================================================================================================================
@@ -492,13 +500,21 @@ if ($_SESSION['internet']) {				// 8/22/10
 
 		if ($_getview == 'true') {
 		require_once('./incs/links.inc.php');
+		if (!($_SESSION['internet'])) {
+			require_once('./forms/facilities_view_screen_NM.php');
+			} else {
 		require_once('./forms/facilities_view_screen.php');
 				}
+		}
 				
 // ============================================= initial display =======================
 			if (!isset($mapmode)) {$mapmode="a";}
 		require_once('./incs/links.inc.php');
+		if (!($_SESSION['internet'])) {
+			require_once('./forms/facilities_screen_NM.php');
+			} else {
 		require_once('./forms/facilities_screen.php');
+			}
 		exit();
     break;
 ?>

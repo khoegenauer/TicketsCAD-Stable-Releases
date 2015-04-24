@@ -61,10 +61,10 @@ $day_night = ((array_key_exists('day_night', ($_SESSION))) && ($_SESSION['day_ni
 		#regions_control { font-family: verdana, arial, helvetica, sans-serif; font-size: 5px; background-color: #FEFEFE; font-weight: bold;}
 		table.cruises { font-family: verdana, arial, helvetica, sans-serif; font-size: 10px; cellspacing: 0; border-collapse: collapse; }
 		table.cruises td {text-align: left; margin-left: 0px; overflow: hidden; }
-		div.scrollableContainer { position: relative; padding-top: 1.2em; border: 1px solid #999; }
+		div.scrollableContainer { position: relative; padding-top: 1.5em; border: 1px solid #999; }
 		div.scrollableContainer2 { position: relative; padding-top: 1.2em; border: 1px solid #999; }
 		div.scrollingArea { max-height: 240px; overflow: auto; overflow-x: hidden; }
-		div.scrollingArea2 { max-height: 480px; overflow: auto; overflow-x: hidden; }
+		div.scrollingArea2 { max-height: 400px; overflow: auto; overflow-x: hidden; }
 		table.scrollable thead tr { left: -1px; top: 0; position: absolute; }
 		table.cruises th { text-align: left; border-left: 1px solid #999; background: #000000; color: #FFFFFF; font-weight: bold; overflow: hidden; }
 		div.tabBox {}
@@ -100,7 +100,7 @@ if ($_SESSION['internet']) {
 	<script src="./js/leaflet/KML.js"></script>  
 	<script src="./js/leaflet-openweathermap.js"></script>
 	<script src="./js/esri-leaflet.js"></script>
-	<script src="./js/OSOpenspace.js"></script>
+	<script src="./js/osopenspace.js"></script>
 	<script src="./js/Control.Geocoder.js"></script>
 	<SCRIPT TYPE="text/javascript" SRC="./js/gmaps_v3_init.js"></script>
 	<script type="text/javascript" src="./js/L.Graticule.js"></script>
@@ -145,6 +145,8 @@ var cell4 = "0px";
 var cell5 = "0px";
 var cell6 = "0px";
 var cell7 = "0px";
+var mapCenter;
+var mapZoom;
 var baseIcon = L.Icon.extend({options: {shadowUrl: './our_icons/shadow.png',
 	iconSize: [20, 32],	shadowSize: [37, 34], iconAnchor: [10, 31],	shadowAnchor: [10, 32], popupAnchor: [0, -20]
 	}
@@ -180,7 +182,7 @@ var fscolors = new Array ('fs_odd', 'fs_even');
 
 function set_period(period) {
 	window.inc_period = period;
-	$('theHeading').innerHTML = heading;
+	$('theHeading').innerHTML = window.captions[window.inc_period];
 	}
 
 function submit_period() {
@@ -267,6 +269,8 @@ function set_size() {
 	load_regions();
 	set_initial_pri_disp();
 	load_poly_controls();
+	mapCenter = map.getCenter();
+	mapZoom = map.getZoom();
 	setTimeout(function() {$('leftcol').style.display = "none"; $('showlists').style.display='inline-block';},10000);
 	}
 
@@ -329,6 +333,25 @@ function do_tab(tabid, suffix, lat, lng) {
 			}
 		}
 
+	$query_al = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `type`= 4 AND `resource_id` = '$_SESSION[user_id]' ORDER BY `id` ASC;";	// 6/10/11
+	$result_al = mysql_query($query_al);	// 6/10/11
+	$al_groups = array();
+	$al_names = "";	
+	while ($row_al = stripslashes_deep(mysql_fetch_assoc($result_al))) 	{	// 6/10/11
+		$al_groups[] = $row_al['group'];
+		$query_al2 = "SELECT * FROM `$GLOBALS[mysql_prefix]region` WHERE `id`= '$row_al[group]';";	// 6/10/11
+		$result_al2 = mysql_query($query_al2);	// 6/10/11
+		while ($row_al2 = stripslashes_deep(mysql_fetch_assoc($result_al2))) 	{	// 6/10/11		
+				$al_names .= $row_al2['group_name'] . ", ";
+			}
+		}
+
+	if((get_num_groups()) && (COUNT(get_allocates(4, $_SESSION['user_id'])) > 1))  {	
+		$regions_string = "Viewing Regions:&nbsp;&nbsp; " . $al_names;
+		} else {
+		$regions_string = "";
+		}
+
 ?>	
 <STYLE TYPE="text/css">
 .box { background-color: #DEE3E7; border: 2px outset #606060; color: #000000; padding: 0px; position: absolute; z-index:1000; width: 180px; }
@@ -369,7 +392,7 @@ function do_tab(tabid, suffix, lat, lng) {
 ?>
 
 <A NAME='top'></A>
-<DIV id='screenname' style='display: none;'>situation</DIV>
+<DIV id='screenname' style='display: none;'>fullscreen</DIV>
 <DIV ID='to_bottom' style="position: fixed; top: 20px; left: 20px; height: 12px; width: 10px;" onclick = "location.href = '#bottom';"><IMG SRC="markers/down.png" BORDER=0 ID = "down"/></div>
 <SCRIPT TYPE="text/javascript" src="./js/wz_tooltip.js"></SCRIPT>
 
@@ -380,6 +403,7 @@ function do_tab(tabid, suffix, lat, lng) {
 <DIV id='outer' style='position: absolute; left: 0px; z-index: 1;'>
 	<DIV CLASS='header' style = "height:32px; width: 100%; float: none; text-align: center;">
 		<SPAN ID='theHeading' CLASS='header' STYLE='background-color: inherit;'></SPAN>
+		<SPAN ID='theRegions' CLASS='heading' STYLE='background-color: #707070;' onMouseover='Tip("<?php print $regions_string;?>", WIDTH, 300);' onmouseout='UnTip();'>Viewing Regions (mouse over to view)</SPAN>
 		<SPAN ID='sev_counts' CLASS='sev_counts'></SPAN>
 	</DIV>
 	<DIV id='left_sidebar' style='position: fixed; top: 30px; left: 0px; height: 500px; font-size: 1.2em; z-index: 9999; background-color: #FFFFFF;'>
@@ -456,7 +480,7 @@ function do_tab(tabid, suffix, lat, lng) {
 <DIV style='position: fixed; top: 100px; right: 0px; z-index: 9999;'>
 <?php
 $allow_filedelete = ($the_level == $GLOBALS['LEVEL_SUPER']) ? TRUE : FALSE;
-print add_sidebar(TRUE, TRUE, TRUE, TRUE, FALSE, 0, 0, 0, 0);
+print add_sidebar(TRUE, TRUE, TRUE, TRUE, $allow_filedelete, 0, 0, 0, 0);
 ?>
 </DIV>
 <SCRIPT>

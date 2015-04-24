@@ -144,9 +144,11 @@ function incident_list($sort_by_field='',$sort_value='', $sortby="tick_id", $sor
 		$where2 .= "AND `$GLOBALS[mysql_prefix]allocates`.`type` = 1";	
 		}
 
+	$interval = get_variable('hide_booked');
+
 	switch($func) {		
 		case 0: 
-			$where = "WHERE (`$GLOBALS[mysql_prefix]ticket`.`status`='{$GLOBALS['STATUS_OPEN']}' OR (`$GLOBALS[mysql_prefix]ticket`.`status`='{$GLOBALS['STATUS_SCHEDULED']}' AND `$GLOBALS[mysql_prefix]ticket`.`booked_date` <= (NOW() + INTERVAL 2 DAY)) OR 
+			$where = "WHERE (`$GLOBALS[mysql_prefix]ticket`.`status`='{$GLOBALS['STATUS_OPEN']}' OR (`$GLOBALS[mysql_prefix]ticket`.`status`='{$GLOBALS['STATUS_SCHEDULED']}' AND `$GLOBALS[mysql_prefix]ticket`.`booked_date` <= (NOW() + INTERVAL " . $interval . " HOUR)) OR 
 				(`$GLOBALS[mysql_prefix]ticket`.`status`='{$GLOBALS['STATUS_CLOSED']}'  AND `$GLOBALS[mysql_prefix]ticket`.`problemend` >= '{$time_back}')){$where2}";	//	11/29/10, 4/18/11, 4/18/11
 			break;
 		case 1:
@@ -163,7 +165,7 @@ function incident_list($sort_by_field='',$sort_value='', $sortby="tick_id", $sor
 			$where = " WHERE (`$GLOBALS[mysql_prefix]ticket`.`status`='{$GLOBALS['STATUS_CLOSED']}' AND `$GLOBALS[mysql_prefix]ticket`.`problemend` BETWEEN '{$the_start}' AND '{$the_end}') {$where2} ";		//	4/18/11, 4/18/11
 			break;				
 		case 10:
-			$where = "WHERE (`$GLOBALS[mysql_prefix]ticket`.`status`='{$GLOBALS['STATUS_SCHEDULED']}' AND `$GLOBALS[mysql_prefix]ticket`.`booked_date` >= (NOW() + INTERVAL 2 DAY)) {$where2}";	//	11/29/10, 4/18/11, 4/18/11
+			$where = "WHERE (`$GLOBALS[mysql_prefix]ticket`.`status`='{$GLOBALS['STATUS_SCHEDULED']}' AND `$GLOBALS[mysql_prefix]ticket`.`booked_date` >= (NOW() + INTERVAL " . $interval . " HOUR)) {$where2}";	//	11/29/10, 4/18/11, 4/18/11
 			break;			
 		default: print "error - error - error - error " . __LINE__;
 		}				// end switch($func)
@@ -279,114 +281,10 @@ function incident_list($sort_by_field='',$sort_value='', $sortby="tick_id", $sor
 			$P = array_key_exists ($the_id , $pats_ary)? $pats_ary[$the_id]: "&nbsp;";
 			$pats_count = (isset($pats_ary[$the_id])) ? $pats_ary[$the_id] : "&nbsp;";
 			$acts_count = (isset($acts_ary[$the_id])) ? $acts_ary[$the_id] : "&nbsp;";	
+			$booked = (is_date($row['booked_date'])) ? format_sb_date_2($row['booked_date']) : 0;
 			
 			$use_quick = (((integer)$func == 0) || ((integer)$func == 10)) ? FALSE : TRUE ;	//	11/29/10
 			$locale = get_variable('locale');	// 08/03/09			
-			if (my_is_float($row['lat'])) {		// 6/21/10
-				$temp_array[0] = $row['lat'];
-				$temp_array[1] = $row['lng'];
-				$temp_array[2] = htmlentities(shorten($row['scope'], 48), ENT_QUOTES);
-				$temp_array[3] = htmlentities(shorten(str_replace($eols, " ", $row['tick_descr']), 256), ENT_QUOTES);
-				$street = empty($row['ticket_street'])? "" : replace_quotes($row['ticket_street']) . "<BR/>" . replace_quotes($row['ticket_city']) . " " . replace_quotes($row['ticket_state']) ;
-				$todisp = (is_guest()|| is_unit())? "": "<A id='disp_" . $the_id . "' CLASS='plain' style='float: none; color: #000000;' HREF='{$_SESSION['routesfile']}?ticket_id={$the_id}' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">Dispatch</A>";	// 7/27/10
-			
-				$rand = ($istest)? "&rand=" . chr(rand(65,90)) : "";													// 10/21/08
-				$theTabs = "<div class='infowin'><BR />";
-				$theTabs .= '<div class="tabBox" style="float: left; width: 100%;">';
-				$theTabs .= '<div class="tabArea">';
-				$theTabs .= '<span id="tab1" class="tabinuse" style="cursor: pointer;" onClick="do_tab(\'tab1\', 1, null, null);">Summary</span>';
-				$theTabs .= '<span id="tab2" class="tab" style="cursor: pointer;" onClick="do_tab(\'tab2\', 2, null, null);">Details</span>';
-				$theTabs .= '<span id="tab3" class="tab" style="cursor: pointer;" onClick="do_tab(\'tab3\', 3, ' . $row['lat'] . ',' . $row['lng'] . ');">Location</span>';
-				$theTabs .= '</div>';
-				$theTabs .= '<div class="contentwrapper">';
-			
-				$tab_1 = "<TABLE width='280px' style='height: 260px;'><TR><TD><TABLE width='98%'>";
-				$tab_1 .= "<TR CLASS='even'><TD COLSPAN=2 ALIGN='center'><B>$strike" . htmlentities(shorten($row['scope'], 48), ENT_QUOTES)  . "$strikend</B></TD></TR>";
-				$tab_1 .= "<TR CLASS='odd'><TD class='td_label' style='font-size: 80%;' ALIGN='left'>As of:</TD><TD ALIGN='left'>" . format_date_2(($row['updated'])) . "</TD></TR>";
-				if (is_date($row['booked_date'])){
-					$tab_1 .= "<TR CLASS='odd'><TD class='td_label' style='font-size: 80%;' ALIGN='left' >Booked Date:</TD><TD ALIGN='left'>" . format_date_2($row['booked_date']) . "</TD></TR>";	//10/27/09, 3/15/11
-					}
-				$tab_1 .= "<TR CLASS='even'><TD class='td_label' style='font-size: 80%;' ALIGN='left'>Reported by:</TD><TD ALIGN='left'>" . replace_quotes(shorten($row['contact'], 32)) . "</TD></TR>";
-				$tab_1 .= "<TR CLASS='odd'><TD class='td_label' style='font-size: 80%;' ALIGN='left'>Phone:</TD><TD ALIGN='left'>" . format_phone($row['phone']) . "</TD></TR>";
-				$tab_1 .= "<TR CLASS='even'><TD class='td_label' style='font-size: 80%;' ALIGN='left'>Addr:</TD><TD ALIGN='left'>$address_street</TD></TR>";
-		
-				$elapsed = get_elapsed_time ($row);
-				$tab_1 .= "<TR CLASS='odd'><TD class='td_label' style='font-size: 80%;' ALIGN='left'>Status:</TD><TD ALIGN='left'>" . get_status($row['status']) . "&nbsp;&nbsp;&nbsp;($elapsed)</TD></TR>";	// 3/27/10
-				$tab_1 .= (empty($row['fac_name']))? "" : "<TR CLASS='even'><TD class='td_label' style='font-size: 80%;' ALIGN='left'>Receiving Facility:</TD><TD ALIGN='left'>" . replace_quotes(shorten($row['fac_name'], 30))  . "</TD></TR>";	//3/27/10, 3/15/11
-				$utm = get_variable('UTM');
-				if ($utm==1) {
-					$coords =  $row['lat'] . "," . $row['lng'];																	// 8/12/09
-					$tab_1 .= "<TR CLASS='even'><TD class='td_label' style='font-size: 80%;' ALIGN='left'>UTM grid:</TD><TD ALIGN='left'>" . toUTM($coords) . "</TD></TR>";
-					}
-				$tab_1 .= "</TABLE></TD></TR>";
-				$tab_1 .= "<TR><TD COLSPAN=2 ALIGN='center'><TABLE><TR style='height: 25px;'><TD style='text-align: center;'>";
-				$tab_1 .= 	$todisp . "<A id='view_" . $the_id . "'  CLASS='plain' style='float: none; color: #000000;' HREF='main.php?id={$the_id}' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">Details</A>";		// 08/8/02
-				if (!(is_guest() )) {
-					if (can_edit()) {							//8/27/10
-						$tab_1 .= 	"<A id='edit_" . $the_id . "' CLASS='plain' style='float: none; color: #000000;' HREF='{$_SESSION['editfile']}?id={$the_id}{$rand}' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">Edit</A>";	
-						}
-					$tab_1 .= "</TD></TR><TR style='height: 25px;'><TD style='text-align: center;'>";
-					if(($internet) && ($locale == 1)) {
-						$tab_1 .= 	"&nbsp;&nbsp;&nbsp;&nbsp;<A id='osmap_but' class='plain' style='float: none; color: #000000;' HREF='#' onClick = 'do_osmap({$temp_array[0]}, {$temp_array[1]}, {$the_id}, &quot;" . $temp_array[2] . "&quot;, &quot;" . $temp_array[3] . "&quot;, \"ticket\");' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">OS Map</A>" ;	// 7/7/09
-						}
-					$tab_1 .= 	"<A id='popup_" . $the_id . "' CLASS='plain' style='float: none; color: #000000;' HREF='#'  onClick = 'do_popup({$the_id});' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\");>Popup</A>" ;	// 7/7/09
-					$tab_1 .= "</TD></TR><TR style='height: 25px;'><TD style='text-align: center;'>";
-					if ((!(is_closed($the_id))) && (!is_unit()))  {		// 3/3/11
-						$tab_1 .= "<A id='close_" . $the_id . "' CLASS='plain' style='float: none; color: #000000;' HREF='#' onClick = 'do_close_tick({$the_id});' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">" . get_text("Close incident") . "</A>";  // 3/3/11
-						}
-					$tab_1 .=   "<A id='mail_" . $the_id . "' CLASS='plain' style='float: none; color: #000000;' HREF='#' onClick = 'do_mail_all_win({$the_id});' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">Contact Units</A>";					
-					$tab_1 .= "</TD></TR><TR style='height: 25px;'><TD style='text-align: center;'>";				
-					$tab_1 .= 	"<A id='note_" . $the_id . "' CLASS='plain' style='float: none; color: #000000;' HREF='#' onClick = 'do_add_note ({$the_id});' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">Add note</A>" ;	// 7/7/09
-					if (can_edit()) {							//8/27/10
-						$tab_1 .= 	"<A id='pat_" . $the_id . "' CLASS='plain' style='float: none; color: #000000;' HREF='patient.php?ticket_id={$the_id}{$rand}' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">Add {$patient}</A>";	// 7/9/09
-						$tab_1 .= 	"<A id='act_" . $the_id . "' CLASS='plain' style='float: none; color: #000000;' HREF='action.php?ticket_id={$the_id}{$rand}' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">Add Action</A>";
-						}
-					$tab_1 .= "</TD></TR></TABLE>";
-					}
-				$tab_1 .= "</TD></TR>";
-				$tab_1 .= 	"</FONT></TD></TR></TABLE>";			// 11/6/08	
-
-				$tab_2 = "<TABLE width='280px' style='height: 280px;' ><TR><TD><TABLE width='98%'>";
-				$tab_2 .= "<TR CLASS='even'><TD class='td_label' style='font-size: 80%;' ALIGN='left'>Description:</TD><TD ALIGN='left'>" . replace_quotes(shorten(str_replace($eols, " ", $row['tick_descr']), 48)) . "</TD></TR>";
-				$tab_2 .= "<TR CLASS='even'><TD class='td_label' style='font-size: 80%;' ALIGN='left'>911 contact:</TD><TD ALIGN='left'>" . shorten($row['nine_one_one'], 48) . "</TD></TR>";
-				$tab_2 .= "<TR CLASS='odd'><TD class='td_label' style='font-size: 80%;' ALIGN='left'>{$disposition}:</TD><TD ALIGN='left'>" . shorten(replace_quotes($row['comments']), 48) . "</TD></TR></TABLE></TD></TR>";		// 8/13/09, 3/15/11
-				$tab_2 .= "<TR><TD COLSPAN=2 ALIGN='left'><DIV style='max-height: 200px; overflow-y: scroll;'>" . show_assigns(0, $the_id) . "</DIV></TD></TR>";
-
-				$tab_2 .= "</TABLE>";			// 11/6/08			
-				
-				$tab_3 = "<TABLE width='280px' style='height: 280px;'><TR><TD>";
-				$tab_3 .= "<TABLE width='98%'>";
-
-				switch($locale) { 
-					case "0":
-					$tab_3 .= "<TR CLASS='odd'><TD class='td_label' ALIGN='left'>USNG:</TD><TD ALIGN='left'>" . LLtoUSNG($row['lat'], $row['lng']) . "</TD></TR>";	// 8/23/08, 10/15/08, 8/3/09
-					break;
-				
-					case "1":
-					$tab_3 .= "<TR CLASS='odd'>	<TD class='td_label' ALIGN='left'>OSGB:</TD><TD ALIGN='left'>" . LLtoOSGB($row['lat'], $row['lng']) . "</TD></TR>";	// 8/23/08, 10/15/08, 8/3/09
-					break;
-				
-					case "2":
-					$coords =  $row['lat'] . "," . $row['lng'];							// 8/12/09
-					$tab_3 .= "<TR CLASS='odd'>	<TD class='td_label' ALIGN='left'>UTM:</TD><TD ALIGN='left'>" . toUTM($coords) . "</TD></TR>";	// 8/23/08, 10/15/08, 8/3/09
-					break;
-				
-					default:
-					print "ERROR in " . basename(__FILE__) . " " . __LINE__ . "<BR />";
-					}
-				$tab_3 .= "<TR><TD class='td_label' style='font-size: 80%;'>Lat</TD><TD class='td_data' style='font-size: 80%;'>" . $row['lat'] . "</TD></TR>";
-				$tab_3 .= "<TR><TD class='td_label' style='font-size: 80%;'>Lng</TD><TD class='td_data' style='font-size: 80%;'>" . $row['lng'] . "</TD></TR>";
-				$tab_3 .= "</TABLE></TD></TR><R><TD><TABLE width='100%'>";			// 11/6/08
-				$tab_3 .= "<TR><TD style='text-align: center;'><CENTER><DIV id='minimap' style='height: 180px; width: 180px; border: 2px outset #707070;'>Map Here</DIV></CENTER></TD></TR>";
-				$tab_3 .= "</TABLE></TD</TR></TABLE>";
-				}
-				
-			$theTabs .= "<div class='content' id='content1' style = 'display: block;'>" . $tab_1 . "</div>";
-			$theTabs .= "<div class='content' id='content2' style = 'display: none;'>" . $tab_2 . "</div>";
-			$theTabs .= "<div class='content' id='content3' style = 'display: none;'>" . $tab_3 . "</div>";
-			$theTabs .= "</div>";
-			$theTabs .= "</div>";
-			$theTabs .= "</div>";
 			
 			$ticket_row[$i][0] = htmlentities($the_scope, ENT_QUOTES);
 			$ticket_row[$i][1] = htmlentities($address_street, ENT_QUOTES);
@@ -409,7 +307,7 @@ function incident_list($sort_by_field='',$sort_value='', $sortby="tick_id", $sor
 			$ticket_row[$i][18] = intval($row['units_assigned']);
 			$ticket_row[$i][19] = $do_blink;
 			$ticket_row[$i][20] = $the_id;		
-			$ticket_row[$i][21] = $theTabs;	
+			$ticket_row[$i][21] = $booked;			
 			$i++;
 			}				// end tickets while ($row = ...)
 		return $ticket_row;
@@ -464,6 +362,7 @@ if($num_rows > 0) {
 		$the_output[0][22] = $by_severity[0];		
 		$the_output[0][23] = $by_severity[1];		
 		$the_output[0][24] = $by_severity[2];
+//		dump($the_output);
 		print json_encode($the_output);
 		}
 	} else {
@@ -471,6 +370,7 @@ if($num_rows > 0) {
 	$output_arr[0][22] = 0;		
 	$output_arr[0][23] = 0;		
 	$output_arr[0][24] = 0;
+//	dump($the_output);
 	print json_encode($output_arr);
 	}
 exit();

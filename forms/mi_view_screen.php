@@ -231,19 +231,43 @@ while ($row_x = stripslashes_deep(mysql_fetch_assoc($result_x))) {
 						<TABLE>
 							<TR>
 								<TD class='td_label'>Email 1</TD>
-								<TD class='td_data'><?php print $comm_arr[$row['gold']][4];?></TD>
+								<TD class='td_data'>
+<?php 
+									if($comm_arr[$row['gold']]) {
+										print $comm_arr[$row['gold']][4];
+										}
+?>
+								</TD>
 							</TR>
 							<TR>
 								<TD class='td_label'>Email 2</TD>
-								<TD class='td_data'><?php print $comm_arr[$row['gold']][5];?></TD>
+								<TD class='td_data'>
+<?php 
+									if($comm_arr[$row['gold']]) {
+										print $comm_arr[$row['gold']][5];
+										}
+?>
+								</TD>
 							</TR>
 							<TR>
 								<TD class='td_label'>Phone 1</TD>
-								<TD class='td_data'><?php print $comm_arr[$row['gold']][6];?></TD>
+								<TD class='td_data'>
+<?php 
+									if($comm_arr[$row['gold']]) {
+										print $comm_arr[$row['gold']][6];
+										}
+?>
+								</TD>
 							</TR>
 							<TR>
 								<TD class='td_label'>Phone 2</TD>
-								<TD class='td_data'><?php print $comm_arr[$row['gold']][7];?></TD>
+								<TD class='td_data'>
+<?php 
+									if($comm_arr[$row['gold']]) {
+										print $comm_arr[$row['gold']][7];
+										}
+?>
+								</TD>
 							</TR>
 						</TABLE>
 					</TD>
@@ -254,19 +278,43 @@ while ($row_x = stripslashes_deep(mysql_fetch_assoc($result_x))) {
 						<TABLE>
 							<TR>
 								<TD class='td_label'>Email 1</TD>
-								<TD class='td_data'><?php print $comm_arr[$row['silver']][4];?></TD>
+								<TD class='td_data'>
+<?php 
+									if($comm_arr[$row['silver']]) {
+										print $comm_arr[$row['silver']][4];
+										}
+?>
+								</TD>
 							</TR>
 							<TR>
 								<TD class='td_label'>Email 2</TD>
-								<TD class='td_data'><?php print $comm_arr[$row['silver']][5];?></TD>
+								<TD class='td_data'>
+<?php 
+									if($comm_arr[$row['silver']]) {
+										print $comm_arr[$row['silver']][5];
+										}
+?>
+								</TD>
 							</TR>
 							<TR>
 								<TD class='td_label'>Phone 1</TD>
-								<TD class='td_data'><?php print $comm_arr[$row['silver']][6];?></TD>
+								<TD class='td_data'>
+<?php 
+									if($comm_arr[$row['silver']]) {
+										print $comm_arr[$row['silver']][6];
+										}
+?>
+								</TD>
 							</TR>
 							<TR>
 								<TD class='td_label'>Phone 2</TD>
-								<TD class='td_data'><?php print $comm_arr[$row['silver']][7];?></TD>
+								<TD class='td_data'>
+<?php 
+									if($comm_arr[$row['silver']]) {
+										print $comm_arr[$row['silver']][7];
+										}
+?>
+								</TD>
 							</TR>
 						</TABLE>
 					</TD>
@@ -277,19 +325,43 @@ while ($row_x = stripslashes_deep(mysql_fetch_assoc($result_x))) {
 						<TABLE>
 							<TR>
 								<TD class='td_label'>Email 1</TD>
-								<TD class='td_data'><?php print $comm_arr[$row['bronze']][4];?></TD>
+								<TD class='td_data'>
+<?php 
+									if(isset($comm_arr[$row['bronze']])) {
+										print $comm_arr[$row['bronze']][4];
+										}
+?>
+								</TD>
 							</TR>
 							<TR>
 								<TD class='td_label'>Email 2</TD>
-								<TD class='td_data'><?php print $comm_arr[$row['bronze']][5];?></TD>
+								<TD class='td_data'>
+<?php 
+									if(isset($comm_arr[$row['bronze']])) {
+										print $comm_arr[$row['bronze']][5];
+										}
+?>
+								</TD>
 							</TR>
 							<TR>
 								<TD class='td_label'>Phone 1</TD>
-								<TD class='td_data'><?php print $comm_arr[$row['bronze']][6];?></TD>
+								<TD class='td_data'>
+<?php 
+									if(isset($comm_arr[$row['bronze']])) {
+										print $comm_arr[$row['bronze']][6];
+										}
+?>
+								</TD>
 							</TR>
 							<TR>
 								<TD class='td_label'>Phone 2</TD>
-								<TD class='td_data'><?php print $comm_arr[$row['bronze']][7];?></TD>
+								<TD class='td_data'>
+<?php 
+									if(isset($comm_arr[$row['bronze']])) {
+										print $comm_arr[$row['bronze']][7];
+										}
+?>
+								</TD>
 							</TR>
 						</TABLE>				
 					</TD>

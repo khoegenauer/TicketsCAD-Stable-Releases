@@ -43,7 +43,7 @@ TEXTAREA {
 	font-family: Verdana, Arial, Helvetica, sans-serif; 
 	text-decoration: none; 
 	white-space: pre;
-	word-wrap: break-all;
+	word-wrap: break-word;
 	}
 
 SELECT {
@@ -384,7 +384,7 @@ TD {
 
 .infowin {
 	width:	300px; 
-	height: 330px;
+	height: 250px;
 	overflow-y: auto; 
 	overflow-x: hidden;
 	} 

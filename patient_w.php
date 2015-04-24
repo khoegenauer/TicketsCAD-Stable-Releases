@@ -199,7 +199,7 @@ $facilitycontact = 	get_text("Facility contact");
 	</HEAD>
 <?php 
 	print (($get_action == "add")||($get_action == "update"))?
-		"<BODY onLoad = 'do_notify(); ck_window();' onUnload='GUnload();'>\n":
+		"<BODY onLoad = 'do_notify(); ck_window();'>\n":
 		"<BODY onLoad = 'ck_window();'>\n";
 	if ($get_action == 'add') {		/* update ticket */
 		$now = mysql_format_date(time() - (get_variable('delta_mins')*60));

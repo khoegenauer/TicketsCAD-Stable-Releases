@@ -56,7 +56,6 @@ function syncAjax - - functions_major.inc.php
 			AJAX=new ActiveXObject("Microsoft.XMLHTTP");
 			}
 		if (AJAX) {
-//			alert("257 " + strURL);
 			AJAX.open("GET", strURL, false);														 
 			AJAX.send(null);							// e
 			return AJAX.responseText;																				 

@@ -79,13 +79,13 @@ if (($result) && ($num_rows > 0)) {
 			} elseif(($row['ticket_id'] ==0 && $row['responder_id'] == 0 && $row['facility_id'] == 0 && $row['mi_id'] == 0) || ($row['filetype'] == 2)) {
 			$theflag = "Portal";
 			} elseif($row['ticket_id'] > 0) {
-			$theflag = "Ticket {$row['ticket_id']}";
+			$theflag = "Tick {$row['ticket_id']}";
 			} elseif($row['responder_id'] > 0) {
-			$theflag = "Responder {$row['responder_id']}";
+			$theflag = "Resp {$row['responder_id']}";
 			} elseif($row['facility_id'] > 0) {
-			$theflag = "Facility {$row['facility_id']}";
+			$theflag = "Fac {$row['facility_id']}";
 			} elseif($row['mi_id'] > 0) {
-			$theflag = "Maj Inc " . shorten(get_mi($row['mi_id']), 10);
+			$theflag = "MI " . shorten(get_mi($row['mi_id']), 10);
 			} else {
 			$theflag = "";
 			}

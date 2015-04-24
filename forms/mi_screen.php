@@ -52,7 +52,7 @@ require_once($the_inc);
 		div.scrollableContainer { position: relative; padding-top: 1.8em; border: 1px solid #999; }
 		div.scrollableContainer2 { position: relative; padding-top: 1.3em; }
 		div.scrollingArea { max-height: 240px; overflow: auto; overflow-x: hidden; }
-		div.scrollingArea2 { max-height: 480px; overflow: auto; overflow-x: hidden; }
+		div.scrollingArea2 { max-height: 400px; overflow: auto; overflow-x: hidden; }
 		table.scrollable thead tr { position: absolute; left: -1px; top: 0px; }
 		table.cruises th { text-align: left; border-left: 1px solid #999; background: #CECECE; color: black; font-weight: bold; overflow: hidden; }
 		.olPopupCloseBox{background-image:url(img/close.gif) no-repeat;cursor:pointer;}	
@@ -84,7 +84,7 @@ if ($_SESSION['internet']) {
 	<script src="./js/leaflet/KML.js"></script>  
 	<script src="./js/leaflet-openweathermap.js"></script>
 	<script src="./js/esri-leaflet.js"></script>
-	<script src="./js/OSOpenspace.js"></script>
+	<script src="./js/osopenspace.js"></script>
 	<script src="./js/Control.Geocoder.js"></script>
 	<script type="text/javascript" src="./js/osm_map_functions.js.php"></script>
 	<script type="text/javascript" src="./js/L.Graticule.js"></script>

@@ -159,8 +159,7 @@ $step = (array_key_exists( 'step', $_POST )) ?  $_POST['step']: 1;
 switch ($step) {
 
 	case 1 :
-//		$user_id = $_SESSION['user_id'];
-		$user_id =1;						// testing
+		$user_id = $_SESSION['user_id'];		// 3/24/2015
 		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]user` WHERE `id` = {$user_id} LIMIT 1";
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
 		$row = stripslashes_deep(mysql_fetch_assoc($result));
@@ -222,7 +221,6 @@ switch ($step) {
 .content { padding: 1em; }
 </STYLE>
 <BODY onload = "document.form_214.f1.focus();">		<!-- <?php echo __LINE__ ; ?> -->
-
 <div id="boxB" class="box" style="left:5px; top:20px;">
   <div class="bar" STYLE="width:12em; color:red; background-color : transparent;"
        onmousedown="dragStart(event, 'boxB')"><i>&nbsp;&nbsp;&nbsp;&nbsp;Drag us</i></div>

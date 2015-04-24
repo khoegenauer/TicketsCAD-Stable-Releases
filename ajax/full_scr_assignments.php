@@ -112,19 +112,18 @@ if($curr_calls > 0) {
 			
 //	============================= end of Regions stuff				
 
-		$in_strike = 	((!(empty($row['scope']))) && ($row['tick_status']== $GLOBALS['STATUS_CLOSED']))? "<STRIKE>": "";					// 11/7/08
-		$in_strikend = 	((!(empty($row['scope']))) && ($row['tick_status']== $GLOBALS['STATUS_CLOSED']))? "</STRIKE>": "";
+		$in_strike = 	((!(empty($row['tick_scope']))) && ($row['tick_status']== $GLOBALS['STATUS_CLOSED']))? "<STRIKE>": "";					// 11/7/08
+		$in_strikend = 	((!(empty($row['tick_scope']))) && ($row['tick_status']== $GLOBALS['STATUS_CLOSED']))? "</STRIKE>": "";
 		if ($inviewed > 0) {	//	Tests to see whether assigned unit is in one of the users groups 5/4/11	
-			if (!(empty($row['scope']))) {	
-
-				$the_name = addslashes ($row['tick_scope']);															// 9/12/09
-				$the_short_name = shorten($row['tick_scope'], 15);
 
 				$the_descr = (empty($row['tick_descr'])) ? "&nbsp;" : addslashes(str_replace($eols, " ", $row['tick_descr']));
 				$the_short_one = (empty($row['tick_descr'])) ? "&nbsp; " : shorten(addslashes(str_replace($eols, " ", $row['tick_descr'])), 25);
 					
 				$address = (empty($row['tick_street']))? "&nbsp;" : $row['tick_street'] . ", ";		// 8/10/10
 				$address = addslashes($address . $row['tick_city']. "&nbsp;". $row['tick_state']);
+			if (!(empty($row['tick_scope']))) {	
+				$the_name = addslashes ($row['tick_scope']);															// 9/12/09
+				$the_short_name = shorten($row['tick_scope'], 15);
 				$short_addr = shorten($address, 15);
 				$cell1 = $the_name;
 				$cell2 = format_sb_date_2($row['problemstart']);
@@ -150,6 +149,7 @@ if($curr_calls > 0) {
 			
 			$cell5 = $unit_name;
 			$cell6 = $the_disp_str;
+			$cell7 = $row['unit_id'];
 			
 			$query = "SELECT *, UNIX_TIMESTAMP(updated) AS `updated`,
 				`t`.`id` AS `type_id`, 
@@ -171,6 +171,7 @@ if($curr_calls > 0) {
 		$ret_arr[$i][3] = $cell4;
 		$ret_arr[$i][4] = $cell5;
 		$ret_arr[$i][5] = $cell6;					
+		$ret_arr[$i][6] = $cell7;				
 		$i++;
 		}
 	} else {

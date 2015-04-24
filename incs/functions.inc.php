@@ -852,29 +852,45 @@ function show_messages ($the_id, $theSort="date", $links, $display) {			/* list 
 
 // } { -- dummy
 
+function get_un_status_name($id) {
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_status` WHERE `id` = " . $id;
+	$result = mysql_query($query);
+	if(mysql_num_rows($result) > 0) {
+		$row = stripslashes_deep(mysql_fetch_assoc($result));
+		return $row['status_val'];
+		} else {
+		return "unk";
+		}
+	}
+
 function show_log ($theid, $show_cfs=FALSE) {								// 11/20/09, 10/20/12, 5/8/14
 	global $evenodd ;	// class names for alternating table row colors
 	require('./incs/log_codes.inc.php'); 									// 9/29/10
-		
 	$query = "
-		SELECT *, 
-		`when` AS `when`,
+		SELECT `$GLOBALS[mysql_prefix]log`.`id` AS `log_id`,
+		`$GLOBALS[mysql_prefix]log`.`who` AS `who`,
+		`$GLOBALS[mysql_prefix]log`.`code` AS `code`,		
+		`$GLOBALS[mysql_prefix]log`.`when` AS `when`,
+		`$GLOBALS[mysql_prefix]log`.`ticket_id` AS `ticket_id`,		
+		`$GLOBALS[mysql_prefix]log`.`responder_id` AS `responder_id`,
+		`$GLOBALS[mysql_prefix]log`.`info` AS `info`,
+		`$GLOBALS[mysql_prefix]log`.`from` AS `from`,
 		`t`.`scope` AS `tickname`,
 		`r`.`handle` AS `unitname`,
 		`s`.`status_val` AS `theinfo`,
 		`u`.`user` AS `thename` 
 		FROM `$GLOBALS[mysql_prefix]log`
-		LEFT JOIN `$GLOBALS[mysql_prefix]ticket` t ON ($GLOBALS[mysql_prefix]log.ticket_id = t.id)
-		LEFT JOIN `$GLOBALS[mysql_prefix]responder` r ON ($GLOBALS[mysql_prefix]log.responder_id = r.id)
-		LEFT JOIN `$GLOBALS[mysql_prefix]un_status` s ON ($GLOBALS[mysql_prefix]log.info = s.id)
-		LEFT JOIN `$GLOBALS[mysql_prefix]user` u ON ($GLOBALS[mysql_prefix]log.who = u.id)
-		WHERE `$GLOBALS[mysql_prefix]log`.`ticket_id` = {$theid} 
-		ORDER BY `when` ASC";								// 10/2/12
+		LEFT JOIN `$GLOBALS[mysql_prefix]ticket` t 		ON (`$GLOBALS[mysql_prefix]log`.`ticket_id` = `t`.`id`)
+		LEFT JOIN `$GLOBALS[mysql_prefix]responder` r 	ON (`$GLOBALS[mysql_prefix]log`.`responder_id` = `r`.`id`)
+		LEFT JOIN `$GLOBALS[mysql_prefix]un_status` s 	ON (`$GLOBALS[mysql_prefix]log`.`code` = `s`.`id`)
+		LEFT JOIN `$GLOBALS[mysql_prefix]user` u 		ON (`$GLOBALS[mysql_prefix]log`.`who` = `u`.`id`)
+		WHERE `$GLOBALS[mysql_prefix]log`.`ticket_id` = " . $theid . " ORDER BY `when` ASC";								// 10/2/12
 	$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);
 	$i = 0;
 	$print = "<TABLE ALIGN='left' CELLSPACING = 1 WIDTH='100%'>";
 
 	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{
+		$code = $row['code'];
 		if ($i==0) {				// 11/20/09
 			$print .= "<TR CLASS='heading'><TD CLASS='heading' TITLE = \"{$row['tickname']}\" COLSPAN=99 ALIGN='center'><U>Log: <I>". shorten($row['tickname'], 32) . "</I></U></TD></TR>";
 			$cfs_head = ($show_cfs)? "<TD ALIGN='center'>CFS</TD>" : ""  ;
@@ -886,12 +902,15 @@ function show_log ($theid, $show_cfs=FALSE) {								// 11/20/09, 10/20/12, 5/8/
 		if ($show_cfs) {
 			$print .= "<TD TITLE =\"{$row['tickname']}\">". shorten($row['tickname'], 16) . "</TD>";	// 2009-11-07 22:37:41 - substr($row['when'], 11, 5)
 			}
-		$print .= 
-			"<TD TITLE =\"{$row['unitname']}\">". 	shorten($row['unitname'], 16) . "</TD>".
-			"<TD TITLE =\"{$row['theinfo']}\">". 	shorten($row['theinfo'], 16) . "</TD>".
-			"<TD TITLE =\"" . format_date_2(strtotime($row['when'])) . "\">". format_sb_date_2($row['when']) . "</TD>".
-			"<TD TITLE =\"{$row['thename']}\">". 	shorten($row['thename'], 8) . "</TD>".
-			"<TD TITLE =\"{$row['from']}\">". 		substr($row['from'], -4) . "</TD>".
+		$print .= "<TD TITLE =\"{$row['unitname']}\">". 	shorten($row['unitname'], 16) . "</TD>";
+		if($code == 20) {
+			$print .= "<TD TITLE =\"{$row['theinfo']}\">". 	shorten(get_un_status_name($row['info']), 16) . "</TD>";
+			} else {
+			$print .= "<TD>&nbsp;</TD>";
+			}
+		$print .= "<TD TITLE =\"" . format_date_2(strtotime($row['when'])) . "\">". format_sb_date_2($row['when']) . "</TD>";
+		$print .= "<TD TITLE =\"{$row['thename']}\">". 	shorten($row['thename'], 8) . "</TD>";
+		$print .= "<TD TITLE =\"{$row['from']}\">". 		substr($row['from'], -4) . "</TD>";
 			"</TR>";
 			$i++;
 		}
@@ -1031,7 +1050,7 @@ function get_all_group_butts_chkd($curr_grps) {		//	6/10/11
 	}
 	
 function get_sub_group_butts($user_id, $resource, $resource_id) {		//	6/10/11
-
+	$al_groups = array();
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `type`= '$resource' AND `resource_id` = '$resource_id';";		//	6/10/11
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
 	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
@@ -3265,12 +3284,12 @@ function get_regions_buttons($user_id) {		//	4/12/12
 	while ($row2 = stripslashes_deep(mysql_fetch_assoc($result2))) 	{		//	4/12/12
 		if(!empty($regs_viewed)) {
 			if(in_array($row2['group'], $regs_viewed)) {
-				$al_buttons.="<SPAN CLASS = '{$evenodd[$i%2]}'style='font-size: .7em;'><INPUT TYPE='checkbox' CHECKED name='frm_group[]' VALUE='{$row2['group']}'>" . get_groupname($row2['group']) . "</INPUT></SPAN><BR />";
+				$al_buttons.="<SPAN CLASS = '{$evenodd[$i%2]}'style='font-size: .7em;'><INPUT TYPE='checkbox' CHECKED name='frm_group[]' onClick=\"check_checkboxes(document.region_form, 'chk_spn', 'clr_spn');\" VALUE='{$row2['group']}'>" . get_groupname($row2['group']) . "</INPUT></SPAN><BR />";
 			} else {
-				$al_buttons.="<SPAN CLASS = '{$evenodd[$i%2]}' style='font-size: .7em;'><INPUT TYPE='checkbox' name='frm_group[]' VALUE='{$row2['group']}'>" . get_groupname($row2['group']) . "</INPUT></SPAN><BR />";
+				$al_buttons.="<SPAN CLASS = '{$evenodd[$i%2]}' style='font-size: .7em;'><INPUT TYPE='checkbox' name='frm_group[]' onClick=\"check_checkboxes(document.region_form, 'chk_spn', 'clr_spn');\" VALUE='{$row2['group']}'>" . get_groupname($row2['group']) . "</INPUT></SPAN><BR />";
 			}
 			} else {
-				$al_buttons.="<SPAN CLASS = '{$evenodd[$i%2]}' style='font-size: .7em;'><INPUT TYPE='checkbox' CHECKED name='frm_group[]' VALUE='{$row2['group']}'>" . get_groupname($row2['group']) . "</INPUT></SPAN><BR />";
+				$al_buttons.="<SPAN CLASS = '{$evenodd[$i%2]}' style='font-size: .7em;'><INPUT TYPE='checkbox' CHECKED name='frm_group[]' onClick=\"check_checkboxes(document.region_form, 'chk_spn', 'clr_spn');\" VALUE='{$row2['group']}'>" . get_groupname($row2['group']) . "</INPUT></SPAN><BR />";
 			}
 		$i++;
 		}
@@ -3289,12 +3308,12 @@ function get_regions_buttons2($user_id) {		//	4/12/12
 	while ($row2 = stripslashes_deep(mysql_fetch_assoc($result2))) 	{	//	5/3/11
 		if(!empty($regs_viewed)) {
 			if(in_array($row2['group'], $regs_viewed)) {
-				$al_buttons.="<DIV style='display: inline; float: left; word-wrap: normal; white-space: nowrap;'><INPUT TYPE='checkbox' CHECKED name='frm_group[]' VALUE='{$row2['group']}'></INPUT>" . get_groupname($row2['group']) . "&nbsp;&nbsp;</DIV><BR />";
+				$al_buttons.="<DIV style='display: inline; float: left; word-wrap: normal; white-space: nowrap;'><INPUT TYPE='checkbox' CHECKED name='frm_group[]' onClick=\"check_checkboxes(document.region_form, 'chk_spn', 'clr_spn');\" VALUE='{$row2['group']}'></INPUT>" . get_groupname($row2['group']) . "&nbsp;&nbsp;</DIV><BR />";
 			} else {
-				$al_buttons.="<DIV style='display: inline; float: left; word-wrap: normal; white-space: nowrap;'><INPUT TYPE='checkbox' name='frm_group[]' VALUE='{$row2['group']}'></INPUT>" . get_groupname($row2['group']) . "&nbsp;&nbsp;</DIV><BR />";
+				$al_buttons.="<DIV style='display: inline; float: left; word-wrap: normal; white-space: nowrap;'><INPUT TYPE='checkbox' name='frm_group[]' onClick=\"check_checkboxes(document.region_form, 'chk_spn', 'clr_spn');\" VALUE='{$row2['group']}'></INPUT>" . get_groupname($row2['group']) . "&nbsp;&nbsp;</DIV><BR />";
 			}
 			} else {
-				$al_buttons.="<DIV style='display: inline; float: left; word-wrap: normal; white-space: nowrap;'><INPUT TYPE='checkbox' CHECKED name='frm_group[]' VALUE='{$row2['group']}'></INPUT>" . get_groupname($row2['group']) . "&nbsp;&nbsp;</DIV><BR />";
+				$al_buttons.="<DIV style='display: inline; float: left; word-wrap: normal; white-space: nowrap;'><INPUT TYPE='checkbox' CHECKED name='frm_group[]' onClick=\"check_checkboxes(document.region_form, 'chk_spn', 'clr_spn');\" VALUE='{$row2['group']}'></INPUT>" . get_groupname($row2['group']) . "&nbsp;&nbsp;</DIV><BR />";
 			}
 		}
 	return $al_buttons;
@@ -3550,9 +3569,12 @@ function list_files($ticket_id=0, $responder_id=0, $facility_id=0, $type=0, $por
 	}
 	
 function add_sidebar($regions = TRUE, $files = TRUE, $messages = TRUE, $controls = TRUE, $allowedit=FALSE, $ticket_id = 0, $responder_id = 0, $facility_id = 0, $mi_id = 0) {
-	$print = "<DIV id='window_sidebar' style='position: fixed; top: 30px; right: 0px; width: auto; height: 500px; font-size: 1.2em; z-index: 50000; background-color: #000000;'>";
+	$theHeight = $_SESSION['scr_height'] / 2.5;
+	$theHeight2 = $theHeight * .8;
+	$theHeight3 = $theHeight * .65;
+	$print = "<DIV id='window_sidebar' style='position: fixed; top: 30px; right: 0px; width: auto; height: " . $theHeight . "px; font-size: 1.2em; z-index: 50000; background-color: #000000;'>";
 	if($regions) {
-		$print .= "<DIV id='regions_control_outer' style='position: fixed; top: 30px; right: 0px; max-height: 500px; font-size: 1.2em; z-index: 9999;'>
+		$print .= "<DIV id='regions_control_outer' style='position: fixed; top: 30px; right: 0px; height: 400px; font-size: 1.2em; z-index: 9999;'>
 			<SPAN id='s_rc' class='plain' style='position: fixed; top: 30px; right: 0px; width: 35px; display: inline-block; cursor: pointer; padding: 2px; background-color: #FEFEFE;' 
 			onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' 
 			onClick=\"sidebar_buttonactions('s_rc');\">
@@ -3561,11 +3583,11 @@ function add_sidebar($regions = TRUE, $files = TRUE, $messages = TRUE, $controls
 			onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' 
 			onClick=\"sidebar_buttonactions('h_rc');\">
 			<IMG src='./images/hide_butt.jpg'></SPAN>
-			<DIV ID = 'regions_control' style='padding: 3px; border: 1px outset #707070; height: 480px; width: 250px; display: none; overflow-y: auto; overflow-x: hidden; font-size: 0.8em; float: right;'><CENTER><IMG src='./images/owmloading.gif'></CENTER></DIV>
+			<DIV ID = 'regions_control' style='padding: 3px; border: 1px outset #707070; height: 380px; width: 250px; display: none; overflow-y: auto; overflow-x: hidden; font-size: 0.8em; float: right;'><CENTER><IMG src='./images/owmloading.gif'></CENTER></DIV>
 		</DIV>";
 		}
 	if($files) {
-		$print .= "<DIV id='file_list_outer' style='position: fixed; top: 30px; right: 0px; height: 500px; font-size: 1.2em; z-index: 9999;'>
+		$print .= "<DIV id='file_list_outer' style='position: fixed; top: 30px; right: 0px; height: " . $theHeight . "px; font-size: 1.2em; z-index: 9999;'>
 			<SPAN id='s_fl' class='plain' style='position: fixed; top: 130px; right: 0px; width: 35px; display: inline-block; cursor: pointer; padding: 2px; background-color: #FEFEFE;' 
 			onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' 
 			onClick=\"sidebar_buttonactions('s_fl'); load_files(". $ticket_id . ", " . $responder_id . ", " . $facility_id . ", " . $mi_id . ", " . $allowedit . ", 'name', 'ASC', 1)\">
@@ -3574,18 +3596,21 @@ function add_sidebar($regions = TRUE, $files = TRUE, $messages = TRUE, $controls
 			onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' 
 			onClick=\"sidebar_buttonactions('h_fl');\">
 			<IMG src='./images/hide_butt.jpg'></SPAN>
-			<DIV class='even' ID = 'fileList' style='position: relative; height: 550px; width: 500px; float: right; display: none; border: 1px outset #707070;'>
+			<DIV class='even' ID = 'fileList' style='position: relative; height: " . $theHeight . "px; width: 500px; float: right; display: none; border: 1px outset #707070;'>
 				<SPAN class='heading' style='width: 500px; text-align: center; display: inline-block;'>Files</SPAN></BR>
 				<DIV style='margin: 10px;'>
 					<DIV class=\"scrollableContainer2\" id='thefileslist' style='display: none;'>
-						<DIV class=\"scrollingArea2\" id='file_list'><CENTER><IMG src='./images/owmloading.gif'></CENTER></DIV>				
+						<DIV class=\"scrollingArea2\" style='height: " . $theHeight3 . "px;' id='file_list'><CENTER><IMG src='./images/owmloading.gif'></CENTER></DIV>				
 					</DIV>
 				</DIV>
+				<CENTER>
+				<SPAN id='delSelected' class='plain' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='delfiles(document.filesForm);' style='text-align: center; float: none;'>Delete Selected</SPAN>
+				</CENTER>
 			</DIV>
 		</DIV>";
 		}
 	if($messages) {
-		$print .= "<DIV id='msgs_list_outer' style='position: fixed; top: 30px; right: 0px; height: 500px; font-size: 1.2em; z-index: 9999;'>
+		$print .= "<DIV id='msgs_list_outer' style='position: fixed; top: 30px; right: 0px; height: " . $theHeight . "px; font-size: 1.2em; z-index: 9999;'>
 			<SPAN id='s_ms' class='plain' style='position: fixed; top: 230px; right: 0px; width: 35px; display: inline-block; cursor: pointer; padding: 2px; background-color: #FEFEFE;'
 			onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' 
 			onClick=\"sidebar_buttonactions('s_ms'); get_mainmessages(". $ticket_id . ", " . $responder_id . ", " . $facility_id . ", " . $mi_id . ", sortby, sort, 'inbox');\">
@@ -3594,23 +3619,23 @@ function add_sidebar($regions = TRUE, $files = TRUE, $messages = TRUE, $controls
 			onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' 
 			onClick=\"sidebar_buttonactions('h_ms');\">
 			<IMG src='./images/hide_butt.jpg'></SPAN>
-			<DIV ID = 'message_list' class='even' style='position: relative;height: 550px; width: 810px; float: right; display: none; border: 1px outset #707070;'>
+			<DIV ID = 'message_list' class='even' style='position: relative; height: " . $theHeight2 . "px; width: 810px; float: right; display: none; border: 1px outset #707070;'>
 				<SPAN class='heading' style='width: 810px; text-align: center; display: inline-block;'>Messages&nbsp;&nbsp;<SPAN id='foldername'>Inbox</SPAN></SPAN></BR>
-				<DIV id='folderlist' class='odd' style='width: 100px; border: 1px outset #707070; display: inline-block; float: left; height: 510px;'>
-				<SPAN id='in_but' class='plain' style='width: 80px;'onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick=\"inboxorsent(". $ticket_id . ", " . $responder_id . ", " . $facility_id . ", " . $mi_id . ", sortby, sort, 'inbox');\">INBOX</SPAN><BR />
-				<SPAN id='sent_but' class='plain' style='width: 80px;'onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick=\"inboxorsent(". $ticket_id . ", " . $responder_id . ", " . $facility_id . ", " . $mi_id . ", sortby, sort, 'sent');\">SENT ITEMS</SPAN><BR />
+				<DIV id='folderlist' class='odd' style='width: 90px; border: 1px outset #707070; display: inline-block; float: left; height: " . $theHeight3 . "px;'>
+				<SPAN id='in_but' class='plain' style='width: 70px;'onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick=\"inboxorsent(". $ticket_id . ", " . $responder_id . ", " . $facility_id . ", " . $mi_id . ", sortby, sort, 'inbox');\">INBOX</SPAN><BR />
+				<SPAN id='sent_but' class='plain' style='width: 70px;'onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick=\"inboxorsent(". $ticket_id . ", " . $responder_id . ", " . $facility_id . ", " . $mi_id . ", sortby, sort, 'sent');\">SENT ITEMS</SPAN><BR />
 				</DIV>
-				<DIV id='messages' style='width: 700px; border: 1px outset #707070;  display: inline-block; float: right;'>
+				<DIV id='messages' style='width: 690px; border: 1px outset #707070;  display: inline-block; float: right;'>
 					<DIV class=\"scrollableContainer2\" id='messageslist' style='display: none; float: right;'>
-						<DIV class=\"scrollingArea2\" id='the_msglist'><CENTER><IMG src='./images/owmloading.gif'></CENTER></DIV>				
+						<DIV class=\"scrollingArea2\" style='height: " . $theHeight3 . "px;' id='the_msglist'><CENTER><IMG src='./images/owmloading.gif'></CENTER></DIV>				
 					</DIV>	
 				</DIV>
 			</DIV>
 		</DIV>";
 		}
 	if($controls) {
-		$print .= "<DIV id='controls_outer' style='position: fixed; top: 30px; right: 0px; max-height: 500px; font-size: 1.2em; z-index: 9999;'>
-			<SPAN id='s_ct' class='plain' style='position: fixed; top: 330px; right: 0px; width: 35px; display: inline-block; cursor: pointer; padding: 2px; background-color: #FEFEFE;;' 
+		$print .= "<DIV id='controls_outer' style='position: fixed; top: 30px; right: 0px; height: " . $theHeight . "px; font-size: 1.2em; z-index: 9999;'>
+			<SPAN id='s_ct' class='plain' style='position: fixed; top: 330px; right: 0px; width: 35px; display: inline-block; cursor: pointer; padding: 2px; background-color: #FEFEFE;' 
 			onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' 
 			onClick=\"sidebar_buttonactions('s_ct');\">
 			<IMG src='./images/controls_butt.jpg'></SPAN>
@@ -3618,7 +3643,7 @@ function add_sidebar($regions = TRUE, $files = TRUE, $messages = TRUE, $controls
 			onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' 
 			onClick=\"sidebar_buttonactions('h_ct');\">
 			<IMG src='./images/hide_butt.jpg'></SPAN>
-			<DIV id='controls' style='padding: 3px; border: 1px outset #707070; background-color: #FEFEFE; height: auto; width: 200px; display: none; font-size: 0.8em; float: right;'></DIV>
+			<DIV id='controls' style='padding: 3px; border: 1px outset #707070; background-color: #FEFEFE; height: " . $theHeight . "px; width: 200px; display: none; font-size: 0.8em; float: right; overflow-y: scroll;'></DIV>
 		</DIV>";
 		}
 	$print .= "</DIV>";

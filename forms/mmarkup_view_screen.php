@@ -176,7 +176,6 @@ function set_size() {
 	fac_celwidth = listwidth * .15;
 	$('outer').style.width = outerwidth + "px";
 	$('outer').style.height = outerheight + "px";
-	$('titlebar').style.width = outerwidth + "px";	
 	$('leftcol').style.width = colwidth + "px";
 	$('leftcol').style.height = colheight + "px";	
 	$('rightcol').style.width = colwidth + "px";

@@ -107,7 +107,9 @@ while ($row_st = stripslashes_deep(mysql_fetch_array($result_st))) {
 unset($result_st);
 
 $assigns_ary = array();				// construct array of responder_id's on active calls
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE ((`clear` IS  NULL) OR (DATE_FORMAT(`clear`,'%y') = '00')) ";
+$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns`
+		LEFT JOIN `$GLOBALS[mysql_prefix]ticket` t ON ($GLOBALS[mysql_prefix]assigns.ticket_id = t.id)
+		WHERE `t`.`status` = '{$GLOBALS['STATUS_OPEN']}' AND ((`clear` IS  NULL) OR (DATE_FORMAT(`clear`,'%y') = '00')) ";
 $result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
 	$assigns_ary[$row['responder_id']] = TRUE;
@@ -269,11 +271,10 @@ while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {			// 7/7/10
 // DISPATCHES 3/16/09
 
 	$units_assigned = 0;
-	if(array_key_exists ($row['unit_id'] , $assigns_ary)) {			// this unit assigned? - 6/4/10
+	if(array_key_exists ($row['unit_id'] , $assigns_ary)) {
 		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns`  
 			LEFT JOIN `$GLOBALS[mysql_prefix]ticket` t ON ($GLOBALS[mysql_prefix]assigns.ticket_id = t.id)
-			WHERE `responder_id` = '{$row['unit_id']}' AND ( `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' )";
-
+			WHERE `responder_id` = '{$row['unit_id']}' AND `t`.`status`='{$GLOBALS['STATUS_OPEN']}' AND (`clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' )";	//	03/26/15
 		$result_as = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 		$units_assigned = mysql_num_rows($result_as);
 		}		// end if(array_key_exists ()
@@ -357,96 +358,6 @@ while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {			// 7/7/10
 		$lng = get_variable('def_lng');
 		}
 		$locale = get_variable('locale');	// 08/03/09	
-// tab 1
-		if (my_is_float($lat)) {										// position data? 4/29/09
-		
-			$temptype = $u_types[$row['type_id']];
-			$temp_array[0] = $lat;
-			$temp_array[1] = $lng;
-			$temp_array[2] = addslashes(shorten($name, 48));
-			$temp_array[3] = addslashes(shorten(str_replace($eols, " ", $row['unit_descr']), 256));
-			$the_type = $temptype[0];																			// 1/1/09
-			$toosmap = ((!($internet)) || ($locale != 1))? "" : "<A id='osmap_but' class='plain' style='float: none; color: #000000;' HREF='#' onClick = 'do_osmap({$temp_array[0]}, {$temp_array[1]}, {$row['unit_id']}, &quot;" . $temp_array[2] . "&quot;, &quot;" . $temp_array[3] . "&quot;, \"responder\");' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">OS Map</A>";
-
-			$theTabs .= "<div class='infowin'><BR />";
-			$theTabs .= '<div class="tabBox" style="float: left; width: 100%;">';
-			$theTabs .= '<div class="tabArea">';
-			$theTabs .= '<span id="tab1" class="tabinuse" style="cursor: pointer;" onClick="do_tab(\'tab1\', 1, null, null);">Summary</span>';
-			if($row_track) {
-				$theTabs .= '<span id="tab2" class="tab" style="cursor: pointer;" onClick="do_tab(\'tab2\', 2, null, null);">Details</span>';
-				}
-			$theTabs .= '<span id="tab3" class="tab" style="cursor: pointer;" onClick="do_tab(\'tab3\', 3, ' . $lat . ',' . $lng . ');">Location</span>';
-			$theTabs .= '</div>';
-			$theTabs .= '<div class="contentwrapper">';
-			
-			$tab_1 = "<TABLE width='280px' style='height: 280px;'><TR><TD><TABLE width='98%'>";			
-			$tab_1 .= "<TR CLASS='even'><TD COLSPAN=2 ALIGN='center'><B>" . htmlentities(shorten($row['name'], 48),ENT_QUOTES) . "</B> - " . $the_type . "</TD></TR>";
-			$tab_1 .= "<TR CLASS='odd'><TD>Description:</TD><TD>" . htmlentities(shorten(str_replace($eols, " ", $row['description']), 32), ENT_QUOTES) . "</TD></TR>";
-			$tab_1 .= "<TR CLASS='even'><TD>Status:</TD><TD>" . $the_status . " </TD></TR>";
-			$tab_1 .= "<TR CLASS='odd'><TD>Contact:</TD><TD>" . addslashes($row['contact_name']). " Via: " . addslashes($row['contact_via']) . "</TD></TR>";
-			$tab_1 .= "<TR CLASS='even'><TD>As of:</TD><TD>" . format_date_2(strtotime($the_time)) . "</TD></TR>";		// 4/11/10
-			if (array_key_exists($row['unit_id'], $assigns)) {
-				$tab_1 .= "<TR CLASS='even'><TD CLASS='emph'>Dispatched to:</TD><TD CLASS='emph'><A HREF='main.php?id=" . $tickets[$row['unit_id']] . "'>" . addslashes(shorten($assigns[$row['unit_id']], 20)) . "</A></TD></TR>";
-				}
-			$tab_1 .= "</TABLE></TD></TR>";
-			$tab_1 .= "<TR><TD COLSPAN=2 ALIGN='center'><TABLE><TR style='height: 25px;'><TD style='text-align: center;'>";
-			$tab_1 .= "<TR style='height: 25px;'><TD COLSPAN=2 ALIGN='center'>" . $tofac . $todisp . $totrack . "</TD></TR>";
-			$tab_1 .= "<TR style='height: 25px;'><TD COLSPAN=2 ALIGN='center'>" . $toedit . "<A id='view_" . $row['unit_id'] . "' CLASS='plain' style='float: none; color: #000000;' HREF='{$_SESSION['unitsfile']}?func=responder&view=true&id=" . $row['unit_id'] . "' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">View</A></TD></TR>";
-			$tab_1 .= "<TR style='height: 25px;'><TD COLSPAN=2 ALIGN='center'>" . $to_log . $toosmap . "</TD></TR>";
-			$tab_1 .= "</TABLE></TD></TR>";
-			$tab_1 .= "</TABLE>";
-
-
-// tab 2
-		if ($row_track) {		// do all three tabs
-			$tab_2 = "<TABLE width='280px' style='height: 280px;' ><TR><TD><TABLE width='98%'>";
-			$tab_2 .="<TR CLASS='even'><TD COLSPAN=2 ALIGN='center'><B>" . $row_track['source'] . "</B></TD></TR>";
-			$tab_2 .= "<TR CLASS='odd'><TD>Course: </TD><TD>" . $row_track['course'] . ", Speed:  " . $row_track['speed'] . ", Alt: " . $row_track['altitude'] . "</TD></TR>";
-			$tab_2 .= "<TR CLASS='even'><TD>Closest city: </TD><TD>" . $row_track['closest_city'] . "</TD></TR>";
-			$tab_2 .= "<TR CLASS='odd'><TD>Status: </TD><TD>" . $row_track['status'] . "</TD></TR>";
-			if (array_key_exists ('packet_date',$row_track ) ) {				// 7/2/2013
-				$strike_ary = ( abs ( ( now() - strtotime ($row_track['packet_date'] ) ) ) <  $GLOBALS['TOLERANCE'] ) ? 
-				array ( "", "") : 
-				array ( "<strike>", "<strike>") ;		
-				$tab_2 .= "<TR CLASS='even'><TD>As of: </TD><TD> {$strike_ary[0]}" . format_date($row_track['packet_date']) . "{$strike_ary[1]} </TD></TR></TABLE></TD></TR></TABLE>";
-				}
-			}	// end if ($row_track)
-			
-		$tab_3 = "<TABLE width='280px' style='height: 280px;'><TR><TD>";
-		$tab_3 .= "<TABLE width='98%'>";
-
-		switch($locale) { 
-			case "0":
-			$tab_3 .= "<TR CLASS='odd'><TD class='td_label' ALIGN='left'>USNG:</TD><TD ALIGN='left'>" . LLtoUSNG($lat, $lng) . "</TD></TR>";	// 8/23/08, 10/15/08, 8/3/09
-			break;
-		
-			case "1":
-			$tab_3 .= "<TR CLASS='odd'>	<TD class='td_label' ALIGN='left'>OSGB:</TD><TD ALIGN='left'>" . LLtoOSGB($lat, $lng) . "</TD></TR>";	// 8/23/08, 10/15/08, 8/3/09
-			break;
-		
-			case "2":
-			$coords =  $lat . "," . $lng;							// 8/12/09
-			$tab_3 .= "<TR CLASS='odd'>	<TD class='td_label' ALIGN='left'>UTM:</TD><TD ALIGN='left'>" . toUTM($coords) . "</TD></TR>";	// 8/23/08, 10/15/08, 8/3/09
-			break;
-		
-			default:
-			print "ERROR in " . basename(__FILE__) . " " . __LINE__ . "<BR />";
-			}
-		$tab_3 .= "<TR><TD class='td_label' style='font-size: 80%;'>Lat</TD><TD class='td_data' style='font-size: 80%;'>" . $lat . "</TD></TR>";
-		$tab_3 .= "<TR><TD class='td_label' style='font-size: 80%;'>Lng</TD><TD class='td_data' style='font-size: 80%;'>" . $lng . "</TD></TR>";
-		$tab_3 .= "</TABLE></TD></TR><R><TD><TABLE width='100%'>";			// 11/6/08
-		$tab_3 .= "<TR><TD style='text-align: center;'><CENTER><DIV id='minimap' style='height: 180px; width: 180px; border: 2px outset #707070;'>Map Here</DIV></CENTER></TD></TR>";
-		$tab_3 .= "</TABLE></TD</TR></TABLE>";
-			
-		$theTabs .= "<div class='content' id='content1' style = 'display: block;'>" . $tab_1 . "</div>";
-		if($row_track) {
-			$theTabs .= "<div class='content' id='content2' style = 'display: none;'>" . $tab_2 . "</div>";
-			}
-		$theTabs .= "<div class='content' id='content3' style = 'display: none;'>" . $tab_3 . "</div>";
-		$theTabs .= "</div>";
-		$theTabs .= "</div>";
-		$theTabs .= "</div>";
-		}
 
 	$ret_arr[$i][0] = $name;
 	$ret_arr[$i][1] = $handle;
@@ -467,7 +378,6 @@ while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {			// 7/7/10
 	$ret_arr[$i][16] = shorten($updated, 10);
 	$ret_arr[$i][17] = $row['unit_id'];
 	$ret_arr[$i][18] = $the_color;	
-	$ret_arr[$i][19] = $theTabs;	
 	$ret_arr[$i][20] = $resp_cat;
 	$ret_arr[$i][23] = $status_name;
 	$ret_arr[$i][24] = intval($row['nr_assigned']);

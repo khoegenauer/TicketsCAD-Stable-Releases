@@ -399,6 +399,7 @@ $direcs_checked = (!empty($row['direcs']))? " checked" : "" ;
 	</DIV>
 	<DIV id='rightcol' style='position: absolute; right: 170px; z-index: 1;'>
 		<DIV id='map_canvas' style='border: 1px outset #707070;'></DIV>
+		<?php print get_variable('map_caption'); ?>
 	</DIV>
 </DIV>
 <?php

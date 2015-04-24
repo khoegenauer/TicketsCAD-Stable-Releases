@@ -45,7 +45,6 @@ $get_action = (empty($_GET['action']))? "form" : $_GET['action'];		// 10/21/08
 	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript" />
 	<META HTTP-EQUIV="Script-date" CONTENT="8/24/08" />
 	<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">	<!-- 3/15/11 -->
-<SCRIPT src="./js/multiSelect.js"></SCRIPT>
 <SCRIPT>
 	function ck_window() {		//  onLoad = "ck_window()"
 		if (window.opener == null) { alert ("<?php print __LINE__;?>")}
@@ -139,6 +138,14 @@ $get_action = (empty($_GET['action']))? "form" : $_GET['action'];		// 10/21/08
 			theForm.submit();
 			}
 		}				// end function validate(theForm)
+
+	function set_signal(inval) {
+		var lh_sep = (document.add_frm.frm_description.value.trim().length>0)? " " : "";
+		var temp_ary = inval.split("|", 2);		// inserted separator
+		document.add_frm.frm_description.value+= lh_sep + temp_ary[1] + ' ';
+		document.add_frm.frm_description.focus();
+		}		// end function set_signal()
+
 	</SCRIPT>
 	</HEAD>
 <?php 
@@ -215,7 +222,7 @@ $get_action = (empty($_GET['action']))? "form" : $_GET['action'];		// 10/21/08
 				$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename(__FILE__), __LINE__);
 	
 				$ticket_id = mysql_insert_id();								// just inserted action id
-	//			($code, $ticket_id=0, $responder_id=0, $info="", $facility_id=0, $rec_facility_id=0, $mileage=0) 		// generic log table writer - 5/31/08, 10/6/09
+//				($code, $ticket_id=0, $responder_id=0, $info="", $facility_id=0, $rec_facility_id=0, $mileage=0) 		// generic log table writer - 5/31/08, 10/6/09
 				do_log($GLOBALS['LOG_ACTION_ADD'], $_GET['ticket_id'], 0,  mysql_insert_id());		// 3/18/10
 				$query = "UPDATE `$GLOBALS[mysql_prefix]ticket` SET `updated` = '$frm_asof' WHERE `id`='" . $_GET['ticket_id'] . "' LIMIT 1";
 				$result = mysql_query($query) or do_error($query,$query, mysql_error(), basename(__FILE__), __LINE__);
@@ -226,7 +233,6 @@ $get_action = (empty($_GET['action']))? "form" : $_GET['action'];		// 10/21/08
 
 //			show_ticket($_GET['ticket_id']);
 			print "<BR /><BR /><INPUT TYPE='button' VALUE='Finished' onClick = 'opener.location.reload(true); opener.parent.frames[\"upper\"].show_msg(\"Action added!\"); window.close();' STYLE = 'margin-left:300px;' /><BR /><BR /><BR />";	//	01/22/11Added refresh of opener window.
-//________________________________________________________________
 			print "</BODY>";				// 10/19/08
 			
 			$addrs = notify_user($_GET['ticket_id'],$GLOBALS['NOTIFY_ACTION_CHG']);		// returns array or FALSE
@@ -293,9 +299,7 @@ $get_action = (empty($_GET['action']))? "form" : $_GET['action'];		// 10/21/08
 	
 </SCRIPT>
 <?php
-
-			}		// end if($addrs) 
-		else {
+			} else {
 ?>		
 <SCRIPT>
 	function do_notify() {
@@ -369,6 +373,20 @@ $get_action = (empty($_GET['action']))? "form" : $_GET['action'];		// 10/21/08
 		<TABLE BORDER="0"> <!-- 3/20/10 -->
 		<TR CLASS='even' VALIGN='top'><TD rowspan=4><B>Description:</B> <font color='red' size='-1'>*</font></TD>
 			<TD colspan=3><TEXTAREA ROWS="2" COLS="90" NAME="frm_description" WRAP="virtual"><?php print $row['description'];?></TEXTAREA>
+			</TD></TR>
+		<TR VALIGN = 'TOP' CLASS='even'>		<!-- 11/15/10 -->
+			<TD ALIGN='right' CLASS="td_label"></TD><TD>Signal &raquo;
+				<SELECT NAME='signals' onChange = 'set_signal(this.options[this.selectedIndex].text); this.options[0].selected=true;'>	<!--  11/17/10 -->
+				<OPTION VALUE=0 SELECTED>Select</OPTION>
+<?php
+				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]codes` ORDER BY `sort` ASC, `code` ASC";
+				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+				while ($row_sig = stripslashes_deep(mysql_fetch_assoc($result))) {
+					$short = shorten ($row_sig['text'], 40);
+					print "\t<OPTION VALUE='{$row_sig['code']}'>{$row_sig['code']}|{$short}</OPTION>\n";		// pipe separator
+					}
+?>
+			</SELECT>
 			</TD></TR>
 		<TR CLASS='odd' VALIGN='top'>
 <?php
@@ -466,13 +484,30 @@ $get_action = (empty($_GET['action']))? "form" : $_GET['action'];		// 10/21/08
 			$z++;
 			}			
 		
+		$heading = "Add Action";
 ?>
-		<SPAN STYLE='margin-left:60px;'><FONT CLASS="header">Add Action</FONT></SPAN><BR /><BR />
-		<FORM METHOD="post" NAME="add_frm" onSubmit='return validate(this.form);' ACTION="action_w.php?ticket_id=<?php print $_GET['ticket_id'];?>&action=add">
+		<SPAN STYLE='margin-left:60px;'><FONT CLASS="header"><?php echo $heading;?></FONT></SPAN><BR /><BR />
+		<FORM METHOD="post" NAME="add_frm" onSubmit='return validate(this.form);' ACTION="<?php echo basename(__FILE__);?>?ticket_id=<?php print $_GET['ticket_id'];?>&action=add">
 		<TABLE BORDER="0" STYLE='margin-left:100px;'>
 		<TR CLASS='even'><TD CLASS='td_label'>Description: <font color='red' size='-1'>*</font></TD>
 			<TD colspan=2><TEXTAREA ROWS="2" COLS="90" NAME="frm_description"></TEXTAREA>
 			</TD></TR>
+
+		<TR VALIGN = 'TOP' CLASS='even'>		<!-- 11/15/10 -->
+			<TD ALIGN='right' CLASS="td_label"></TD><TD>Signal &raquo;
+				<SELECT NAME='signals' onChange = 'set_signal(this.options[this.selectedIndex].text); this.options[0].selected=true;'>	<!--  11/17/10 -->
+				<OPTION VALUE=0 SELECTED>Select</OPTION>
+<?php
+				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]codes` ORDER BY `sort` ASC, `code` ASC";
+				$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+				while ($row_sig = stripslashes_deep(mysql_fetch_assoc($result))) {
+					$short = shorten ($row_sig['text'], 40);
+					print "\t<OPTION VALUE='{$row_sig['code']}'>{$row_sig['code']}|{$short}</OPTION>\n";		// pipe separator
+					}
+?>
+			</SELECT>
+			</TD></TR>
+
 <?php
 //						generate dropdown menu of responders
 

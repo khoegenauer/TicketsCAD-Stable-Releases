@@ -549,7 +549,7 @@ if (isset($rowtr)) {																	// got tracks?
 		controlsHTML +=	"<TR class='even'><TD><CENTER><TABLE ID='buttons_sh' style='display: <?php print $show_controls;?>;'>";
 		controlsHTML +=	"<TR CLASS='odd'><TD><DIV ID = 'poly_boxes' ALIGN='center' VALIGN='middle' style='text-align: center; vertical-align: middle;'></DIV></TD></TR></TABLE></CENTER></TD></TR></TABLE>";
 </SCRIPT>
-			<?php print $map_capt; ?>
+			<?php print get_variable('map_caption'); ?>
 	</DIV>
 </DIV>
 <?php

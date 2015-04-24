@@ -58,12 +58,13 @@ $day_night = ((array_key_exists('day_night', ($_SESSION))) && ($_SESSION['day_ni
 	<STYLE>
 		.disp_stat	{ FONT-WEIGHT: bold; FONT-SIZE: 9px; COLOR: #FFFFFF; BACKGROUND-COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif;}
 		#regions_control { font-family: verdana, arial, helvetica, sans-serif; font-size: 5px; background-color: #FEFEFE; font-weight: bold;}
+		#sched_flag { font-family: verdana, arial, helvetica, sans-serif; font-size: 12px; color: #0080FF; font-weight: bold; cursor: pointer; }
 		table.cruises { font-family: verdana, arial, helvetica, sans-serif; font-size: 11px; cellspacing: 0; border-collapse: collapse; }
 		table.cruises td {overflow: hidden; }
 		div.scrollableContainer { position: relative; padding-top: 1.5em; border: 1px solid #999; }
 		div.scrollableContainer2 { position: relative; padding-top: 1.3em; }
 		div.scrollingArea { max-height: 240px; overflow: auto; overflow-x: hidden; }
-		div.scrollingArea2 { max-height: 460px; overflow: auto; overflow-x: hidden; }
+		div.scrollingArea2 { max-height: 400px; overflow: auto; overflow-x: hidden; }
 		table.scrollable thead tr { position: absolute; left: -1px; top: 0px; }
 		table.cruises th { text-align: left; border-left: 1px solid #999; background: #CECECE; color: black; font-weight: bold; overflow: hidden; }
 		div.tabBox {}
@@ -93,7 +94,7 @@ if ($_SESSION['internet']) {
 	<script src="./js/leaflet/leaflet.js"></script>
 	<script src="./js/proj4leaflet.js"></script>
 	<script src="./js/leaflet/KML.js"></script>  
-	<script src="./js/OSOpenspace.js"></script>
+	<script src="./js/osopenspace.js"></script>
 	<script src="./js/leaflet-openweathermap.js"></script>
 	<script src="./js/esri-leaflet.js"></script>
 	<script src="./js/Control.Geocoder.js"></script>
@@ -138,6 +139,7 @@ var r_interval = null;
 var f_interval = null;
 var b_interval = null;
 var c_interval = null;
+var s_interval = null;
 var latest_ticket = 0;
 var latest_responder = 0;
 var latest_facility = 0;
@@ -190,7 +192,13 @@ var colors = new Array ('odd', 'even');
 
 function set_period(period) {
 	window.inc_period = period;
-	$('theHeading').innerHTML = heading;
+	thelength = document.getElementById('period_select').options.length;
+	for(var f = 0; f < thelength; f++) {
+		if(document.getElementById('period_select').options[f].value == period) {
+			document.getElementById('period_select').options[f].selected = true;
+			}
+		}
+	$('theHeading').innerHTML = window.captions[window.inc_period];
 	}
 	
 function pageLoaded() {
@@ -261,6 +269,63 @@ function destroy_facmarkers() {
 	fmarkers.length = 0;
 	}
 
+
+function secondsToTime(secs) {
+	var numdays = Math.floor(secs / 86400);
+	var numhours = Math.floor((secs % 86400) / 3600);
+	var numminutes = Math.floor(((secs % 86400) % 3600) / 60);
+	var numseconds = ((secs % 86400) % 3600) % 60;
+	var outputText =  numdays + "D " + numhours + ":" + numminutes + ":" + Math.round(numseconds);
+	return outputText;
+	}
+	
+function do_statistics() {
+//	$('s1').innerHTML = $('s2').innerHTML = $('s3').innerHTML = $('s4').innerHTML = $('s5').innerHTML = $('s6').innerHTML = " - ";
+	var randomnumber=Math.floor(Math.random()*99999999);
+	var url = './ajax/basic_statistics.php?version=' + randomnumber;
+	sendRequest (url,stats_cb, "");
+	function stats_cb(req) {
+		var theStats = JSON.decode(req.responseText);
+		$('s1').innerHTML = theStats[0];
+		$('s2').innerHTML = theStats[1];
+		$('s3').innerHTML = theStats[4];
+		$('s4').innerHTML = secondsToTime(theStats[5]);
+		$('s5').innerHTML = secondsToTime(theStats[8]);
+		$('s6').innerHTML = theStats[9];
+		}
+	statistics_get();
+	}
+	
+function statistics_get() {								// set cycle
+	if (s_interval!=null) {return;}
+	s_interval = window.setInterval('statistics_loop()', 30000);
+	}			// end statistics_get mu get()
+
+function statistics_loop() {
+	do_statistics();
+	}			// end statistics_loop do_loop()
+	
+function get_scheduled_number() {
+	var randomnumber=Math.floor(Math.random()*99999999);
+	var sessID = "<?php print $_SESSION['id'];?>";
+	var url = './ajax/sit_scheduled.php?version=' + randomnumber + '&q=' +sessID;
+	sendRequest (url,sched_cb, "");
+	function sched_cb(req) {
+		var thescheds = JSON.decode(req.responseText);
+		if(thescheds) {
+			if(thescheds[0] > 0) {
+				var theOutput = " There is (are) " + thescheds[0] + " Scheduled Incident(s)";
+				} else {
+				var theOutput = "";
+				}
+			} else {
+			var theOutput = "";
+			}
+		$('sched_flag').innerHTML = theOutput;
+		$('sched_flag').setAttribute('onclick','show_btns_closed(); set_period(10);');
+		}
+	}	
+
 function set_size() {
 	if (typeof window.innerWidth != 'undefined') {
 		viewportwidth = window.innerWidth,
@@ -306,6 +371,8 @@ function set_size() {
 	$('the_flist').style.maxHeight = listHeight + "px";
 	$('the_flist').style.width = listwidth + "px";
 	$('facilitiesheading').style.width = listwidth + "px";
+	$('stats_wrapper').style.width = mapWidth + "px";
+	$('stats_heading').style.width = mapWidth + "px";
 	load_status_control();
 	load_fac_status_control();
 	load_exclusions();
@@ -313,8 +380,6 @@ function set_size() {
 	load_catchments();
 	load_basemarkup();
 	load_groupbounds();	
-//	load_facilitylist(window.fac_field, window.fac_direct);
-//	load_responderlist(window.resp_field, window.resp_direct);
 	load_incidentlist(window.inc_field, window.inc_direct);
 	do_conditions();
 	load_regions();
@@ -332,14 +397,14 @@ function loadData() {
 	load_catchments();
 	load_basemarkup();
 	load_groupbounds();	
-//	load_facilitylist(window.fac_field, window.fac_direct);
-//	load_responderlist(window.resp_field, window.resp_direct);
 	load_incidentlist(window.inc_field, window.inc_direct);
 	do_conditions();
 	load_regions();
 	load_log(window.log_field, window.log_direct);
 	set_initial_pri_disp();
 	load_poly_controls();
+	do_statistics();
+	get_scheduled_number();
 	}
 	
 function pageUnload() {
@@ -348,6 +413,7 @@ function pageUnload() {
 	clearInterval(f_interval); 
 	clearInterval(b_interval); 
 	clearInterval(c_interval); 	
+	clearInterval(s_interval); 
 	}
 
 var thelevel = '<?php print $the_level;?>';
@@ -554,14 +620,15 @@ if (is_guest()) {
 <DIV ID = "div_patient_id" STYLE="display:none;"></DIV>
 <DIV id = "outer" style='position: absolute; left: 0px;'>
 	<DIV CLASS='header' style = "height:32px; width: 100%; float: none; text-align: center;">
-		<SPAN ID='theHeading' CLASS='header' STYLE='background-color: inherit;'></SPAN>
+		<SPAN ID='theHeading' CLASS='header' STYLE='background-color: inherit;'></SPAN>&nbsp;&nbsp;&nbsp;
+		<SPAN ID='theRegions' CLASS='heading' STYLE='background-color: #707070;' onmouseout='UnTip();'>Viewing Regions (mouse over to view)</SPAN>
 		<SPAN ID='sev_counts' CLASS='sev_counts'></SPAN><DIV id='timer_div' class='text_medium' style='color: #707070; float: right;'></DIV>
 	</DIV>
 	<DIV id = "leftcol" style='position: absolute; left: 10px;'>
 		<DIV id='ticketheading' class = 'heading' style='border: 1px outset #707070;'>
 			<DIV style='text-align: center;'>
 				<FORM NAME = 'frm_interval_sel' STYLE = 'float: left; display:inline' >
-					<SELECT NAME = 'frm_interval' onChange = 'show_btns_closed(); set_period(this.value);'>
+					<SELECT id='period_select' NAME = 'frm_interval' onChange = 'show_btns_closed(); set_period(this.value);'>
 						<OPTION VALUE='99' SELECTED><?php print get_text("Change display"); ?></OPTION>
 						<OPTION VALUE='0'><?php print get_text("Current situation"); ?></OPTION>
 						<OPTION VALUE='1'><?php print $incidents;?> closed today</OPTION>
@@ -573,11 +640,11 @@ if (is_guest()) {
 						<OPTION VALUE='7'><?php print $incidents;?> closed last month</OPTION>
 						<OPTION VALUE='8'><?php print $incidents;?> closed this year</OPTION>
 						<OPTION VALUE='9'><?php print $incidents;?> closed last year</OPTION>
+						<OPTION VALUE='10'><?php print $incidents;?> Scheduled</OPTION>
 					</SELECT>
 				</FORM>			
-				Incidents <SPAN ID='sched_flag'>
+				Incidents <SPAN ID='sched_flag'></SPAN>
 				<SPAN id='reload_incs'class='plain' style='width: 19px; height: 19px; float: left; text-align: center; vertical-align: top;' onmouseover='do_hover(this.id); Tip("Click to refresh Incident List");' onmouseout='do_plain(this.id); UnTip();' onClick="do_incident_refresh();"><IMG SRC = './markers/refresh.png' ALIGN='right'></SPAN>
-				</SPAN>
 				<SPAN id='collapse_incs' onClick="hideDiv('ticketlist', 'collapse_incs', 'expand_incs')" style = 'display: "";'><IMG SRC = './markers/collapse.png' ALIGN='right'></SPAN>
 				<SPAN id='expand_incs' onClick="showDiv('ticketlist', 'collapse_incs', 'expand_incs')" style = 'display: none;'><IMG SRC = './markers/expand.png' ALIGN='right'></SPAN><BR />
 				<SPAN ID = 'btn_go' class='plain' style='width: 50px; float: none; display: none; font-size: .8em; color: green;' onmouseover='do_hover(this.id);' onmouseout='do_plain(this.id);' onClick='submit_period(); hide_btns_closed();' CLASS='conf_button' STYLE = 'margin-left: 10px; color: green; display: none;'>Next</SPAN>
@@ -654,6 +721,31 @@ if (is_guest()) {
 		<DIV class="scrollableContainer" id='loglist' style='border: 1px outset #707070;'>
 			<DIV class="scrollingArea" id='the_loglist'><CENTER><IMG src='./images/owmloading.gif'></CENTER></DIV>				
 		</DIV><BR /><BR />
+		<DIV id='stats_heading' class = 'heading'>
+			<DIV style='text-align: center;'>Statistics<BR />
+				<FONT SIZE = 'normal'><EM><SPAN class='text_medium' style='color: #FFFFFF;' id='caption'>hover over header for details on what each element is</SPAN></EM></FONT>
+			</DIV>
+		</DIV>
+		<DIV id='stats_wrapper' style='width: 100%;'>
+			<TABLE id='stats_table' BORDER=1 style='width: 100%;'>
+				<TR class='heading' style='width: 100%;'>
+					<TH class='heading' onMouseover="Tip('Number of Tickets');" onMouseOut="UnTip();" style='width: 16%; text-align: center;'>NT</TH>
+					<TH class='heading' onMouseover="Tip('Number of Tickets not assigned');" onMouseOut="UnTip();" style='width: 16%; text-align: center;'>NA</TH>
+					<TH class='heading' onMouseover="Tip('Number of Responders on Scene');" onMouseOut="UnTip();" style='width: 16%; text-align: center;'>RO</TH>
+					<TH class='heading' onMouseover="Tip('Average time to dispatch (Days Hours-Mins:Secs)');" onMouseOut="UnTip();" style='width: 16%; text-align: center;'>AD</TH>
+					<TH class='heading' onMouseover="Tip('Average time ticket is open (Days Hours-Mins:Secs)');" onMouseOut="UnTip();" style='width: 16%; text-align: center;'>TO</TH>
+					<TH class='heading' onMouseover="Tip('Number of available responders');" onMouseOut="UnTip();" style='width: 16%; text-align: center;'>AR</TH>
+				</TR>
+				<TR class='even' style='width: 100%;'>
+					<TD id='s1' style='width: 16%; text-align: center; background-color: #CECECE;'></TD>
+					<TD id='s2' style='width: 16%; text-align: center; background-color: #CECECE;'></TD>
+					<TD id='s3' style='width: 16%; text-align: center; background-color: #CECECE;'></TD>
+					<TD id='s4' style='width: 16%; text-align: center; background-color: #CECECE;'></TD>
+					<TD id='s5' style='width: 16%; text-align: center; background-color: #CECECE;'></TD>
+					<TD id='s6' style='width: 16%; text-align: center; background-color: #CECECE;'></TD>
+				</TR>
+			</TABLE>
+		</DIV>
 	</DIV>
 <?php
 $allow_filedelete = ($the_level == $GLOBALS['LEVEL_SUPER']) ? TRUE : FALSE;
@@ -725,6 +817,8 @@ $('facilitylist').style.width = listwidth + "px";
 $('the_flist').style.maxHeight = listHeight + "px";
 $('the_flist').style.width = listwidth + "px";
 $('facilitiesheading').style.width = listwidth + "px";
+$('stats_wrapper').style.width = mapWidth + "px";
+$('stats_heading').style.width = mapWidth + "px";
 // end of set widths
 var theLocale = <?php print get_variable('locale');?>;
 var useOSMAP = <?php print get_variable('use_osmap');?>;

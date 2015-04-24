@@ -28,7 +28,7 @@ if($rows > 0) {
 	$result2 = mysql_query($query2) or do_error($query2, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);	
 	}
 if($success) {
-	$textStr = "Access Request received from " . $theName . "\r\n\r\nEMAIL: " . $email . "\r\nPHONE: " . $row['phone'] . "\r\nREASON FOR REQUEST: " . $row['reason'] . "\r\n";
+	$textStr = "Access Request received from " . $theName . "\r\n\r\nEMAIL: " . $theEmail . "\r\nPHONE: " . $row['phone'] . "\r\nREASON FOR REQUEST: " . $row['reason'] . "\r\n";
 	$contact_add = get_contact_addr();
 	do_send($contact_add, "", "Tickets Access Request", $textStr, 0, 0, 0, NULL);
 	}

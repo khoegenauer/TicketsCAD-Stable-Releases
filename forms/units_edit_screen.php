@@ -220,12 +220,12 @@ var track_captions = ["", "Callsign&nbsp;&raquo;", "Device key&nbsp;&raquo;", "U
 	<DIV ID='to_bottom' style='position:fixed; top:2px; left:50px; height: 12px; width: 10px;' onclick = 'to_bottom()'><IMG SRC='markers/down.png'  BORDER=0 /></DIV>
 	<DIV id='outer' style='position: absolute; left: 0px;'>
 		<DIV id='leftcol' style='position: absolute; left: 10px;'>
-			<A NAME='top'>		<!-- 11/11/09 -->
-			<FORM METHOD="POST" NAME= "res_edit_Form" ENCTYPE="multipart/form-data" ACTION="units.php?goedit=true"> <!-- 7/9/09 -->
+			<A NAME='top'>
+			<FORM METHOD="POST" NAME="res_edit_Form" ENCTYPE="multipart/form-data" ACTION="units.php?goedit=true">
 			<TABLE BORDER=0 ID='editform'>
 				<TR>
 					<TD ALIGN='center' COLSPAN='2'><FONT CLASS='header'><FONT SIZE=-1><FONT COLOR='green'>&nbsp;Edit '<?php print $row['name'];?>' data</FONT>&nbsp;&nbsp;(#<?php print $id; ?>)</FONT></FONT><BR /><BR />
-						<FONT SIZE=-1>(mouseover caption for help information)</FONT></FONT><DIV id = 'fence_flag'><BR /><BR /></DIV>
+						<FONT SIZE=-1>(mouseover caption for help information)</FONT><DIV id = 'fence_flag'><BR /><BR /></DIV>
 					</TD>
 				</TR>
 				<TR class='spacer'>
@@ -265,7 +265,7 @@ var track_captions = ["", "Callsign&nbsp;&raquo;", "Device key&nbsp;&raquo;", "U
 <?php	
 						} elseif((is_admin()) && (COUNT(get_allocates(4, $_SESSION['user_id'])) > 1)) {
 ?>
-						<TR CLASS='odd' VALIGN='top'>;
+						<TR CLASS='odd' VALIGN='top'>
 							<TD CLASS="td_label"><A CLASS="td_label" HREF="#" TITLE="Sets Regions that Responder is allocated to - click + to expand, - to collapse"><?php print get_text("Regions");?></A>:
 								<SPAN id='expand_gps' onClick="$('groups_sh').style.display = 'inline-block'; $('expand_gps').style.display = 'none'; $('collapse_gps').style.display = 'inline-block';" style = 'display: inline-block; font-size: 16px; border: 1px solid;'><B>+</B></SPAN>
 								<SPAN id='collapse_gps' onClick="$('groups_sh').style.display = 'none'; $('collapse_gps').style.display = 'none'; $('expand_gps').style.display = 'inline-block';" style = 'display: none; font-size: 16px; border: 1px solid;'><B>-</B></SPAN></TD>
@@ -279,7 +279,7 @@ var track_captions = ["", "Callsign&nbsp;&raquo;", "Device key&nbsp;&raquo;", "U
 <?php
 						} else {
 ?>
-						<TR CLASS='odd' VALIGN='top'>;
+						<TR CLASS='odd' VALIGN='top'>
 							<TD CLASS='td_label'><A CLASS="td_label" HREF="#" TITLE="Shows Regions that Responder is allocated to"><?php print get_text("Regions");?></A>:
 							<SPAN id='expand_gps' onClick="$('groups_sh').style.display = 'inline-block'; $('expand_gps').style.display = 'none'; $('collapse_gps').style.display = 'inline-block';" style = 'display: inline-block; font-size: 16px; border: 1px solid;'><B>+</B></SPAN>
 							<SPAN id='collapse_gps' onClick="$('groups_sh').style.display = 'none'; $('collapse_gps').style.display = 'none'; $('expand_gps').style.display = 'inline-block';" style = 'display: none; font-size: 16px; border: 1px solid;'><B>-</B></SPAN></TD>

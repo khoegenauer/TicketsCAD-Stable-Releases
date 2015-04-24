@@ -61,7 +61,7 @@ while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
 		div.scrollableContainer { position: relative; padding-top: 1.8em; border: 1px solid #999; }
 		div.scrollableContainer2 { position: relative; padding-top: 1.3em; }
 		div.scrollingArea { max-height: 240px; overflow: auto; overflow-x: hidden; }
-		div.scrollingArea2 { max-height: 480px; overflow: auto; overflow-x: hidden; }
+		div.scrollingArea2 { max-height: 400px; overflow: auto; overflow-x: hidden; }
 		table.scrollable thead tr { left: -1px; top: 0; position: absolute; }
 		table.cruises th { text-align: left; border-left: 1px solid #999; background: #CECECE; color: black; font-weight: bold; overflow: hidden; }
 		.olPopupCloseBox{background-image:url(img/close.gif) no-repeat;cursor:pointer;}	
@@ -79,9 +79,6 @@ while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
 	<SCRIPT TYPE="text/javascript" SRC="./js/misc_function.js"></SCRIPT>	<!-- 5/3/11 -->	
 	<SCRIPT TYPE="text/javascript" SRC="./js/domready.js"></script>
 	<SCRIPT SRC="./js/messaging.js" TYPE="text/javascript"></SCRIPT><!-- 10/23/12-->
-<?php 
-if ($_SESSION['internet']) {				// 8/22/10
-?>
 	<script type="text/javascript" src="./js/geotools2.js"></script>
 	<script src="./js/usng.js"></script>
 	<script type="text/javascript" src="./js/osgb.js"></script>
@@ -97,9 +94,6 @@ if ($_SESSION['internet']) {				// 8/22/10
 	<script type="text/javascript" src="./js/osm_map_functions.js.php"></script>
 	<script type="text/javascript" src="./js/L.Graticule.js"></script>
 	<script type="text/javascript" src="./js/leaflet-providers.js"></script>
-<?php 
-	} 
-?>
 	<SCRIPT>
 	var sortby = '`date`';	//	11/18/13
 	var sort = "DESC";	//	11/18/13
@@ -394,6 +388,7 @@ if ($_SESSION['internet']) {				// 8/22/10
 							mi_number = mi_id;
 							var markup_arr = mi_arr[key][9];
 							if(markup_arr) {
+								if($('map_canvas')) {
 								var theID = markup_arr['id'];
 								var theLinename = markup_arr['name'];
 								var theIdent = markup_arr['ident'];
@@ -414,13 +409,16 @@ if ($_SESSION['internet']) {				// 8/22/10
 									var banner = drawBanner(theLinename, theData, theWidth, theColor, "basemarkup", theID);
 									}
 								}
+								}
 							if(mi_arr[key][11]) {
 								var tic_arr = mi_arr[key][11];
 								if(tic_arr[key]) {
+									if($('map_canvas')) {
 									if(i == 1) {
 										var thePoint = L.latLng(tic_arr[key][2],tic_arr[key][3]);
 										window.bounds = L.latLngBounds(thePoint);
 										}
+									}
 									}
 								for (n = 0; n < tic_arr.length; n++) {
 									var theTickid = tic_arr[n][0];
@@ -429,8 +427,12 @@ if ($_SESSION['internet']) {				// 8/22/10
 									var theLng = tic_arr[n][3];
 									var theType = tic_arr[n][4];
 									var theSeverity = tic_arr[n][5];
+									if($('map_canvas')) {
+										if((isFloat(theLat)) && (isFloat(theLng))) {
 									var marker = createTicMarker(theLat, theLng, "Ticket: " + theScope + "<BR />Major Incident: " + mi_arr[key][0], theSeverity, theTickid, mi_id, theScope);
 									marker.addTo(map);
+											}
+										}
 									var theResp_arr = tic_arr[n][6];
 									if(theResp_arr) {
 										for(z = 0; z < theResp_arr.length; z++) {
@@ -438,11 +440,15 @@ if ($_SESSION['internet']) {				// 8/22/10
 											var resp_handle = theResp_arr[z][1];
 											var resp_lat = theResp_arr[z][2];
 											var resp_lng = theResp_arr[z][3];
+											if($('map_canvas')) {
+												if((isFloat(resp_lat)) && (isFloat(resp_lng))) {
 											var rmarker = createRespMarker(resp_lat, resp_lng, resp_id, mi_id, resp_handle)
 											rmarker.addTo(map);
 											}
 										}
 									}
+								}
+							}
 								}
 							}
 						i++;
@@ -837,7 +843,11 @@ if ($_SESSION['internet']) {				// 8/22/10
 
 	if ($_getadd == 'true') {
 		require_once('./incs/links.inc.php');
+		if (!($_SESSION['internet'])) {
+			require_once('./forms/mi_add_screen_NM.php');			
+			} else {
 		require_once('./forms/mi_add_screen.php');
+			}
 		exit();
 		}		// end if ($_GET['add'])
 
@@ -847,7 +857,11 @@ if ($_SESSION['internet']) {				// 8/22/10
 
 	if ($_getedit == 'true') {
 		require_once('./incs/links.inc.php');
+		if (!($_SESSION['internet'])) {
+			require_once('./forms/mi_edit_screen_NM.php');			
+			} else {
 		require_once('./forms/mi_edit_screen.php');
+			}
 		exit();
 		}		// end if ($_GET['edit'])
 // =================================================================================================================
@@ -855,13 +869,21 @@ if ($_SESSION['internet']) {				// 8/22/10
 
 	if ($_getview == 'true') {
 		require_once('./incs/links.inc.php');
+		if (!($_SESSION['internet'])) {
+			require_once('./forms/mi_view_screen_NM.php');			
+			} else {
 		require_once('./forms/mi_view_screen.php');
+			}
 		exit();
 		}
 // ============================================= initial display =======================
 	if (!isset($mapmode)) {$mapmode="a";}
 	require_once('./incs/links.inc.php');
+	if (!($_SESSION['internet'])) {
+		require_once('./forms/mi_screen_NM.php');			
+		} else {
 	require_once('./forms/mi_screen.php');
+		}
 	exit();
     break;
 ?>

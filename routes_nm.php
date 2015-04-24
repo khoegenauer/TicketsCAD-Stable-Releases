@@ -8,7 +8,12 @@ $from_top = 20;				// buttons alignment, user-reviseable as needed
 $sidebar_width = 400;		// pixels
 //$from_left = $sidebar_width + get_variable('map_width') + 72;
 //$from_left =  get_left_margin ($sidebar_width);
-$from_left = round (0.75 * $_SESSION['scr_width']);
+if ((array_key_exists('frm_mode', $_GET)) && ($_GET['frm_mode']==1)) {
+	$inWin = true;
+	$from_left = round (0.5 * $_SESSION['scr_width']);
+	} else {
+	$from_left = round (0.75 * $_SESSION['scr_width']);
+	}
 
 $show_tick_left = FALSE;	// controls left-side vs. right-side appearance of incident details - 11/27/09
 $unit_ht_max = 	0.3;		// unit sidebar height maximum as a portion of screen height, a decimal fraction; default 0.3 ( = 30%)
@@ -463,12 +468,11 @@ if (!empty($_POST)) {				// 77-200
 	</H3>
 	<FORM NAME='cont_form' METHOD = 'get' ACTION = "main.php">
 <?php
-	if ((array_key_exists('frm_mode', $_POST)) && ($_POST['frm_mode']==1)) {
+	if ((array_key_exists('frm_mode', $_GET)) && ($_GET['frm_mode']==1)) {
 ?>	
 	<INPUT TYPE='button' VALUE='Finished' onClick = "window.close()">
 <?php
-		}
-	else {
+		} else {
 ?>
 	<INPUT TYPE='button' VALUE='Continue' onClick = "document.cont_form.submit()">
 
@@ -775,7 +779,10 @@ $disabled = ($capabilities=="")? "disabled" : "" ;	// 11/18/10
 	<INPUT TYPE='hidden' NAME = 'id' VALUE = "<?php print $_GET['ticket_id'];?>"/>	
 	</FORM>	
 
-	<FORM NAME='routes_Form' METHOD='post' ACTION="<?php print basename( __FILE__); ?>"> <!-- 7/9/10 -->
+<?php
+	$theAction = ($inWin) ? "routes_nm.php?frm_mode=1" : "routes_nm.php";
+?>
+	<FORM NAME='routes_Form' METHOD='post' ACTION="<?php print $theAction;?>">
 	<INPUT TYPE='hidden' NAME='func' 			VALUE='do_db' />
 	<INPUT TYPE='hidden' NAME='frm_ticket_id' 	VALUE='<?php print $_GET['ticket_id']; ?>' />
 	<INPUT TYPE='hidden' NAME='frm_by_id' 		VALUE= "<?php print $_SESSION['user_id'];?>" />
@@ -825,7 +832,11 @@ $disabled = ($capabilities=="")? "disabled" : "" ;	// 11/18/10
 			print "</FORM>";	
 			print "<INPUT TYPE='button' VALUE='Reset' onClick = 'doReset()' />";
 			print "</SPAN>";			
+			if ((array_key_exists('frm_mode', $_GET)) && ($_GET['frm_mode']==1)) {			
+				print "<INPUT TYPE='button' VALUE='Cancel'  onClick='window.close();' />";
+				} else {
 			print "<INPUT TYPE='button' VALUE='Cancel'  onClick='history.back();' />";
+				}
 			if ($nr_units>0) {			
 				print "<BR /><INPUT TYPE='button' value='DISPATCH\nUNITS' onClick = '" . $thefunc . "' />\n";	// 6/14/09
 				}

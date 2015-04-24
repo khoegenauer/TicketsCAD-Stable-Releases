@@ -824,7 +824,17 @@ if (mysql_num_rows($result)>0) {
 					<INPUT TYPE="hidden" NAME="mode" VALUE="<?php print $mode;?>" />
 					<INPUT TYPE="hidden" NAME="frm_id" VALUE="<?php print $_GET['id'];?>" />
 				<TR CLASS='even'><TD COLSPAN=2 ALIGN="center"><BR />
+<?php
+					if($mode == 1) {
+?>
+						<INPUT TYPE = 'button' VALUE = 'Cancel' onClick = 'window.close();' STYLE = 'margin-left:40px' />
+<?php
+						} else {
+?>
 					<INPUT TYPE = 'button' VALUE = 'Cancel' onClick = 'document.can_Form.submit();' STYLE = 'margin-left:40px' />
+<?php
+						}
+?>
 					<INPUT TYPE="reset" VALUE="Reset"  STYLE = 'margin-left:40px' />
 					<INPUT TYPE="button" VALUE="Submit" onClick = "validate(this.form)"  STYLE = 'margin-left:40px' />
 					</TD></TR>
@@ -940,9 +950,6 @@ if (mysql_num_rows($result)>0) {
 				}			// end array_key_exists('add')
 	
 			else {
-				if ($_SESSION['user_id'])
-					$query = "SELECT * FROM `$GLOBALS[mysql_prefix]notify` WHERE user='$_SESSION[user_id]'";
-				else
 					$query = "SELECT * FROM `$GLOBALS[mysql_prefix]notify`";
 					
 				$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
@@ -1940,16 +1947,11 @@ if (mysql_num_rows($result)>0) {
 			}
 			}
 
-		// for ($i=0;$i<$broj;$i++) {						//dump all tables:
-			// $table_name = $backup->tables[$i]; 			//get table name
-			// $backup->dump_table($table_name); 			//dump it to output (buffer)
-			// $_echo .=htmlspecialchars($backup->output); 	//write output
-			// }	
-
 		$_echo .="\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end \n";
-		echo "\n<FORM NAME='the_form'><TEXTAREA NAME ='the_dump' COLS=120 ROWS=20>{$_echo}</TEXTAREA>";
+		echo "\n<DIV style='width: 60%; position: absolute; left: 20%; top: 5%;'><FORM NAME='the_form'><TEXTAREA NAME ='the_dump' COLS=120 ROWS=20>{$_echo}</TEXTAREA>";
 		echo "<BR /><BR /><INPUT onclick='copyit()' type='button' value='Click to copy the dump' name='cpy'\>\n</FORM>\n";
-	
+		echo "<BR /><BR /><A id='cancel_but' CLASS='plain' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF='config.php'>Back to Config</A></DIV>\n";
+		exit();
 		break;
 	    
 	case 'delete' :	
@@ -2430,7 +2432,7 @@ ul {
 	<BODY onLoad = 'ck_frames()'> <!-- 11/13/10 -->
 <?php if (isset($top_notice)) print "<SPAN STYLE='margin-left: 100px;' CLASS='header' >{$top_notice}</SPAN><BR /><BR />"; ?>
 <BR />
-		<DIV style='position: absolute; left: 20px; top: 50px; max-height: 85%; width: 45%; overflow-y: scroll;'>
+		<DIV id='mainmenu' style='position: absolute; left: 20px; top: 50px; max-height: 85%; width: 45%; overflow-y: scroll;'>
 		<DIV class='config_heading' id='gen_settings' style='display: inline-block; clear: both; width: 100%; border: 1px inset #707070;'>
 			<DIV class='config_heading'>General</DIV>
 			<A id='about' class='plain' style='clear: both; width: 150px;' HREF="#" onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick = "do_about();">About this version ...</A>	

@@ -148,9 +148,9 @@ $the_resp_id = (isset($_GET['id']))? $_GET['id']: 0;	//	11/18/13
 
 @session_start();	
 
-if (!($_SESSION['internet'])) {				// 8/22/10
+/* if (!($_SESSION['internet'])) {				// 8/22/10
 	header("Location: units_nm.php");
-	}
+	} */
 
 $tester = (((isset($_REQUEST['edit'])) && $_REQUEST['edit'] == TRUE) || ((isset($_REQUEST['add'])) && ($_REQUEST['add'] == TRUE)) || ((isset($_REQUEST['view'])) && ($_REQUEST['view'] == TRUE))) ? 0 : 1;
 
@@ -266,9 +266,9 @@ function get_user_details($rosterID) {	//	9/6/13
 		div.scrollableContainer { position: relative; padding-top: 1.8em; border: 1px solid #999; }
 		div.scrollableContainer2 { position: relative; padding-top: 1.3em; }
 		div.scrollingArea { max-height: 240px; overflow: auto; overflow-x: hidden; }
-		div.scrollingArea2 { max-height: 480px; overflow: auto; overflow-x: hidden; }
+		div.scrollingArea2 { max-height: 400px; overflow: auto; overflow-x: hidden; }
 		table.scrollable thead tr { left: -1px; top: 0; position: absolute; }
-		table.cruises th { text-align: left; border-left: 1px solid #999; background: #CECECE; color: black; font-weight: bold; overflow: hidden; }
+		table.cruises th { text-align: left; border-left: 1px solid #999; background-color: #CECECE; color: black; font-weight: bold; overflow: hidden; }
 		.olPopupCloseBox{background-image:url(img/close.gif) no-repeat;cursor:pointer;}	
 		div.tabBox {}
 		div.tabArea { font-size: 80%; font-weight: bold; padding: 0px 0px 3px 0px; }
@@ -711,7 +711,11 @@ if ($_SESSION['internet']) {				// 8/22/10
 
 	if ($_getadd == 'true') {
 		require_once('./incs/links.inc.php');
+		if (!($_SESSION['internet'])) {
+			require_once('./forms/units_add_screen_NM.php');
+			} else {
 		require_once('./forms/units_add_screen.php');
+			}
 		if((is_super()) || (is_administrator())) {	//	10/28/10 Added for add on modules
 			if(file_exists("./incs/modules.inc.php")) {
 				get_modules('res_add_Form');
@@ -726,7 +730,11 @@ if ($_SESSION['internet']) {				// 8/22/10
 
 	if ($_getedit == 'true') {
 		require_once('./incs/links.inc.php');
+		if (!($_SESSION['internet'])) {
+			require_once('./forms/units_edit_screen_NM.php');
+			} else {
 		require_once('./forms/units_edit_screen.php');
+			}
 		if((is_super()) || (is_administrator())) {	//	10/28/10 Added for add on modules
 			if(file_exists("./incs/modules.inc.php")) {
 				get_modules('res_edit_Form');
@@ -738,7 +746,11 @@ if ($_SESSION['internet']) {				// 8/22/10
 
 	if ($_getview == 'true') {
 		require_once('./incs/links.inc.php');
+		if (!($_SESSION['internet'])) {
+			require_once('./forms/units_view_screen_NM.php');
+			} else {
 		require_once('./forms/units_view_screen.php');
+			}
 		if((is_super()) || (is_administrator())) {	//	10/28/10 Added for add on modules
 				if(file_exists("./incs/modules.inc.php")) {
 				get_modules('res_view_Form');
@@ -748,7 +760,11 @@ if ($_SESSION['internet']) {				// 8/22/10
 // ============================================= initial display =======================
 			if (!isset($mapmode)) {$mapmode="a";}
 		require_once('./incs/links.inc.php');
+	if (!($_SESSION['internet'])) {
+		require_once('./forms/units_screen_NM.php');
+		} else {
 	require_once('./forms/units_screen.php');
+		}
 		if((is_super()) || (is_administrator())) {	//	10/28/10 Added for add on modules
 			if(file_exists("./incs/modules.inc.php")) {
 				get_modules('list_form');

@@ -3806,13 +3806,6 @@ function show_ticket($id,$print='false', $search = FALSE) {								/* show speci
 		return;
 		}
 
-//	Regions stuff	6/10/11		
-		
-print get_buttons_inner();	// 4/12/12
-print get_buttons_inner2();	//	4/12/12
-
-//	End of Regions stuff
-	
 	$restrict_ticket = ((get_variable('restrict_user_tickets')==1) && !(is_administrator()))? " AND owner=$_SESSION[user_id]" : "";
 										// 1/7/10
 	$query = "SELECT *,
@@ -3954,6 +3947,7 @@ print get_buttons_inner2();	//	4/12/12
 		print "</TD></TR>";		
 		print "<TR CLASS='print_TD'><TD colspan=99 ALIGN='left'>";
 		print show_actions($row['tick_id'], "date", FALSE, TRUE);		// lists actions and patient data, print - 10/30/09
+
 		print "</TD></TR>";
 		print "</TABLE>\n";
 		print "<BR /><BR /><BR />";

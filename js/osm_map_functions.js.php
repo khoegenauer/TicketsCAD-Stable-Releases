@@ -2,6 +2,7 @@
 require_once('../incs/functions.inc.php');
 @session_start();
 $the_level = (isset($_SESSION['level'])) ? $_SESSION['level'] : 0 ;
+$showmaps = ((array_key_exists('internet', ($_SESSION))) && ($_SESSION['internet'])) ? 1 : 0;
 $temp = get_variable('auto_poll');				// 1/28/09
 $poll_val = ($temp==0)? "none" : $temp ;
 $day_night = ((array_key_exists('day_night', ($_SESSION))) && ($_SESSION['day_night']))? $_SESSION['day_night'] : 'Day';	//	3/15/11
@@ -17,6 +18,7 @@ while ($row = stripslashes_deep(mysql_fetch_assoc($result))){
 	$states[$row['name']] = $row['code'];
 	}
 ?>
+var internet = <?php print $showmaps;?>;
 var icons=[];
 icons[<?php echo $GLOBALS['SEVERITY_NORMAL'];?>] = 1;	// blue
 icons[<?php echo $GLOBALS['SEVERITY_MEDIUM'];?>] = 2;	// yellow
@@ -46,6 +48,8 @@ fac_icons[6] = 7;
 fac_icons[7] = 8;
 
 var max_zoom = <?php print get_variable('def_zoom');?>;
+var popupInfo = "";
+var currPopup;
 var map;				// make globally visible
 var myMarker;
 var condMarkers;
@@ -1222,7 +1226,6 @@ function show_btns_closed() {						// 4/30/10
 function hide_btns_closed() {
 	$('btn_go').style.display = 'none';
 	$('btn_can').style.display = 'none';
-	document.frm_interval_sel.frm_interval.selectedIndex=0;
 	}
 function show_btns_scheduled() {						// 4/30/10
 	$('btn_scheduled').style.display = 'inline';
@@ -1231,7 +1234,6 @@ function show_btns_scheduled() {						// 4/30/10
 function hide_btns_scheduled() {
 	$('btn_scheduled').style.display = 'none';
 	$('btn_can').style.display = 'none';
-	document.frm_interval_sel.frm_sched.selectedIndex=0;
 	}
 	
 function do_add_note (id) {				// 8/12/09
@@ -1299,12 +1301,20 @@ function to_str(instr) {			// 0-based conversion - 2/13/09
 	}
 	
 function loc_lkup(my_form) {		   						// 7/5/10
-	if ((my_form.frm_city.value.trim()==""  || my_form.frm_state.value.trim()=="")) {
+	if(my_form.frm_street.value.trim() != "" && my_form.frm_city.value.trim() == "") {
+		var theCity = my_form.frm_street.value.trim();
+		var theStreet = "";
+		} else {
+		var theCity = my_form.frm_city.value.trim();
+		var theStreet = my_form.frm_street.value.trim();
+		}
+	if (theCity == "" || my_form.frm_state.value.trim() == "") {
 		alert ("City and State are required for location lookup.");
 		return false;
 		}
-	var myAddress = my_form.frm_street.value.trim() + ", " +my_form.frm_city.value.trim() + " "  +my_form.frm_state.value.trim();
+	var myAddress = theStreet + ", " + theCity + " " + my_form.frm_state.value.trim();
 	control.options.geocoder.geocode(myAddress, function(results) {
+		if(!results) {alert("Cannot find location");}
 		var r = results[0]['center'];
 		var theLat = r.lat;
 		var theLng = r.lng;
@@ -1371,10 +1381,10 @@ function newGetAddress(latlng, currform) {
 					document.res_add_Form.frm_city.value = theCity;
 					var theState = (state != "") ? states_arr[state] : "";
 					document.res_add_Form.frm_state.value = theState;
-					document.res_add_Form.frm_lat.value = theLat.toFixed(6); 
-					document.res_add_Form.frm_lng.value = theLng.toFixed(6); 
-					document.res_add_Form.show_lat.value = theLat.toFixed(6); 
-					document.res_add_Form.show_lng.value = theLng.toFixed(6);
+					document.res_add_Form.frm_lat.value = lat; 
+					document.res_add_Form.frm_lng.value = lng; 
+					document.res_add_Form.show_lat.value = lat; 
+					document.res_add_Form.show_lng.value = lng;
 					var loc = <?php print get_variable('locale');?>;
 					if(loc == 0) { document.res_add_Form.frm_ngs.value=LLtoUSNG(lat, lng, 5); }
 					if(loc == 1) { document.res_add_Form.frm_ngs.value=LLtoOSGB(lat, lng, 5); }
@@ -1391,10 +1401,10 @@ function newGetAddress(latlng, currform) {
 					document.res_edit_Form.frm_city.value = theCity;
 					var theState = (state != "") ? states_arr[state] : "";
 					document.res_edit_Form.frm_state.value = theState;
-					document.res_edit_Form.frm_lat.value = theLat.toFixed(6); 
-					document.res_edit_Form.frm_lng.value = theLng.toFixed(6); 
-					document.res_edit_Form.show_lat.value = theLat.toFixed(6); 
-					document.res_edit_Form.show_lng.value = theLng.toFixed(6);
+					document.res_edit_Form.frm_lat.value = lat; 
+					document.res_edit_Form.frm_lng.value = lng; 
+					document.res_edit_Form.show_lat.value = lat; 
+					document.res_edit_Form.show_lng.value = lng;
 					var loc = <?php print get_variable('locale');?>;
 					if(loc == 0) { document.res_edit_Form.frm_ngs.value=LLtoUSNG(lat, lng, 5); }
 					if(loc == 1) { document.res_edit_Form.frm_ngs.value=LLtoOSGB(lat, lng, 5); }
@@ -1411,10 +1421,10 @@ function newGetAddress(latlng, currform) {
 					document.loc_add_Form.frm_city.value = theCity;
 					var theState = (state != "") ? states_arr[state] : "";
 					document.loc_add_Form.frm_state.value = theState;
-					document.loc_add_Form.frm_lat.value = theLat.toFixed(6); 
-					document.loc_add_Form.frm_lng.value = theLng.toFixed(6); 
-					document.loc_add_Form.show_lat.value = theLat.toFixed(6); 
-					document.loc_add_Form.show_lng.value = theLng.toFixed(6);
+					document.loc_add_Form.frm_lat.value = lat; 
+					document.loc_add_Form.frm_lng.value = lng; 
+					document.loc_add_Form.show_lat.value = lat; 
+					document.loc_add_Form.show_lng.value = lng;
 					var loc = <?php print get_variable('locale');?>;
 					if(loc == 0) { document.loc_add_Form.frm_ngs.value=LLtoUSNG(lat, lng, 5); }
 					if(loc == 1) { document.loc_add_Form.frm_ngs.value=LLtoOSGB(lat, lng, 5); }
@@ -1431,10 +1441,10 @@ function newGetAddress(latlng, currform) {
 					document.loc_edit_Form.frm_city.value = theCity;
 					var theState = (state != "") ? states_arr[state] : "";
 					document.loc_edit_Form.frm_state.value = theState;
-					document.loc_edit_Form.frm_lat.value = theLat.toFixed(6); 
-					document.loc_edit_Form.frm_lng.value = theLng.toFixed(6); 
-					document.loc_edit_Form.show_lat.value = theLat.toFixed(6); 
-					document.loc_edit_Form.show_lng.value = theLng.toFixed(6);
+					document.loc_edit_Form.frm_lat.value = lat; 
+					document.loc_edit_Form.frm_lng.value = lng; 
+					document.loc_edit_Form.show_lat.value = lat; 
+					document.loc_edit_Form.show_lng.value = lng;
 					var loc = <?php print get_variable('locale');?>;
 					if(loc == 0) { document.loc_edit_Form.frm_ngs.value=LLtoUSNG(lat, lng, 5); }
 					if(loc == 1) { document.loc_edit_Form.frm_ngs.value=LLtoOSGB(lat, lng, 5); }
@@ -1451,8 +1461,8 @@ function newGetAddress(latlng, currform) {
 					var address3 = (theCity != "") ? theCity + ", " : "";
 					var address4 = (r.state != "") ? r.state : "";					
 					document.c.frm_address.value = address1 + address2 + address3 + address4;
-					document.c.frm_lat.value = theLat.toFixed(6); 
-					document.c.frm_lng.value = theLng.toFixed(6); 
+					document.c.frm_lat.value = lat; 
+					document.c.frm_lng.value = lng; 
 					document.c.frm_address.focus();
 					break;
 					
@@ -1465,8 +1475,8 @@ function newGetAddress(latlng, currform) {
 					var address3 = (theCity != "") ? theCity + ", " : "";
 					var address4 = (r.state != "") ? r.state : "";					
 					document.u.frm_address.value = address1 + address2 + address3 + address4;
-					document.u.frm_lat.value = theLat.toFixed(6); 
-					document.u.frm_lng.value = theLng.toFixed(6); 
+					document.u.frm_lat.value = lat; 
+					document.u.frm_lng.value = lng; 
 					document.u.frm_address.focus();
 					break;
 					
@@ -1479,10 +1489,10 @@ function newGetAddress(latlng, currform) {
 					document.add.frm_city.value = theCity;
 					var theState = (state != "") ? states_arr[state] : "";
 					document.add.frm_state.value = theState;
-					document.add.frm_lat.value = lat.toFixed(6); 
-					document.add.frm_lng.value = lng.toFixed(6); 
-					document.add.show_lat.value = lat.toFixed(6); 
-					document.add.show_lng.value = lng.toFixed(6); 
+					document.add.frm_lat.value = lat; 
+					document.add.frm_lng.value = lng; 
+					document.add.show_lat.value = lat; 
+					document.add.show_lng.value = lng; 
 					document.add.frm_street.focus();
 					var loc = <?php print get_variable('locale');?>;
 					if(loc == 0) { document.add.frm_ngs.value=LLtoUSNG(lat, lng, 5); }
@@ -1499,10 +1509,10 @@ function newGetAddress(latlng, currform) {
 					document.edit.frm_city.value = theCity;
 					var theState = (state != "") ? states_arr[state] : "";
 					document.edit.frm_state.value = theState;
-					document.edit.frm_lat.value = lat.toFixed(6); 
-					document.edit.frm_lng.value = lng.toFixed(6); 
-					document.edit.show_lat.value = lat.toFixed(6); 
-					document.edit.show_lng.value = lng.toFixed(6); 
+					document.edit.frm_lat.value = lat; 
+					document.edit.frm_lng.value = lng; 
+					document.edit.show_lat.value = lat; 
+					document.edit.show_lng.value = lng; 
 					document.edit.frm_street.focus();
 					var loc = <?php print get_variable('locale');?>;
 					if(loc == 0) { document.edit.frm_ngs.value=LLtoUSNG(lat, lng, 5); }
@@ -1657,6 +1667,13 @@ function createMarker(lat, lon, info, color, stat, theid, sym, category, region,
 		marker.on('popupclose', function(e) {
 			map.setView(mapCenter, mapZoom);
 			});
+		marker.on('click', function(e) {
+			if($('screenname').innerHTML == "fullscreen") {
+				get_fs_tickpopup(theid);
+				} else {
+				get_tickpopup(theid);
+				}
+			});	
 		marker.id = color;
 		marker.category = category;
 		marker.region = region;		
@@ -1700,10 +1717,17 @@ function createUnitMarker(lat, lon, info, color, stat, theid, sym, category, reg
 			}
 		var iconurl = "./our_icons/gen_icon.php?blank=" + theIconColor + "&text=" + iconStr;
 		icon = new baseIcon({iconUrl: iconurl});	
-		var marker = L.marker([lat, lon], {icon: icon, title: tip, zIndexOffset: window.unitzindexno, riseOnHover: true, riseOffset: 30000}).bindPopup(info).openPopup();
+		var marker = L.marker([lat, lon], {icon: icon, title: tip, zIndexOffset: window.unitzindexno, riseOnHover: true, riseOffset: 30000});
 		marker.on('popupclose', function(e) {
 			map.setView(mapCenter, mapZoom);
 			});
+		marker.on('click', function(e) {
+			if($('screenname').innerHTML == "fullscreen") {
+				get_fs_resppopup(theid);
+				} else {
+				get_resppopup(theid);
+				}
+			});	
 		marker.id = color;
 		marker.category = category;
 		marker.region = region;		
@@ -1740,10 +1764,17 @@ function createFacilityMarker(lat, lon, info, color, stat, theid, sym, category,
 		var iconStr = sym.substring(origin);
 		var iconurl = "./our_icons/gen_fac_icon.php?blank=" + color + "&text=" + iconStr;
 		icon = new baseFacIcon({iconUrl: iconurl});	
-		var marker = L.marker([lat, lon], {icon: icon, title: tip, zIndexOffset: window.faczindexno, riseOnHover: true, riseOffset: 30000}).bindPopup(info).openPopup();
+		var marker = L.marker([lat, lon], {icon: icon, title: tip, zIndexOffset: window.faczindexno, riseOnHover: true, riseOffset: 30000});
 		marker.on('popupclose', function(e) {
 			map.setView(mapCenter, mapZoom);
 			});
+		marker.on('click', function(e) {
+			if($('screenname').innerHTML == "fullscreen") {
+				get_fs_facspopup(theid);
+				} else {
+				get_facspopup(theid);
+				}
+			});	
 		marker.id = color;
 		marker.category = category;
 		marker.region = region;	
@@ -1887,70 +1918,177 @@ function createdummyFacMarker(lat, lon, info, icon, title, theid){
 
 function destroy_locmarkers() {
 	for(var key in wlmarkers) {
-		map.removeLayer(wlmarkers[key]);
+		if(wlmarkers[key]) {map.removeLayer(wlmarkers[key]);}
 		}
 	}
 	
-function destroy_incmarkers() {
+/* function destroy_incmarkers() {
 	for(var key in tmarkers) {
-		map.removeLayer(tmarkers[key]);
+		if(tmarkers[key]) {map.removeLayer(tmarkers[key]);}
 		}
 	}
 	
 function destroy_unitmarkers() {
 	for(var key in rmarkers) {
-		map.removeLayer(rmarkers[key]);
+		if(rmarkers[key]) {map.removeLayer(rmarkers[key]);}
 		}
 	}
 	
 function destroy_facmarkers() {
 	for(var key in fmarkers) {
-		map.removeLayer(fmarkers[key]);
+		if(fmarkers[key]) {map.removeLayer(fmarkers[key]);}
+		}
+	} */
+	
+function get_tickpopup(id) {
+	var randomnumber=Math.floor(Math.random()*99999999);
+	var sessID = "<?php print $_SESSION['id'];?>";
+	var url = './ajax/inc_popup.php?id=' + id + '&version=' + randomnumber+'&q='+sessID;
+	sendRequest (url,theCB, "");
+	function theCB(req) {
+		var thePopup = JSON.decode(req.responseText);
+		setTimeout(function() {
+			popupInfo = thePopup[0];
+			map.panTo(tmarkers[id].getLatLng());
+			tmarkers[id].bindPopup(popupInfo).openPopup();
+			}, 200)
+		}
+	}
+		
+function get_resppopup(id) {
+	var randomnumber=Math.floor(Math.random()*99999999);
+	var sessID = "<?php print $_SESSION['id'];?>";
+	var url = './ajax/resp_popup.php?id=' + id + '&version=' + randomnumber+'&q='+sessID;
+	sendRequest (url,theCB, "");
+	function theCB(req) {
+		var thePopup = JSON.decode(req.responseText);
+		setTimeout(function() {
+			popupInfo = thePopup[0];
+			map.panTo(rmarkers[id].getLatLng());
+			rmarkers[id].bindPopup(popupInfo).openPopup();
+			}, 200)
+		}
+	}
+		
+function get_facspopup(id) {
+	var randomnumber=Math.floor(Math.random()*99999999);
+	var sessID = "<?php print $_SESSION['id'];?>";
+	var url = './ajax/facs_popup.php?id=' + id + '&version=' + randomnumber+'&q='+sessID;
+	sendRequest (url,theCB, "");
+	function theCB(req) {
+		var thePopup = JSON.decode(req.responseText);
+		setTimeout(function() {
+			popupInfo = thePopup[0];
+			map.panTo(fmarkers[id].getLatLng());
+			fmarkers[id].bindPopup(popupInfo).openPopup();
+			}, 200)
+		}
+	}
+		
+function get_fs_tickpopup(id) {
+	var randomnumber=Math.floor(Math.random()*99999999);
+	var sessID = "<?php print $_SESSION['id'];?>";
+	var url = './ajax/fs_inc_popup.php?id=' + id + '&version=' + randomnumber+'&q='+sessID;
+	sendRequest (url,theCB, "");
+	function theCB(req) {
+		var thePopup = JSON.decode(req.responseText);
+		setTimeout(function() {
+			popupInfo = thePopup[0];
+			map.panTo(tmarkers[id].getLatLng());
+			tmarkers[id].bindPopup(popupInfo).openPopup();
+			}, 200)
+		}
+	}
+		
+function get_fs_resppopup(id) {
+	var randomnumber=Math.floor(Math.random()*99999999);
+	var sessID = "<?php print $_SESSION['id'];?>";
+	var url = './ajax/fs_resp_popup.php?id=' + id + '&version=' + randomnumber+'&q='+sessID;
+	sendRequest (url,theCB, "");
+	function theCB(req) {
+		var thePopup = JSON.decode(req.responseText);
+		setTimeout(function() {
+			popupInfo = thePopup[0];
+			map.panTo(rmarkers[id].getLatLng());
+			rmarkers[id].bindPopup(popupInfo).openPopup();
+			}, 200)
+		}
+	}
+		
+function get_fs_facspopup(id) {
+	var randomnumber=Math.floor(Math.random()*99999999);
+	var sessID = "<?php print $_SESSION['id'];?>";
+	var url = './ajax/fs_facs_popup.php?id=' + id + '&version=' + randomnumber+'&q='+sessID;
+	sendRequest (url,theCB, "");
+	function theCB(req) {
+		var thePopup = JSON.decode(req.responseText);
+		setTimeout(function() {
+			popupInfo = thePopup[0];
+			map.panTo(fmarkers[id].getLatLng());
+			fmarkers[id].bindPopup(popupInfo).openPopup();
+			}, 200)
 		}
 	}
 	
 function mytclick(id) {					// Responds to sidebar click, then triggers listener above -  note [i]
-	if(quick) {
+	if((quick) || (!tmarkers[id]) || (internet == 0)) {
 		document.tick_form.id.value=id;
 		document.tick_form.action='edit.php';
 		document.tick_form.submit();
 		} else {
-		map.panTo(tmarkers[id].getLatLng());
-		tmarkers[id].openPopup();
-		location.href = "#top";
+		if($('screenname').innerHTML == "fullscreen") {
+			get_fs_tickpopup(id);
+			} else {
+			get_tickpopup(id);
 		}
+	}
+	return false;
 	}
 	
 function myrclick(id) {					// Responds to sidebar click, then triggers listener above -  note [i]
-	if(quick) {
-		document.resp_form.id.value=id;
-		document.resp_form.func.value='responder';
-		document.resp_form.edit.value='true';
-		document.resp_form.action='units.php';
-		document.resp_form.submit();
+	if((quick) || (!rmarkers[id]) || (internet == 0)) {
+		document.view_form.id.value = id;
+		document.view_form.func.value='responder';
+		document.view_form.view.value='true';
+		document.view_form.submit();		
+//		document.resp_form.id.value=id;
+//		document.resp_form.func.value='responder';
+//		document.resp_form.edit.value='true';
+//		document.resp_form.action='units.php';
+//		document.resp_form.submit();
 		} else {
-		map.panTo(rmarkers[id].getLatLng());
-		rmarkers[id].openPopup();
-		location.href = "#top";
+		if($('screenname').innerHTML == "fullscreen") {
+			get_fs_resppopup(id);
+		} else {
+			get_resppopup(id);
 		}
+	}
+	return false;
 	}
 	
 function myfclick(id) {					// Responds to sidebar click, then triggers listener above -  note [i]
-	if(quick) {
-		document.fac_form.id.value=id;
-		document.fac_form.func.value='responder';
-		document.fac_form.edit.value='true';
-		document.fac_form.action='facilities.php';
-		document.fac_form.submit();
+	if((quick) || (!fmarkers[id]) || (internet == 0)) {
+		document.view_form.id.value = id;
+		document.view_form.func.value='responder';
+		document.view_form.view.value='true';
+		document.view_form.submit();	
+//		document.fac_form.id.value=id;
+//		document.fac_form.func.value='responder';
+//		document.fac_form.edit.value='true';
+//		document.fac_form.action='facilities.php';
+//		document.fac_form.submit();
 		} else {
-		map.panTo(fmarkers[id].getLatLng());
-		fmarkers[id].openPopup();
-		location.href = "#top";
+		if($('screenname').innerHTML == "fullscreen") {
+			get_fs_facspopup(id);
+		} else {
+			get_facspopup(id);
+			}
 		}
+	return false;
 	}
 	
 function mywlclick(id) {					// Responds to sidebar click, then triggers listener above -  note [i]
-	if((quick) || (!wlmarkers[id])) {
+	if((quick) || (!wlmarkers[id]) || (internet == 0)) {
 		document.wl_form.id.value=id;
 		document.wl_form.func.value='responder';
 		document.wl_form.edit.value='true';
@@ -1959,14 +2097,14 @@ function mywlclick(id) {					// Responds to sidebar click, then triggers listene
 		} else {
 		map.panTo(wlmarkers[id].getLatLng());
 		wlmarkers[id].openPopup();
-		location.href = "#top";
 		}
+	return false;
 	}
 	
 function myrssclick(id) {					// Responds to sidebar click, then triggers listener above -  note [i]
 	map.panTo(rss_markers[id].getLatLng());
 	rss_markers[id].openPopup();
-	location.href = "#top";
+	return false;
 	}
 	
 function init_map(theType, lat, lng, icon, theZoom, locale, useOSMAP, control_position) {
@@ -2133,6 +2271,7 @@ function fvg_handleResult(req) {	// 6/10/11	The persist callback function for vi
 	load_regions();
 	set_initial_pri_disp();
 	load_poly_controls();
+	update_regions_text();
 	}
 	
 function form_validate(theForm) {	//	5/3/11
@@ -2289,13 +2428,18 @@ function load_incidentlist(sort, dir) {
 		var inc_arr = JSON.decode(req.responseText);
 		if(!inc_arr) { alert("Error Decoding Incidentlist"); }
 		if(window.inc_period_changed == 1) {
-			destroy_incmarkers();
+//			destroy_incmarkers();
+			for(var key in tmarkers) {
+				if(tmarkers[key]) {map.removeLayer(tmarkers[key]);}
+				}
 			$('the_list').innerHTML = "";
 			window.inc_period_changed = 0;
 			}
 		if((inc_arr[0]) && (inc_arr[0][0] == 0)) {
 			window.inc_last_display = 0;
-			destroy_incmarkers();
+			for(var key in tmarkers) {
+				if(tmarkers[key]) {map.removeLayer(tmarkers[key]);}
+				}
 			outputtext = "<marquee direction='left' style='font-size: 1.5em; font-weight: bold;'>......No Incidents, please select another time period or add a new incident.........</marquee>";
 			$('the_list').innerHTML = outputtext;
 			var the_sev_str = "<font color='blue'>Normal " + inc_arr[0][22] + "</FONT>, ";
@@ -2305,7 +2449,9 @@ function load_incidentlist(sort, dir) {
 			return false;
 			}
 		if(window.changed_inc_sort == true) {
-			destroy_incmarkers();
+			for(var key in tmarkers) {
+				if(tmarkers[key]) {map.removeLayer(tmarkers[key]);}
+				}
 			}	
 		var i = 1;
 		var blinkstart = "";
@@ -2330,27 +2476,29 @@ function load_incidentlist(sort, dir) {
 		for(var key in inc_arr) {
 			if(key != 0) {
 				var inc_id = inc_arr[key][20];
-				var infowindowtext = inc_arr[key][21];
-				if(tmarkers[i]) {
+				var infowindowtext = "";
+				if(tmarkers[inc_id]) {
 					if(window.changed_inc_sort == false) {
-						var curPos = tmarkers[i].getLatLng();
+						var curPos = tmarkers[inc_id].getLatLng();
 						if((curPos.lat != inc_arr[key][2]) || (curPos.lng != inc_arr[key][3])) {
 							theLatLng = new L.LatLng(inc_arr[key][2], inc_arr[key][3]);
-							tmarkers[i].setLatLng(theLatLng);
+							tmarkers[inc_id].setLatLng(theLatLng);
 							}
 						} else {
 						// Changed sort, don't refresh markers
 						}
 					} else {
+					if($('map_canvas')) {	
 					if((isFloat(inc_arr[key][2])) && (isFloat(inc_arr[key][3]))) {
-						var marker = createMarker(inc_arr[key][2], inc_arr[key][3], infowindowtext, inc_arr[key][5], inc_arr[key][4], i, i, category, 0, inc_arr[key][11]);
+							var marker = createMarker(inc_arr[key][2], inc_arr[key][3], infowindowtext, inc_arr[key][5], inc_arr[key][4], inc_id, i, category, 0, inc_arr[key][11]);
 						marker.addTo(map);
 						} else {
 						var deflat = "<?php print get_variable('def_lat');?>";
 						var deflng = "<?php print get_variable('def_lng');?>";		
-						var marker = createdummyIncMarker(deflat, deflng, infowindowtext, "", resp_arr[key][0], i);
+							var marker = createdummyIncMarker(deflat, deflng, infowindowtext, "", inc_arr[key][0], i);
 						marker.addTo(map);
 						}
+					}
 					}
 				if(inc_arr[key][19] == 1) {
 					blinkstart = "<blink>";
@@ -2359,7 +2507,17 @@ function load_incidentlist(sort, dir) {
 					blinkstart = "";
 					blinkend = "";
 					}					
-				outputtext += "<TR CLASS='" + colors[i%2] +"' style='width: " + window.listwidth + "px;' onMouseover=\"Tip('" + inc_arr[key][0] + " - " + inc_arr[key][1] + "')\" onMouseout='UnTip();' onClick='mytclick(" + i + ");'>";
+				if(inc_arr[key][6] == 1) {
+					var strike = "text-decoration: line-through;";
+					} else {
+					var strike = "";
+					}
+				if(inc_arr[key][21] == 0) {
+					var datestring = "<SPAN>" + inc_arr[key][10] + "</SPAN>";
+					} else {
+					var datestring = "<SPAN style='background-color: blue; color: #FFFFFF;'>" + inc_arr[key][21] + "</SPAN>";
+					}
+				outputtext += "<TR CLASS='" + colors[i%2] +"' style='width: " + window.listwidth + "px; " + strike + "' onMouseover=\"Tip('" + inc_arr[key][0] + " - " + inc_arr[key][1] + "')\" onMouseout='UnTip();' onClick='mytclick(" + inc_id + ");'>";
 				outputtext += "<TD class='plain_list' style='color: " + inc_arr[key][14] + ";'>" + pad(4, i, "\u00a0") + "</TD>";
 				outputtext += "<TD class='plain_list' style='color: " + inc_arr[key][14] + ";'>" + htmlentities(inc_arr[key][0], 'ENT_QUOTES') + "</TD>";
 				outputtext += "<TD class='plain_list' style='color: " + inc_arr[key][14] + ";'>" + inc_arr[key][1] + "</TD>";
@@ -2367,7 +2525,7 @@ function load_incidentlist(sort, dir) {
 				outputtext += "<TD class='plain_list' style='color: " + inc_arr[key][14] + "; width: 12px;'>" + pad(6, inc_arr[key][17], "\u00a0") + "</TD>";
 				outputtext += "<TD class='plain_list' style='color: " + inc_arr[key][14] + "; width: 12px;'>" + pad(6, inc_arr[key][16], "\u00a0") + "</TD>";
 				outputtext += "<TD class='plain_list' style='color: " + inc_arr[key][14] + "; width: 12px;'>" + blinkstart + pad(6, inc_arr[key][18], "\u00a0") + blinkend + "</TD>";
-				outputtext += "<TD class='plain_list' style='color: " + inc_arr[key][14] + ";'>" + inc_arr[key][10] + "</TD>";
+				outputtext += "<TD class='plain_list' style='color: " + inc_arr[key][14] + ";'>" + datestring + "</TD>";
 				outputtext += "<TD>" + pad(3, " ", "\u00a0") + "</TD>";
 				outputtext += "</TR>";
 				if(window.tickets_updated[key]) {
@@ -2643,7 +2801,7 @@ function load_responderlist(sort, dir) {
 		var resp_arr = JSON.decode(req.responseText);
 		if(!resp_arr) { alert("Error Decoding Responderlist"); }
 		if((resp_arr[0]) && (resp_arr[0][0] == 0)) {
-			destroy_unitmarkers();
+//			do_destroy();
 			var outputtext = "<marquee direction='left' style='font-size: 1.5em; font-weight: bold;'>......No Units to view.........</marquee>";
 			$('the_rlist').innerHTML = outputtext;
 			$('boxes').innerHTML = resp_arr[0][19];
@@ -2667,6 +2825,7 @@ function load_responderlist(sort, dir) {
 				if(key != 0) {
 					if(resp_arr[key][2]) {
 						var unit_id = resp_arr[key][2];
+						var unit_no = resp_arr[key][17];
 						if(resp_arr[key][11] != "") {
 							var theMailBut = pad(6, "<DIV style='text-align: center;'><IMG SRC='mail.png' BORDER=0 TITLE = 'click to email unit " + resp_arr[key][1] + "' onclick = 'do_mail_win(\"" + unit_id + "\");'></DIV>", "\u00a0");
 							} else {
@@ -2680,17 +2839,17 @@ function load_responderlist(sort, dir) {
 						var bg_color = resp_arr[key][7];
 						var fg_color = resp_arr[key][8];
 						outputtext += "<TR id='" + resp_arr[key][20] + i +"' CLASS='" + colors[i%2] +"' style='width: " + window.listwidth + "px;'>";
-						outputtext += "<TD style=\"background-color: " + bg_color + "; color: " + fg_color + ";\" onClick='myrclick(" + i + ");'>" + unit_id + "</TD>";
-						outputtext += "<TD onClick='myrclick(" + i + ");'>" + pad(10, htmlentities(resp_arr[key][1], 'ENT_QUOTES'), "\u00a0") + "</TD>";
+						outputtext += "<TD style=\"background-color: " + bg_color + "; color: " + fg_color + ";\" onClick='myrclick(" + unit_no + ");'>" + unit_id + "</TD>";
+						outputtext += "<TD onClick='myrclick(" + unit_no + ");'>" + pad(10, htmlentities(resp_arr[key][1], 'ENT_QUOTES'), "\u00a0") + "</TD>";
 						outputtext += "<TD>" + theMailBut + "</TD>";
-						outputtext += "<TD onClick='myrclick(" + i + ");'>" + pad(20, resp_arr[key][12], "\u00a0") + "</TD>";
+						outputtext += "<TD onClick='myrclick(" + unit_no + ");'>" + pad(20, resp_arr[key][12], "\u00a0") + "</TD>";
 						if(!window.status_control[resp_arr[key][17]]) {
 							outputtext += "<TD " + theTip + ">" + resp_arr[key][23] + "</TD>";
 							} else {
 							outputtext += "<TD " + theTip + ">" + window.status_control[resp_arr[key][17]] + "</TD>";
 							}
-						outputtext += "<TD onClick='myrclick(" + i + ");'>" +  pad(3, resp_arr[key][13], "\u00a0") + "</TD>";
-						outputtext += "<TD onClick='myrclick(" + i + ");'><SPAN id = '" + resp_arr[key][27] + "'>" + resp_arr[key][16] + "</SPAN></TD>";
+						outputtext += "<TD onClick='myrclick(" + unit_no + ");'>" +  pad(3, resp_arr[key][13], "\u00a0") + "</TD>";
+						outputtext += "<TD onClick='myrclick(" + unit_no + ");'><SPAN id = '" + resp_arr[key][27] + "'>" + resp_arr[key][16] + "</SPAN></TD>";
 						outputtext += "<TD>" + pad(5, " ", "\u00a0") + "</TD>";
 						outputtext += "</TR>";
 						if(window.responders_updated[resp_arr[key][17]]) {
@@ -2703,38 +2862,40 @@ function load_responderlist(sort, dir) {
 							window.responders_updated[resp_arr[key][17]] = resp_arr[key][16];
 							window.do_resp_update = true;
 							}
-						infowindowtext = resp_arr[key][19];
-						if(rmarkers[i]) {
+						infowindowtext = "";
+						if(rmarkers[unit_no]) {
 							if(window.changed_resp_sort == false) {
-								var curPos = rmarkers[i].getLatLng();
+								var curPos = rmarkers[unit_no].getLatLng();
 								if((curPos.lat != resp_arr[key][3]) || (curPos.lng != resp_arr[key][4])) {
 									theLatLng = new L.LatLng(resp_arr[key][3], resp_arr[key][3]);
-									rmarkers[i].setLatLng(theLatLng);
+									rmarkers[unit_no].setLatLng(theLatLng);
 									}
 								} else {
 /* 								do_destroy();
 								if((isFloat(resp_arr[key][3])) && (isFloat(resp_arr[key][4]))) {
-									var marker = createUnitMarker(resp_arr[key][3], resp_arr[key][4], infowindowtext, resp_arr[key][18], 0, i, resp_arr[key][2], resp_arr[key][20], 0, resp_arr[key][9], resp_arr[key][25]); // 7/28/10, 3/15/11, 12/23/13
+									var marker = createUnitMarker(resp_arr[key][3], resp_arr[key][4], infowindowtext, resp_arr[key][18], 0, unit_no, resp_arr[key][2], resp_arr[key][20], 0, resp_arr[key][9], resp_arr[key][25]); // 7/28/10, 3/15/11, 12/23/13
 									marker.addTo(map);
 									} else {
 									var deflat = "<?php print get_variable('def_lat');?>";
 									var deflng = "<?php print get_variable('def_lng');?>";		
-									var marker = createdummyUnitMarker(deflat, deflng, infowindowtext, "", resp_arr[key][0], i);
+									var marker = createdummyUnitMarker(deflat, deflng, infowindowtext, "", resp_arr[key][0], unit_no);
 									marker.addTo(map);
 									} */
 								}
 							} else {
+							if($('map_canvas')) {
 							if((isFloat(resp_arr[key][3])) && (isFloat(resp_arr[key][4]))) {
-								var marker = createUnitMarker(resp_arr[key][3], resp_arr[key][4], infowindowtext, resp_arr[key][18], 0, i, resp_arr[key][2], resp_arr[key][20], 0, resp_arr[key][9], resp_arr[key][25]); // 7/28/10, 3/15/11, 12/23/13
+									var marker = createUnitMarker(resp_arr[key][3], resp_arr[key][4], infowindowtext, resp_arr[key][18], 0, unit_no, resp_arr[key][2], resp_arr[key][20], 0, resp_arr[key][9], resp_arr[key][25]); // 7/28/10, 3/15/11, 12/23/13
 								marker.addTo(map);
 								} else {
 								var deflat = "<?php print get_variable('def_lat');?>";
 								var deflng = "<?php print get_variable('def_lng');?>";		
-								var marker = createdummyUnitMarker(deflat, deflng, infowindowtext, "", resp_arr[key][0], i);
+									var marker = createdummyUnitMarker(deflat, deflng, infowindowtext, "", resp_arr[key][0], unit_no);
 								marker.addTo(map);
 								}
 							}
-						responder_number = unit_id;
+							}
+						responder_number = unit_no;
 						}
 					i++;
 					}
@@ -3005,7 +3166,7 @@ function load_responderlist2(sort, dir) {
 		var responder_number = 0;	
 		var resp_arr = JSON.decode(req.responseText);
 		if((resp_arr[0]) && (resp_arr[0][0] == 0)) {
-			destroy_unitmarkers();
+//			do_destroy();
 			var outputtext = "<marquee direction='left' style='font-size: 1.5em; font-weight: bold;'>......No Units to view.........</marquee>";
 			$('the_rlist').innerHTML = outputtext;
 			$('boxes').innerHTML = resp_arr[0][19];
@@ -3034,6 +3195,7 @@ function load_responderlist2(sort, dir) {
 						}
 					if(resp_arr[key][2]) {
 						var unit_id = resp_arr[key][2];
+						var unit_no = resp_arr[key][17];
 						if(resp_arr[key][11] != "") {
 							var theMailBut = pad(8, "<DIV style='text-align: center;'><IMG SRC='mail.png' BORDER=0 TITLE = 'click to email unit " + resp_arr[key][1] + "' onclick = 'do_mail_win(\"" + unit_id + "\");'></DIV>", "\u00a0");
 							} else {
@@ -3047,16 +3209,16 @@ function load_responderlist2(sort, dir) {
 						var bg_color = resp_arr[key][7];
 						var fg_color = resp_arr[key][8];
 						outputtext += "<TR id='" + resp_arr[key][20] + i +"' CLASS='" + colors[i%2] +"' style='width: " + window.leftlistwidth + "px;'>";
-						outputtext += "<TD style='background-color: " + bg_color + "; color: " + fg_color + ";' onClick='myrclick(" + i + ");'>" + pad(6, unit_id, "\u00a0") + "</TD>";
-						outputtext += "<TD onClick='myrclick(" + i + ");'>" + htmlentities(resp_arr[key][0], 'ENT_QUOTES') + "</TD>";
+						outputtext += "<TD style='background-color: " + bg_color + "; color: " + fg_color + ";' onClick='myrclick(" + unit_no + ");'>" + pad(6, unit_id, "\u00a0") + "</TD>";
+						outputtext += "<TD onClick='myrclick(" + unit_no + ");'>" + htmlentities(resp_arr[key][0], 'ENT_QUOTES') + "</TD>";
 						outputtext += "<TD style='text-align: center;'>" + theMailBut + "</TD>";
-						outputtext += "<TD onClick='myrclick(" + i + ");'>" + pad(22, resp_arr[key][12], "\u00a0") + "</TD>";
+						outputtext += "<TD onClick='myrclick(" + unit_no + ");'>" + pad(22, resp_arr[key][12], "\u00a0") + "</TD>";
 						outputtext += "<TD>" + window.status_control[resp_arr[key][17]] + "</TD>";
 						var status_about = resp_arr[key][26].trunc(20);
-						outputtext += "<TD " + theTip + " onClick='myrclick(" + i + ");'>" + pad(22, htmlentities(status_about, 'ENT_QUOTES'), "\u00a0") + "</TD>";
-						outputtext += "<TD onClick='myrclick(" + i + ");'>" +  pad(6, resp_arr[key][13], "\u00a0") + "</TD>";
+						outputtext += "<TD " + theTip + " onClick='myrclick(" + unit_no + ");'>" + pad(22, htmlentities(status_about, 'ENT_QUOTES'), "\u00a0") + "</TD>";
+						outputtext += "<TD onClick='myrclick(" + unit_no + ");'>" +  pad(6, resp_arr[key][13], "\u00a0") + "</TD>";
 						var theFlag = resp_arr[key][27];
-						outputtext += "<TD onClick='myrclick(" + i + ");'><SPAN id = '" + theFlag + "' style='white-space: nowrap;'>" + pad(10, resp_arr[key][16], "\u00a0") + "</SPAN></TD>";
+						outputtext += "<TD onClick='myrclick(" + unit_no + ");'><SPAN id = '" + theFlag + "' style='white-space: nowrap;'>" + pad(10, resp_arr[key][16], "\u00a0") + "</SPAN></TD>";
 						outputtext += "<TD>" + pad(2, " ", "\u00a0") + "</TD>";
 						outputtext += "</TR>";
 						if(window.responders_updated[resp_arr[key][17]]) {
@@ -3069,38 +3231,40 @@ function load_responderlist2(sort, dir) {
 							window.responders_updated[resp_arr[key][17]] = resp_arr[key][16];
 							window.do_resp_update = true;
 							}
-						infowindowtext = resp_arr[key][19];
-						if(rmarkers[i]) {
+						infowindowtext = "";
+						if(rmarkers[unit_no]) {
 							if(window.changed_resp_sort == false) {
-								var curPos = rmarkers[i].getLatLng();
+								var curPos = rmarkers[unit_no].getLatLng();
 								if((curPos.lat != resp_arr[key][3]) || (curPos.lng != resp_arr[key][4])) {
 									theLatLng = new L.LatLng(resp_arr[key][3], resp_arr[key][3]);
-									rmarkers[i].setLatLng(theLatLng);
+									rmarkers[unit_no].setLatLng(theLatLng);
 									}
 								} else {
 /* 								do_destroy();
 								if((isFloat(resp_arr[key][3])) && (isFloat(resp_arr[key][4]))) {
-									var marker = createUnitMarker(resp_arr[key][3], resp_arr[key][4], infowindowtext, resp_arr[key][18], 0, i, resp_arr[key][2], resp_arr[key][20], 0, resp_arr[key][9], resp_arr[key][25]); // 7/28/10, 3/15/11, 12/23/13
+									var marker = createUnitMarker(resp_arr[key][3], resp_arr[key][4], infowindowtext, resp_arr[key][18], 0, unit_no, resp_arr[key][2], resp_arr[key][20], 0, resp_arr[key][9], resp_arr[key][25]); // 7/28/10, 3/15/11, 12/23/13
 									marker.addTo(map);
 									} else {
 									var deflat = "<?php print get_variable('def_lat');?>";
 									var deflng = "<?php print get_variable('def_lng');?>";		
-									var marker = createdummyUnitMarker(deflat, deflng, infowindowtext, "", resp_arr[key][0], i);
+									var marker = createdummyUnitMarker(deflat, deflng, infowindowtext, "", resp_arr[key][0], unit_no);
 									marker.addTo(map);
 									} */
 								}
 							} else {
+							if($('map_canvas')) {
 							if((isFloat(resp_arr[key][3])) && (isFloat(resp_arr[key][4]))) {
-								var marker = createUnitMarker(resp_arr[key][3], resp_arr[key][4], infowindowtext, resp_arr[key][18], 0, i, resp_arr[key][2], resp_arr[key][20], 0, resp_arr[key][9], resp_arr[key][25]); // 7/28/10, 3/15/11, 12/23/13
+									var marker = createUnitMarker(resp_arr[key][3], resp_arr[key][4], infowindowtext, resp_arr[key][18], 0, unit_no, resp_arr[key][2], resp_arr[key][20], 0, resp_arr[key][9], resp_arr[key][25]); // 7/28/10, 3/15/11, 12/23/13
 								marker.addTo(map);
 								} else {
 								var deflat = "<?php print get_variable('def_lat');?>";
 								var deflng = "<?php print get_variable('def_lng');?>";		
-								var marker = createdummyUnitMarker(deflat, deflng, infowindowtext, "", resp_arr[key][0], i);
+									var marker = createdummyUnitMarker(deflat, deflng, infowindowtext, "", resp_arr[key][0], unit_no);
 								marker.addTo(map);
 								}
 							}							
-						responder_number = unit_id;
+							}							
+						responder_number = unit_no;
 						}
 					i++;
 					}
@@ -3334,7 +3498,7 @@ function load_facilitylist(sort, dir) {
 		var fac_arr = JSON.decode(req.responseText);
 		if(!fac_arr) { alert("Error Decoding Facilitylist"); }
 		if((fac_arr[0]) && (fac_arr[0][0] == 0)) {
-			destroy_facmarkers();
+//			do_destroy();
 			var outputtext = "<marquee direction='left' style='font-size: 1.5em; font-weight: bold;'>......No Facilities to view.........</marquee>";
 			$('the_flist').innerHTML = outputtext;
 			$('fac_boxes').innerHTML = fac_arr[0][12];
@@ -3368,15 +3532,15 @@ function load_facilitylist(sort, dir) {
 						 var theTip = "";
 						 }
 					outputtext += "<TR id='" + fac_arr[key][15] + i +"' CLASS='" + colors[i%2] + "' style='width: " + window.listwidth + "px;'>";
-					outputtext += "<TD style=\"background-color: " + bg_color + "; color: " + fg_color + ";\" onClick='myfclick(" + i + ");'>" + fac_arr[key][2] + "</TD>";
-					outputtext += "<TD style=\"text-align: left;\" onClick='myfclick(" + i + ");'>" + htmlentities(fac_arr[key][0], 'ENT_QUOTES') + "</TD>";
+					outputtext += "<TD style=\"background-color: " + bg_color + "; color: " + fg_color + ";\" onClick='myfclick(" + fac_id + ");'>" + fac_arr[key][2] + "</TD>";
+					outputtext += "<TD style=\"text-align: left;\" onClick='myfclick(" + fac_id + ");'>" + htmlentities(fac_arr[key][0], 'ENT_QUOTES') + "</TD>";
 					outputtext += "<TD>" + theMailBut + "</TD>";
 					if(!window.fac_status_control[fac_arr[key][10]]) {
 						outputtext += "<TD " + theTip + ">" + fac_arr[key][17] + "</TD>";
 						} else {
 						outputtext += "<TD " + theTip + ">" + window.fac_status_control[fac_arr[key][10]] + "</TD>";
 						}
-					outputtext += "<TD onClick='myfclick(" + i + ");'>" + fac_arr[key][9] + "</TD>";
+					outputtext += "<TD onClick='myfclick(" + fac_id + ");'>" + fac_arr[key][9] + "</TD>";
 					outputtext += "<TD>" + pad(3, " ", "\u00a0") + "</TD>";
 					outputtext += "</TR>";
 					if(window.facilities_updated[fac_id]) {
@@ -3389,7 +3553,7 @@ function load_facilitylist(sort, dir) {
 						window.facilities_updated[fac_id] = fac_arr[key][9];
 						window.do_fac_update = true;
 						}
-					if(fmarkers[i]) {
+					if(fmarkers[fac_id]) {
 						if(window.changed_resp_sort == false) {
 							// not changed sort order but don't refresh markers
 							} else {
@@ -3402,16 +3566,18 @@ function load_facilitylist(sort, dir) {
 							} else {
 							var icon_str = fac_arr[key][2].toString();
 							}
-						infowindowtext = fac_arr[key][14];
+						infowindowtext = "";
+						if($('map_canvas')) {
 						if((isFloat(fac_arr[key][3])) && (isFloat(fac_arr[key][4]))) {
-							var marker = createFacilityMarker(fac_arr[key][3], fac_arr[key][4], infowindowtext, fac_arr[key][11], 0, i, icon_str,  fac_arr[key][15], 0, "This is a Facility"); // 7/28/10, 3/15/11, 12/23/13
+								var marker = createFacilityMarker(fac_arr[key][3], fac_arr[key][4], infowindowtext, fac_arr[key][11], 0, fac_id, icon_str,  fac_arr[key][15], 0, "This is a Facility"); // 7/28/10, 3/15/11, 12/23/13
 							marker.addTo(map);
 							} else {
 							var deflat = "<?php print get_variable('def_lat');?>";
 							var deflng = "<?php print get_variable('def_lng');?>";		
-							var marker = createdummyFncMarker(deflat, deflng, infowindowtext, "", resp_arr[key][0], i);
+								var marker = createdummyFncMarker(deflat, deflng, infowindowtext, "", resp_arr[key][0], fac_id);
 							marker.addTo(map);
 							}
+						}
 						}
 					facility_number = fac_id;
 					i++;					
@@ -3727,13 +3893,17 @@ function load_fs_incidentlist() {
 	function incidentlist_cb(req) {
 		var inc_arr = JSON.decode(req.responseText);
 		if(window.inc_period_changed == 1) {
-			destroy_incmarkers();
+			for(var key in tmarkers) {
+				if(tmarkers[key]) {map.removeLayer(tmarkers[key]);}
+				}
 			$('the_list').innerHTML = "";
 			window.inc_period_changed = 0;
 			}
 		if((inc_arr[0]) && (inc_arr[0][0] == 0)) {
 			window.inc_last_display = 0;
-			destroy_incmarkers();
+			for(var key in tmarkers) {
+				if(tmarkers[key]) {map.removeLayer(tmarkers[key]);}
+				}
 			outputtext = "<marquee direction='left' style='font-size: 1.5em; font-weight: bold;'>......No Incidents, please select another time period or add a new incident.........</marquee>";
 			$('the_list').innerHTML = outputtext;
 			var the_sev_str = "<font color='blue'>Normal " + inc_arr[0][22] + "</FONT>, ";
@@ -3742,7 +3912,9 @@ function load_fs_incidentlist() {
 			$('sev_counts').innerHTML = the_sev_str;
 			} else {
 			if(window.changed_inc_sort == true) {
-				destroy_incmarkers();
+				for(var key in tmarkers) {
+					if(tmarkers[key]) {map.removeLayer(tmarkers[key]);}
+					}
 				}	
 			var i = 1;
 			var blinkstart = "";
@@ -3771,7 +3943,7 @@ function load_fs_incidentlist() {
 						blinkstart = "<blink>";
 						blinkend = "</blink>";
 						}
-					outputtext += "<TR CLASS='" + fscolors[i%2] +"' style='width: " + window.listwidth + "px;' onMouseover=\"Tip('" + inc_arr[key][0] + " - " + inc_arr[key][1] + "')\" onMouseout='UnTip();' onClick='mytclick(" + i + ");'>";
+					outputtext += "<TR CLASS='" + fscolors[i%2] +"' style='width: " + window.listwidth + "px;' onMouseover=\"Tip('" + inc_arr[key][0] + " - " + inc_arr[key][1] + "')\" onMouseout='UnTip();' onClick='mytclick(" + inc_id + ");'>";
 					outputtext += "<TD class='fs_td' style='color: " + inc_arr[key][14] + ";'>" + key + "</TD>";
 					outputtext += "<TD class='fs_td' style='color: " + inc_arr[key][14] + ";'>" + inc_arr[key][0] + "</TD>";
 					outputtext += "<TD class='fs_td' style='color: " + inc_arr[key][14] + ";'>" + inc_arr[key][1] + "</TD>";
@@ -3800,7 +3972,7 @@ function load_fs_incidentlist() {
 							}
 						} else {
 						if((isFloat(inc_arr[key][2])) && (isFloat(inc_arr[key][3]))) {
-							var marker = createMarker(inc_arr[key][2], inc_arr[key][3], infowindowtext, inc_arr[key][5], inc_arr[key][4], i, i, category, 0, inc_arr[key][11]);		// 3/19/11
+							var marker = createMarker(inc_arr[key][2], inc_arr[key][3], infowindowtext, inc_arr[key][5], inc_arr[key][4], inc_id, i, category, 0, inc_arr[key][11]);		// 3/19/11
 							marker.addTo(map);
 							}
 						}
@@ -3870,7 +4042,9 @@ function load_fs_responders() {
 		var responder_number = 0;	
 		var resp_arr = JSON.decode(req.responseText);
 		if(resp_arr[0][22] == 0) {
-			destroy_unitmarkers();
+			for(var key in rmarkers) {
+				if(rmarkers[key]) {map.removeLayer(rmarkers[key]);}
+				}
 			$('boxes').innerHTML = resp_arr[0][19];
 			window.latest_responder = 0;
 			} else {
@@ -3897,7 +4071,7 @@ function load_fs_responders() {
 								}
 							} else {
 							if((isFloat(resp_arr[key][3])) && (isFloat(resp_arr[key][4]))) {
-								var marker = createUnitMarker(resp_arr[key][3], resp_arr[key][4], infowindowtext, resp_arr[key][18], 0, key, resp_arr[key][2], resp_arr[key][20], 0, resp_arr[key][9], resp_arr[key][25]); // 7/28/10, 3/15/11, 12/23/13
+								var marker = createUnitMarker(resp_arr[key][3], resp_arr[key][4], infowindowtext, resp_arr[key][18], 0, unit_id, resp_arr[key][2], resp_arr[key][20], 0, resp_arr[key][9], resp_arr[key][25]); // 7/28/10, 3/15/11, 12/23/13
 								marker.addTo(map);
 								}
 							}							
@@ -3943,7 +4117,9 @@ function load_fs_facilities() {
 		var facility_number = 0;
 		var fac_arr = JSON.decode(req.responseText);
 		if(fac_arr[0][13] == 0) {
-			destroy_facmarkers();
+			for(var key in fmarkers) {
+				if(fmarkers[key]) {map.removeLayer(fmarkers[key]);}
+				}
 			$('fac_boxes').innerHTML = fac_arr[0][19];
 			window.latest_facility = 0;
 			} else {
@@ -3960,7 +4136,7 @@ function load_fs_facilities() {
 						window.facilities_updated[fac_id] = fac_arr[key][9];
 						window.do_fac_update = true;
 						}
-					if(fmarkers[i]) {
+					if(fmarkers[fac_id]) {
 						} else {
 						if(!fac_arr[key][2]) {
 							var icon_str = "UNK";
@@ -3969,7 +4145,7 @@ function load_fs_facilities() {
 							}
 						infowindowtext = fac_arr[key][14];
 						if((isFloat(fac_arr[key][3])) && (isFloat(fac_arr[key][4]))) {
-							var marker = createFacilityMarker(fac_arr[key][3], fac_arr[key][4], infowindowtext, fac_arr[key][11], 0, i, icon_str,  fac_arr[key][15], 0, "This is a Facility"); // 7/28/10, 3/15/11, 12/23/13
+							var marker = createFacilityMarker(fac_arr[key][3], fac_arr[key][4], infowindowtext, fac_arr[key][11], 0, fac_id, icon_str,  fac_arr[key][15], 0, "This is a Facility"); // 7/28/10, 3/15/11, 12/23/13
 							marker.addTo(map);
 							}
 						}
@@ -4009,6 +4185,7 @@ function add_hash(in_str) { // prepend # if absent
 	}
 
 function draw_poly(linename, category, color, opacity, width, filled, fillcolor, fillopacity, linedata, theType, theID) {
+	if(filled == 0) { filled = false; } else { filled = true;}
 	if(!linedata) {return;}
 	if(!(boundary[theID])) {
 		var path = new Array();
@@ -4038,26 +4215,19 @@ function draw_poly(linename, category, color, opacity, width, filled, fillcolor,
 	}
 	
 function drawCircle(linename, linedata, strokeColor, strokeWidth, strokeOpacity, filled, fillColor, fillOpacity, theType, theID) {
+	if(filled == 0) { filled = false; } else { filled = true;}
 	var theData = linedata.split(';');
 	var thelineData = theData[0].split(',');
 	var theRadius = theData[1];
 	var radius = theRadius*1000
 	if((!(bound_names[theID])) && (!(boundary[theID]))){
-		if(filled == 1) {
 			var draw_circle = L.circle([thelineData[0], thelineData[1]], radius, {
 				clickable: false,
 				color: strokeColor,
-				fill: true,
+			fill: filled,
 				fillColor: fillColor,
 				fillOpacity: fillOpacity
 				}).addTo(map);
-			} else {
-			var draw_circle = L.circle([thelineData[0], thelineData[1]], radius, {
-				clickable: false,
-				color: strokeColor,
-				fill: false
-				}).addTo(map);			
-			}
 		draw_circle.bindPopup(linename);
 		boundary[theID] = draw_circle;		
 		if(linename) {
@@ -4252,8 +4422,27 @@ function load_regions() {
 		var reg_arr = JSON.decode(req.responseText);
 		outputtext = reg_arr[0];
 		$('regions_control').innerHTML = outputtext;
+		if($('theRegions')) {
+			$('theRegions').onmouseover = function() {
+				Tip(reg_arr[1], WIDTH, 300);
+				};
+			}
 		}				// end function regions_cb()
 	}				// end function load_regions()
+
+function update_regions_text() {
+	var outputtext = "<DIV style='font-size: 1.1em;'>";
+	var randomnumber=Math.floor(Math.random()*99999999);		
+	sendRequest ('./ajax/get_regions_control.php?version=' + randomnumber,regions_cb2, "");		
+	function regions_cb2(req) {
+		var reg_arr = JSON.decode(req.responseText);
+		if($('theRegions')) {
+			$('theRegions').onmouseover = function() {
+				Tip(reg_arr[1], WIDTH, 300);
+				};
+			}
+		}				// end function regions_cb2()
+	}				// end function update_regions_text()
 
 function check_excl(resp_id, lat, lng, flag) {
 	var randomnumber=Math.floor(Math.random()*99999999);
@@ -4440,17 +4629,16 @@ function load_files(ticket, responder, facility, mi, allowedit, sort, dir, type)
 					var theURL = "./ajax/download.php?filename=" + file_arr[key][0] + "&origname=" + file_arr[key][1] + "&type=" + file_arr[key][2];
 					outputtext += "<TR CLASS='" + colors[i%2] + "' style='width: 100%;'>";
 					outputtext += "<TD><input type='checkbox' name='frm_file[]' value='" + file_id + "'></TD>";					
-					outputtext += "<TD onClick='location.href=\"" + theURL + "\"'>" + the_title + "</TD>";
-					outputtext += "<TD onClick='location.href=\"" + theURL + "\"'>" + file_arr[key][4] + "</TD>";
-					outputtext += "<TD onClick='location.href=\"" + theURL + "\"'>" + file_arr[key][5] + "</TD>";
-					outputtext += "<TD onClick='location.href=\"" + theURL + "\"'>" + file_arr[key][7] + "</TD>";
+					outputtext += "<TD onClick='location.href=\"" + theURL + "\"'>" + pad(30, the_title, "\u00a0") + "</TD>";
+					outputtext += "<TD onClick='location.href=\"" + theURL + "\"'>" + pad(15, file_arr[key][4], "\u00a0") + "</TD>";
+					outputtext += "<TD onClick='location.href=\"" + theURL + "\"'>" + pad(20, file_arr[key][5], "\u00a0") + "</TD>";
+					outputtext += "<TD onClick='location.href=\"" + theURL + "\"'>" + pad(20, file_arr[key][7], "\u00a0") + "</TD>";
 					outputtext += "</TR>";
 					}
 				i++;
 				}
 			outputtext += "</tbody>";
 			outputtext += "<TR><TD COLSPAN=99 style='text-align: center;'>";
-			outputtext += "<SPAN id='delSelected' class='plain' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='delfiles(document.filesForm);' style='text-align: center; float: none;'>Delete Selected</SPAN>";
 			outputtext += "</TD></TR></FORM></TABLE>";
 			setTimeout(function() {$('file_list').innerHTML = outputtext;
 				var filetbl = document.getElementById('filestable');
@@ -4464,7 +4652,7 @@ function load_files(ticket, responder, facility, mi, allowedit, sort, dir, type)
 					if(tableRow.cells[4] && headerRow.cells[4]) {headerRow.cells[4].style.width = tableRow.cells[4].offsetWidth + "px";}
 					} else {
 					var cellwidthBase = window.mapWidth / 20;
-					headerRow.cells[1].style.width = (cellwidthBase * 3) + "px";
+					headerRow.cells[0].style.width = (cellwidthBase * 3) + "px";
 					headerRow.cells[1].style.width = (cellwidthBase * 7) + "px";
 					headerRow.cells[2].style.width = (cellwidthBase * 3) + "px";
 					headerRow.cells[3].style.width = (cellwidthBase * 3) + "px";
@@ -4849,7 +5037,7 @@ function get_theMessages(ticket_id, responder_id, facility_id, mi_id, sort, dir,
 	function main_mess_cb(req) {
 		var theNew = 0;
 		var the_messages=JSON.decode(req.responseText);
-		if(the_messages[0][0] == "No Messages") {
+		if((!the_messages) || (the_messages[0][0] == "No Messages")) {
 			if(($('inbox_new')) && ($('sent_new'))) { get_message_totals(); }
 			var outputtext = "<marquee direction='left' style='font-size: 1.5em; font-weight: bold;'>......No Messages.........</marquee>";	
 			setTimeout(function() {$('the_msglist').innerHTML = outputtext;},2000);
@@ -5175,7 +5363,8 @@ function full_scr_ass() {
 			outputtext += "</thead>";
 			outputtext += "<tbody>";
 			for(var key = 0; key < ass_arr.length; key++) {
-				outputtext += "<TR class='" + colors[i%2] + "' style='width: " + window.listwidth + "px;'>";
+				var the_resp = ass_arr[key][6];
+				outputtext += "<TR class='" + colors[i%2] + "' style='width: " + window.listwidth + "px;' onClick='myrclick(" + the_resp + ");'>";
 				outputtext += "<TD class='fs_td' >" + ass_arr[key][0] + "</TD>";
 				outputtext += "<TD class='fs_td' >" + ass_arr[key][2] + "</TD>";
 				outputtext += "<TD class='fs_td' >" + ass_arr[key][4] + "</TD>";
@@ -5218,6 +5407,7 @@ function do_conditions() {
 	sendRequest (url,cond_cb, "");
 	function cond_cb(req) {
 		var cond_arr = JSON.decode(req.responseText);
+		if(!cond_arr) { return;}
 		for(var f = 0; f < cond_arr.length; f++) {
 			var the_condID = cond_arr[f][0];
 			var the_condTitle = cond_arr[f][1];
@@ -5229,9 +5419,11 @@ function do_conditions() {
 			var the_condLat = cond_arr[f][7];
 			var the_condLng = cond_arr[f][8];
 			var info = cond_arr[f][9];
+			if($('map_canvas')) {
 			if((isFloat(the_condLat)) && (isFloat(the_condLng))) {
 				var cmarker = createConditionMarker(the_condLat, the_condLng, the_condID, info, "roadinfo", the_iconurl);
 				}
+			}
 			}
 		}				// end function cond_cb()
 	conditions_get();	
@@ -5263,14 +5455,36 @@ function delfiles(myForm){
 function del_handleResult(req) {
 	}
 	
+function check_checkboxes(myForm, checkControl, uncheckControl) {
+	var boxesChecked = 0;
+	for (i=0;i<myForm.elements.length; i++) {
+		if(myForm.elements[i].type =='checkbox'){
+			if(myForm.elements[i].checked == true) {
+				boxesChecked++;
+				}
+			}
+		}		// end for ()
+	if(myForm.elements.length == boxesChecked) {
+		$(uncheckControl).style.display = "inline-block";
+		$(checkControl).style.display = "none";	
+		} else if(boxesChecked == 0) {
+		$(uncheckControl).style.display = "none";
+		$(checkControl).style.display = "inline-block";		
+		} else {
+		$(uncheckControl).style.display = "inline-block";
+		$(checkControl).style.display = "inline-block";	
+		}
+	}
+	
 function do_check(myForm, checkControl, uncheckControl){
 	for (i=0;i<myForm.elements.length; i++) {
 		if(myForm.elements[i].type =='checkbox'){
 			myForm.elements[i].checked = true;
 			}
 		}		// end for ()
-	$(uncheckControl).style.display = "inline-block";
-	$(checkControl).style.display = "none";
+	check_checkboxes(myForm, checkControl, uncheckControl);
+//	$(uncheckControl).style.display = "inline-block";
+//	$(checkControl).style.display = "none";
 	}		// end function do_clear
 	
 function do_clear(myForm, checkControl, uncheckControl){
@@ -5279,8 +5493,9 @@ function do_clear(myForm, checkControl, uncheckControl){
 			myForm.elements[i].checked = false;
 			}
 		}		// end for ()
-	$(uncheckControl).style.display = "none";
-	$(checkControl).style.display = "inline-block";
+	check_checkboxes(myForm, checkControl, uncheckControl);
+//	$(uncheckControl).style.display = "none";
+//	$(checkControl).style.display = "inline-block";
 	}		// end function do_clear
 	
 function htmlspecialchars_decode(string, quote_style) {

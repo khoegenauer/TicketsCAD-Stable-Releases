@@ -547,7 +547,7 @@ function get_user_name($the_id) {
 	return $the_ret;
 		}
 
-function get_facilityname($value) {
+function get_thefacilityname($value) {
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]facilities` WHERE `id` = " . $value . " LIMIT 1";		 
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
 	if(mysql_num_rows($result) != 0) {
@@ -642,8 +642,8 @@ if((!empty($_POST)) && (empty($_GET))) {
 	$the_summary .= get_text('To Address') . ": " . $_POST['frm_toaddress'] . "\\r";
 	$the_summary .= get_text('Pickup Time') . ": " . $_POST['frm_pickup'] . "\\r";
 	$the_summary .= get_text('Arrival Time') . ": " . $_POST['frm_arrival'] . "\\r";
-	$orig_Fac = (intval($_POST['frm_orig_fac']) != 0) ? get_facilityname(intval($_POST['frm_orig_fac'])) : "";
-	$rec_Fac =  (intval($_POST['frm_rec_fac']) != 0) ? get_facilityname(intval($_POST['frm_rec_fac'])) : "";
+	$orig_Fac = (intval($_POST['frm_orig_fac']) != 0) ? get_thefacilityname(intval($_POST['frm_orig_fac'])) : "";
+	$rec_Fac =  (intval($_POST['frm_rec_fac']) != 0) ? get_thefacilityname(intval($_POST['frm_rec_fac'])) : "";
 	$the_summary .= ((is_array($orig_Fac)) && ($orig_Fac[0] != "")) ? "Originating Facility " . $orig_Fac[0] . "\\rAddress: " . $orig_Fac[1] . "\\rPhone " . $orig_Fac[2] . "\\r" : "";
 	$the_summary .= ((is_array($rec_Fac)) && ($rec_Fac[0] != "")) ? "Receiving Facility " . $rec_Fac[0] . "\\rAddress: " . $rec_Fac[1] . "\\rPhone " . $rec_Fac[2] . "\\r" : "";
 	$searchArray = array("\r\n", "\n", "\r");
@@ -763,8 +763,8 @@ if((!empty($_POST)) && (empty($_GET))) {
 		}
 	$status_sel .= "</SELECT>";
 
-	$rec_facility = ($row['rec_facility'] != 0) ? get_facilityname($row['rec_facility']) : "Not Set";
-	$orig_facility = ($row['orig_facility'] != 0) ? get_facilityname($row['orig_facility']) : "Not Set";	
+	$rec_facility = ($row['rec_facility'] != 0) ? get_thefacilityname($row['rec_facility']) : "Not Set";
+	$orig_facility = ($row['orig_facility'] != 0) ? get_thefacilityname($row['orig_facility']) : "Not Set";	
 	$onload_str = "load(" .  get_variable('def_lat') . ", " . get_variable('def_lng') . "," . get_variable('def_zoom') . ");";
 	$now = time() - (intval(get_variable('delta_mins')*60));
 	$the_details = get_contact_details($row['requester']);	#
