@@ -67,6 +67,12 @@ if((($istest)) && (!empty($_POST))) {dump ($_POST);}
 
 extract($_GET);
 extract($_POST);
+
+if(($_SESSION['level'] == $GLOBALS['LEVEL_UNIT']) && (intval(get_variable('restrict_units')) == 1)) {
+	print "Not Authorized";
+	exit();
+	}
+
 $locale = get_variable('locale');	// 08/03/09
 
 $nature = get_text("Nature");			// 12/03/10
@@ -572,7 +578,6 @@ p.page { page-break-after: always; }
 				$result_val= mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
 				$row_val = stripslashes_deep(mysql_fetch_assoc($result_val));
 				$the_status = (empty($row_val))? "??": shorten($row_val['status_val'], 12); 		// 2/2/09
-
 				$caption .= "\t<TD ALIGN='CENTER'>&nbsp;&nbsp;" . shorten($the_status, 12) . "&nbsp;&nbsp;</TD>\n";
 				}
 			}

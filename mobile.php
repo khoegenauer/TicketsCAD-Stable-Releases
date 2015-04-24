@@ -146,6 +146,11 @@ function adj_time($time_stamp) {
 	<SCRIPT TYPE="text/javascript" src="./js/misc_function.js"></SCRIPT>
 	<script language="JavaScript">
 	<!--
+	function do_logout() {						// 10/27/08
+		show_topframe();
+		document.gout_form.submit();			// send logout 
+		}
+
 	
 function do_save_handleResult(req) {			// the called-back function
 	}			// end function handle Result()
@@ -162,6 +167,19 @@ function do_save(in_val) {
 	if (parseInt(rows_arr[0]) > 0) { 							// save as the normalizing string
 		row_str = window.top.document.getElementsByTagName("frameset")[0].rows;}
 
+	function hide_topframe() {
+		frames_obj = window.top.document.getElementsByTagName("frameset")[0];
+		rows_arr = frames_obj.rows.split(",", 4);	
+		rows_arr[0] = 0;
+		frames_obj.rows = rows_arr.join(",");						// string to attribute - hide the top frame	
+		}
+		
+	function show_topframe() {
+		frames_obj = window.top.document.getElementsByTagName("frameset")[0];
+		rows_arr = frames_obj.rows.split(",", 4);	
+		frames_obj.rows = row_str;								// make top frame visible
+		}
+
 	function showhideFrame(btn) {
 		frames_obj = window.top.document.getElementsByTagName("frameset")[0];
 		rows_arr = frames_obj.rows.split(",", 4);		
@@ -169,11 +187,11 @@ function do_save(in_val) {
 			rows_arr[0] = 0;
 			frames_obj.rows = rows_arr.join(",");						// string to attribute - hide the top frame
 			do_save("h");
-			btn.value = "Show Menu";
+			if($(btn)) { btn.value = "Show Menu"; }
 		} else {
 			frames_obj.rows = row_str;								// make top frame visible
 			do_save("s");
-			btn.value = "Hide Menu";			
+			if($(btn)) { btn.value = "Hide Menu"; }		
 		}
 	}
 	
@@ -182,10 +200,10 @@ function do_save(in_val) {
 		if (upperVis == "h") {
 			rows_arr[0] = 0;
 			frames_obj.rows = rows_arr.join(",");		// string to attribute - hide the top frame
-			$('b1').value = "Show Menu";
+			if($('b1')) { $('b1').value = "Show Menu"; }
 			} else {
 			frames_obj.rows = row_str;				// make top frame visible
-			$('b1').value = "Hide Menu";
+			if($('b1')) { $('b1').value = "Hide Menu"; }
 		}
 	}	
 
@@ -399,11 +417,10 @@ function replaceButtonText(buttonId, text) {
 
 	function start_watch() {							// get initial values from top
 		parent.frames['upper'].mu_init();				// start the polling
-		$("div_ticket_id").innerHTML = parent.frames["upper"].$("div_ticket_id").innerHTML;		// copy for monitoring
-		$("div_assign_id").innerHTML = parent.frames["upper"].$("div_assign_id").innerHTML;
-		$("div_action_id").innerHTML = parent.frames["upper"].$("div_action_id").innerHTML;	
-		$("div_patient_id").innerHTML = parent.frames["upper"].$("div_patient_id").innerHTML;
-		
+		if($("div_ticket_id")) { $("div_ticket_id").innerHTML = parent.frames["upper"].$("div_ticket_id").innerHTML;	}	// copy for monitoring
+		if($("div_assign_id")) { $("div_assign_id").innerHTML = parent.frames["upper"].$("div_assign_id").innerHTML; }
+		if($("div_action_id")) { $("div_action_id").innerHTML = parent.frames["upper"].$("div_action_id").innerHTML;	}
+		if($("div_patient_id")) { $("div_patient_id").innerHTML = parent.frames["upper"].$("div_patient_id").innerHTML; }
 		watch_val = window.setInterval("do_watch()",5000);		// 4/7/10 - 5 seconds
 		}				// end function start watch()
 
@@ -487,18 +504,29 @@ if (mysql_affected_rows()==0) {
 
 	$caption = ($mode==MINE)? "All calls": $the_unit_name;
 	$frm_mode = ($mode==MINE)? ALL: MINE;
+	$hide_top = (($_SESSION['level'] == $GLOBALS['LEVEL_UNIT']) && (intval(get_variable('restrict_units')) == 1)) ? "hide_topframe();" : "";
 /*
 <BODY onLoad="checkUpper(); start_watch();" onUnload = "end_watch();"> 
 <BODY onLoad="checkUpper();" > <!-- 2/19/12 -->
 */
 ?>
-<BODY onLoad="checkUpper(); start_watch();" onUnload = "end_watch();"> <!-- <?php echo __LINE__;?> -->
+<BODY onLoad="checkUpper(); start_watch(); <?php print $hide_top;?>" onUnload = "end_watch();"> <!-- <?php echo __LINE__;?> -->
 	<DIV ID = "div_ticket_id" STYLE="display:none;"></DIV>	
 	<DIV ID = "div_assign_id" STYLE="display:none;"></DIV>
 
 <BR /><BR /><BR /><BR />
 <CENTER>
-<input id="b1" type="button" value="Hide Top Menu" CLASS='btn_not_chkd' onclick="showhideFrame(this)"><BR /><BR /> 
+<?php
+if(($_SESSION['level'] == $GLOBALS['LEVEL_UNIT']) && (intval(get_variable('restrict_units')) == 1)) {	//	2/24/14
+?>
+	<input id="logout_but" type="button" value="Logout" CLASS='hover_lo' onclick="do_logout()"><BR /><BR />
+<?php
+	} else {
+?>
+	<input id="b1" type="button" value="Hide Top Menu" CLASS='btn_not_chkd' onclick="showhideFrame(this)"><BR /><BR />
+<?php
+	}
+?>
 <H2><?php print $for_str;?>: no current calls  as of <?php print substr($now, 11,5);?></H2>
 <?php
 	if (can_edit()) {
@@ -667,8 +695,9 @@ else {
 </SCRIPT>
 <?php
 $unload_str = ($_SESSION['internet'])? "GUnload(); end_watch();"  : "end_watch();";
+$hide_top = (($_SESSION['level'] == $GLOBALS['LEVEL_UNIT']) && (intval(get_variable('restrict_units')) == 1)) ? "hide_topframe();" : "";
 ?>
-<BODY onLoad="checkUpper(); start_watch(); start_blink();" onUnload = "end_watch(); end_blink();">  <!-- <?php echo __LINE__;?> -->
+<BODY onLoad="checkUpper(); start_watch(); start_blink(); <?php print $hide_top;?>" onUnload = "end_watch(); end_blink();">  <!-- <?php echo __LINE__;?> -->
 	<SCRIPT TYPE="text/javascript" src="./js/wz_tooltip.js"></SCRIPT>
 		
 	<DIV ID = "div_ticket_id" STYLE="display:none;"></DIV>	<!-- 2/27/12 -->
@@ -702,7 +731,17 @@ $unload_str = ($_SESSION['internet'])? "GUnload(); end_watch();"  : "end_watch()
 	</TD>
 	<TD ID = 'ctr top' ALIGN='center'>
 		<TABLE BORDER=0 >
+<?php
+		if(($_SESSION['level'] == $GLOBALS['LEVEL_UNIT']) && (intval(get_variable('restrict_units')) == 1)) {
+?>
+			<TR><TD ALIGN='center'><input id="logout_but" type="button" value="Logout" CLASS='hover_lo' onclick="do_logout()"></TD></TR>
+<?php
+			} else {
+?>
 		<TR><TD ALIGN='center'><input id="b1" type="button" value="Hide Menu" CLASS='btn_not_chkd' onclick="showhideFrame(this)"></TD></TR>
+<?php
+			}
+?>
 		<TR CLASS='spacer'><TD class='spacer'>&nbsp;</TD></TR>
 		<TR><TD ALIGN='left'>	<!-- 3/15/11 -->	
 <?php
@@ -952,6 +991,9 @@ $unload_str = ($_SESSION['internet'])? "GUnload(); end_watch();"  : "end_watch()
 </p>
 -->
 <DIV ID='to_bottom' style="position:fixed; bottom:50px; left:150px; height: 12px; width: 10px;" onclick = "location.href = '#top';"><IMG SRC="markers/up.png" BORDER=0 /></div>
+<FORM NAME="gout_form" action="main.php" TARGET = "main">
+<INPUT TYPE='hidden' NAME = 'logout' VALUE = 1 />
+</FORM>
 </BODY>
 
 </HTML>

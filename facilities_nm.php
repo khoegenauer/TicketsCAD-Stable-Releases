@@ -551,7 +551,7 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 		}
 
 	if(!isset($curr_viewed)) {	
-		if(count($al_groups == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
+		if(count($al_groups) == 0) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
 			$where2 = "WHERE `a`.`type` = 3";
 			} else {
 		$x=0;	//	6/10/11
@@ -824,7 +824,6 @@ var buttons_html = "";
 				quote_smart(trim($_POST['frm_beds_a'])) . "," .
 				quote_smart(trim($_POST['frm_beds_o'])) . "," .
 				quote_smart(trim($_POST['frm_beds_info'])) . "," .
-
 				quote_smart(trim($_POST['frm_capab'])) . "," .
 				quote_smart(trim($_POST['frm_status_id'])) . "," .
 				quote_smart(trim($_POST['frm_status_about'])) . "," .

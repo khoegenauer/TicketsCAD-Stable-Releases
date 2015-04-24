@@ -2433,7 +2433,7 @@ ul {
 <?php
 		if (!intval(get_variable('ics_top')==1)) { 		// 5/24/2013
 ?>		
-		<LI><A HREF="#" onClick = "window.open('ics213.php', 'ics213');">ICS 213</A>		<!-- 3/22/12 -->		
+		<LI><A HREF="#" onClick = "window.open('ics213.php', 'ics213');">ICS FORMS</A>		<!-- 3/22/12 -->		
 <?php
 			}		// end if ( ... ics_top ...)
 			

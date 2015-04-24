@@ -543,6 +543,7 @@ if(file_exists("./incs/modules.inc.php")) {
 			if (condxmlHttp.status == 200) {
 				var conditions = JSON.decode(condxmlHttp.responseText);
 				for(var key in conditions) {
+					if(conditions[key][0] != 0) {
 					var the_condID = conditions[key][0];
 					var the_condTitle = conditions[key][1];
 					var the_condTypeTitle = conditions[key][2];
@@ -562,6 +563,7 @@ if(file_exists("./incs/modules.inc.php")) {
 						}
 					}	
 				}
+			}
 			}
 		conditions_get();		
 		}
@@ -587,6 +589,7 @@ if(file_exists("./incs/modules.inc.php")) {
 			if (condxmlHttp.status == 200) {
 				var conditions = JSON.decode(condxmlHttp.responseText);
 				for(var key in conditions) {
+					if(conditions[key][0] != 0) {
 					var the_condID = conditions[key][0];
 					var the_condTitle = conditions[key][1];
 					var the_condTypeTitle = conditions[key][2];
@@ -607,6 +610,7 @@ if(file_exists("./incs/modules.inc.php")) {
 					}	
 				}
 			}
+		}
 		}
 		
 	function do_set_sess_exp() {			// set session expiration  - 1/11/10
@@ -1446,7 +1450,7 @@ if((get_variable('use_messaging') == 1) || (get_variable('use_messaging') == 2) 
 
 <!-- ================== -->			<!-- 5/13/2013 -->				
 			<SPAN ID = 'ics'  CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
-				onClick = "starting=false;window.open('ics213.php', 'ics213')"><?php print get_text("ICS-213"); ?></SPAN> <!-- 5/13/2013 -->
+				onClick = "starting=false;window.open('ics213.php', 'ics213')"><?php print get_text("ICS-FORMS"); ?></SPAN> <!-- 5/13/2013 -->
 <?php
 			}		// end if (ics_top)
 

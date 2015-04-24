@@ -12,6 +12,7 @@
 9/30/10 fix per JB email
 6/9/2013 revised for general code cleanup, WP json data
 11/15/2013 corrections for short array; no geodata  
+11/28/2013 handle null WP returns
 */
 
 require_once('incs/functions.inc.php');		//7/28/10
@@ -88,7 +89,9 @@ else {													// no priors or constituents - do WP
 				
 	$jsonresp = json_decode ($data, true); 	
 	
-	if ( ! (array_key_exists ( "errors", $jsonresp ) ) ) {
+//	if ( ! (array_key_exists ( "errors", $jsonresp ) ) ) {
+	if ( ( is_array($jsonresp) ) && ( ! (array_key_exists ( "errors", $jsonresp ) ) ) ) {	// 11/28/2013
+
 		$vals[10] = "3";		// id WP as data source
 		$vals[1] = array_key_exists (  "displayname", $jsonresp["listings"][0] ) ?
 					$jsonresp["listings"][0]["displayname"] : "" ;

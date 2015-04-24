@@ -667,7 +667,6 @@ function get_main_messagelist(ticket_id, responder_id, sortby, sort, filter, the
  						default:
  							the_text = "Error";
  						}
-//					if(the_messages[key][2] == "IS") { the_del_flag = "color: green;" }
 					var the_delstat = "Delivery Status: " + the_text + " ---- ";
 					the_string += "<TABLE cellspacing='0' cellpadding='1' style='width: 100%; table-layout: fixed;'>";			
 					the_string += "<TR title='" + the_delstat + the_messages[key][11] + "' style='" + theClass + "; border-bottom: 2px solid #000000;'>";

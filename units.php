@@ -182,7 +182,11 @@ if((($istest)) && (!empty($_POST))) {dump ($_POST);}
 */
 $remotes = get_current();		// returns array - 3/16/09
 
-$the_level = $_SESSION['level'];	//	11/18/13
+if(($_SESSION['level'] == $GLOBALS['LEVEL_UNIT']) && (intval(get_variable('restrict_units')) == 1)) {
+	print "Not Authorized";
+	exit();
+	}
+
 $u_types = array();												// 1/1/09
 $query = "SELECT * FROM `$GLOBALS[mysql_prefix]unit_types` ORDER BY `id`";		// types in use
 $result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
@@ -263,6 +267,7 @@ if((array_key_exists('HTTPS', $_SERVER)) && ($_SERVER['HTTPS'] == 'on')) {
 	}
 ?>
 	<SCRIPT TYPE="text/javascript" src="<?php print $gmaps_url;?>"></SCRIPT>
+	<script type="text/javascript" src="./js/KmlMapParser.js"></script>
 	<SCRIPT  SRC="./js/usng.js" TYPE="text/javascript"></SCRIPT>	<!-- 8/23/08 -->
 	<SCRIPT  SRC="./js/lat_lng.js" TYPE="text/javascript"></SCRIPT>	<!-- 11/8/11 -->
 	<SCRIPT  SRC="./js/geotools2.js" TYPE="text/javascript"></SCRIPT>	<!-- 11/8/11 -->
@@ -826,7 +831,7 @@ if((array_key_exists('HTTPS', $_SERVER)) && ($_SERVER['HTTPS'] == 'on')) {
 		while ($row_al = stripslashes_deep(mysql_fetch_assoc($result_al))) 	{	//	6/10/11
 			$al_groups[] = $row_al['group'];
 			}	
-		if(count($al_groups == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
+		if(count($al_groups) == 0) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
 			$where2 = "WHERE `a`.`type` = 2 AND `r`.`ring_fence` > 0 AND `r`.`lat` != '' AND `r`.`lng` != ''";
 			} else {
 		$x=0;	//	6/10/11
@@ -940,7 +945,7 @@ if((array_key_exists('HTTPS', $_SERVER)) && ($_SERVER['HTTPS'] == 'on')) {
 		while ($row_al = stripslashes_deep(mysql_fetch_assoc($result_al))) 	{	//	6/10/11
 			$al_groups[] = $row_al['group'];
 			}	
-		if(count($al_groups == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
+		if(count($al_groups) == 0) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
 			$where2 = "WHERE `a`.`type` = 2 AND `r`.`excl_zone` > 0 AND `r`.`lat` != '' AND `r`.`lng` != ''";
 			} else {
 		$x=0;	//	6/10/11
@@ -2039,7 +2044,7 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 			}
 
 		if(!isset($curr_viewed)) {	
-			if(count($al_groups == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
+			if(count($al_groups) == 0) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
 				$where2 = "WHERE `a`.`type` = 2";
 				} else {			
 			$x=0;	//	6/10/11
@@ -2461,7 +2466,7 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 
 <?php
 //	print "<TABLE BORDER = 4>{$buttons}</TABLE>";
-//	do_kml();
+	do_kml();
 ?>
 	</SCRIPT>
 <?php
@@ -2968,7 +2973,7 @@ function orig_map($mode, $lat, $lng, $icon) {						// Responder add, edit, view 
 <?php
 			}				// end if ($mode=="v")
 
-//		do_kml();			// kml functions
+		do_kml();			// kml functions
 ?>
 
 	</SCRIPT>
@@ -4267,7 +4272,7 @@ fence_init();
 			}	
 			
 		if(!isset($curr_viewed)) {		//	7/2/13	revised WHERE to AND - Where clause was repeated
-		if(count($al_groups == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
+			if(count($al_groups) == 0) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
 				$where2 = "AND `$GLOBALS[mysql_prefix]allocates`.`type` = 1";
 			} else {		
 				$x=0;	//	6/10/11
