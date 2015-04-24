@@ -135,7 +135,7 @@ if((array_key_exists('HTTPS', $_SERVER)) && ($_SERVER['HTTPS'] == 'on')) {
 	}
 ?>
 	<SCRIPT TYPE="text/javascript" src="<?php print $gmaps_url;?>"></SCRIPT>
-	<script type="text/javascript" src="./js/KmlMapParser.js"></script>
+	<script type="text/javascript" src="./js/geoxml_v3.js"></script>
 	<SCRIPT  SRC="./js/usng.js" TYPE="text/javascript"></SCRIPT>
 	<SCRIPT  SRC="./js/lat_lng.js" TYPE="text/javascript"></SCRIPT>	<!-- 11/8/11 -->
 	<SCRIPT  SRC="./js/geotools2.js" TYPE="text/javascript"></SCRIPT>	<!-- 11/8/11 -->
@@ -1790,7 +1790,6 @@ var buttons_html = "";
 				`beds_a`= " . 		quote_smart(trim($_POST['frm_beds_a'])) . ",
 				`beds_o`= " . 		quote_smart(trim($_POST['frm_beds_o'])) . ",
 				`beds_info`= " . 	quote_smart(trim($_POST['frm_beds_info'])) . ",
-
 				`capab`= " . 		quote_smart(trim($_POST['frm_capab'])) . ",
 				`status_id`= " .	quote_smart(trim($_POST['frm_status_id'])) . ",
 				`status_about`= " . quote_smart(trim($_POST['frm_status_about'])) . ",

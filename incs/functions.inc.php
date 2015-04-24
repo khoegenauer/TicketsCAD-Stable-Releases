@@ -181,6 +181,7 @@
 9/6/13 Added tracking type - mobile tracker for mobile screen
 9/10/13 Added function show_unit_log() and function list_files(...)
 9/10/13 Added Xastir APR tracking
+4/7/2014 ICS message code revised
 */
 error_reporting(E_ALL);
 
@@ -287,7 +288,7 @@ $GLOBALS['LOG_FACILITY_ONSCN']		=49;		// 9/22/09
 $GLOBALS['LOG_FACILITY_CLR']		=50;		// 9/22/09
 $GLOBALS['LOG_FACILITY_RESET']		=51;		// 9/22/09
 
-$GLOBALS['LOG_ICS213_MESSAGE_SEND']	=60;		// 3/22/12
+$GLOBALS['LOG_ICS_MESSAGE_SEND']	=60;		// 4/7/2014
 
 $GLOBALS['LOG_ERROR']				=90;		// 1/10/11
 $GLOBALS['LOG_INTRUSION']			=91;		// 5/25/11
@@ -1954,7 +1955,7 @@ function isValidURL($url) {
 	return preg_match('|^http(s)?://[a-z0-9-]+(.[a-z0-9-]+)*(:[0-9]+)?(/.*)?$|i', $url);
 	}
 	
-function do_kml() {									// emits JS for kml-type files in noted directory - added 5/23/08
+function do_kml() {									// emits JS for kml-type files in noted directory - added 5/23/08, 4/2/14
 	$dir = "./kml_files";							// required as directory
 	if (is_dir($dir)){										
 		$dh  = opendir($dir);
@@ -1969,10 +1970,8 @@ function do_kml() {									// emits JS for kml-type files in noted directory - 
 				case "kmz":
 				case "xml":
 					$url = $server_str . $filename;
-					echo "\tvar xml_" . $i . " = new KmlMapParser({ map: map});\n"; 
-					echo "xml_" . $i . ".parse(['" . $url . "']);";     					
-					echo "xml_" . $i . ".setVisibility(true);";
-					echo "xml_" . $i . ".setOverlayVisibility(true);";	
+					echo "\tvar xml_" . $i . " = new GeoXml(\"xml_" . $i . "\", map, \"" . $url . "\", {nozoom: true});\n";
+					echo "xml_" . $i . ".parse();";
 					$i++;
 					break;
 // ---------------------------------
@@ -1982,10 +1981,8 @@ function do_kml() {									// emits JS for kml-type files in noted directory - 
 					$lines = file($the_addr );
 					foreach ($lines as $line_num => $line) {				// Loop through our array.
 						if(isValidURL( trim($line))) {
-							echo "\tvar xml_" . $i . " = new KmlMapParser({ map: map});\n"; 
-							echo "xml_" . $i . ".parse(['" . trim($line) . "']);";     					
-							echo "xml_" . $i . ".setVisibility(true);";
-							echo "xml_" . $i . ".setOverlayVisibility(true);";	
+							echo "\tvar xml_" . $i . " = new GeoXml(\"xml_" . $i . "\", map, \"" . $url . "\", {nozoom: true});\n";
+							echo "xml_" . $i . ".parse();";
 							}
 						$i++;
 						}
@@ -3268,12 +3265,12 @@ function clean_string($value) {	//	10/23/12
 	return mysql_real_escape_string($value);
 	}
 
-function get_buttons_inner(){		//	4/12/12
+function get_buttons_inner(){		//	4/12/12, 4/2/14
 	if((get_num_groups()) && (COUNT(get_allocates(4, $_SESSION['user_id'])) > 1))  {	//	6/10/11
 ?>
 		<SCRIPT>
 		side_bar_html= "";
-		side_bar_html +="<form name='region_form' METHOD='post' action='main.php'><DIV><SPAN class='but_hdr'>Regions</SPAN>";
+		side_bar_html +="<form name='region_form' METHOD='post' action=\"<?php print $_SERVER['PHP_SELF'];?>\"><DIV><SPAN class='but_hdr'>Regions</SPAN>";
 		side_bar_html +="<?php print get_regions_buttons($_SESSION['user_id']);?>";
 		side_bar_html +="<SPAN id='reg_sub_but' class='plain' style='float: none;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick='form_validate(document.region_form);'>Update</SPAN>";
 		side_bar_html +="<SPAN id='expand_regs' class='plain' style='z-index:1001; cursor: pointer; float: right;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onclick=\"$('top_reg_box').style.display = 'none'; $('regions_outer').style.display = 'block';\">Undock</SPAN></DIV></form>";
@@ -3283,12 +3280,12 @@ function get_buttons_inner(){		//	4/12/12
 		}
 	}
 
-function get_buttons_inner2(){		//	4/12/12
+function get_buttons_inner2(){		//	4/12/12, 4/2/14
 	if((get_num_groups()) && (COUNT(get_allocates(4, $_SESSION['user_id'])) > 1))  {	//	6/10/11
 ?>
 		<SCRIPT>
 		side_bar_html= "";
-		side_bar_html+="<form name='region_form2' METHOD='post' action='main.php'><DIV><SPAN class='but_hdr'>Regions</SPAN><BR /><BR />";
+		side_bar_html+="<form name='region_form2' METHOD='post' action=\"<?php print $_SERVER['PHP_SELF'];?>\"><DIV><SPAN class='but_hdr'>Regions</SPAN><BR /><BR />";
 		side_bar_html += "<?php print get_regions_buttons2($_SESSION['user_id']);?><BR /><BR />";
 		side_bar_html+="<BR /><BR /><SPAN id='reg_sub_but2' class='plain' style='float: none;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick='form_validate(document.region_form2);'>Update</SPAN></DIV></form>";
 		$("region_boxes2").innerHTML = side_bar_html;			

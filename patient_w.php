@@ -15,6 +15,7 @@
 3/15/11 changed stylesheet.php to stylesheet.php
 5/26/11 added intrusion detection
 7/27/11	fix multiple selects per KB email
+4/8/2014 - insurance made non-mandatory
 */
 error_reporting(E_ALL);			// 10/1/08
 
@@ -131,11 +132,11 @@ $facilitycontact = 	get_text("Facility contact");
 		return (start.valueOf() <= end.valueOf());	
 		}
 
-	function validate(theForm) {
+	function validate(theForm) {		// 4/8/2014
 		var errmsg="";
 		if (theForm.frm_name.value == "")						{errmsg+= "\tName is required\n";}
 		if (theForm.frm_gender_val.value==0) 					{errmsg+= "\t<?php echo $gender;?> required\n";}
-		if (theForm.frm_ins_id.value==0) 						{errmsg+= "\t<?php echo $insurance;?> selection required\n";}
+//		if (theForm.frm_ins_id.value==0) 						{errmsg+= "\t<?php echo $insurance;?> selection required\n";}
 		if (theForm.frm_description.value == "")				{errmsg+= "\tDescription is required\n";}
 		do_unlock(theForm) ;
 		if (!chkval(theForm.frm_hour_asof.value, 0,23)) 		{errmsg+= "\tAs-of time error - Hours\n";}
