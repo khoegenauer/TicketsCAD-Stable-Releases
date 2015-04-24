@@ -576,7 +576,8 @@ p.page { page-break-after: always; }
 				$caption .= "\t<TD ALIGN='CENTER'>&nbsp;&nbsp;" . shorten($the_status, 12) . "&nbsp;&nbsp;</TD>\n";
 				}
 			}
-		$caption .=  "<TD ALIGN='center'><U>{$incident}</U></TD></TR>\n";
+		$caption .=  "<TD ALIGN='center'><U>{$incident}</U></TD>";
+		$caption .=  "<TD ALIGN='left'><U>Comment</U></TD></TR>\n";	//	9/10/13
 		$blank = $statuses;
 
 		$where = " WHERE `when` >= '" . $from_to[0] . "' AND `when` < '" . $from_to[1] . "'";
@@ -590,7 +591,7 @@ p.page { page-break-after: always; }
 			`ticket_id` AS `incident`
 			FROM `$GLOBALS[mysql_prefix]log`
 			LEFT JOIN `$GLOBALS[mysql_prefix]responder` r ON (`$GLOBALS[mysql_prefix]log`.responder_id = r.id) ".
-			$where . $which_unit. " AND `code` = " . $GLOBALS['LOG_UNIT_STATUS'] . " ORDER BY `name` ASC, `incident` ASC, `status` ASC, `when` ASC" ;
+			$where . $which_unit. " AND ((`code` = " . $GLOBALS['LOG_UNIT_STATUS'] . ") OR (`code` = " . $GLOBALS['LOG_COMMENT'] . ")) ORDER BY `name` ASC, `incident` ASC, `status` ASC, `when` ASC" ;	//	9/10/13
 //		dump($query);
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), __FILE__, __LINE__);
 		$i = 0;
@@ -608,6 +609,7 @@ p.page { page-break-after: always; }
 					$theIncident_id = $row['incident'];
 					}
 				else {														// no, flush, initialize and populate
+					if($row['code'] != $GLOBALS['LOG_COMMENT']) {	//	9/10/13
 					print "<TR CLASS='" . $evenodd[$i%2] . "'>";
 					$theUnitName = (array_key_exists($curr_unit, $unit_names))? shorten($unit_names[$curr_unit], 16): "#" . $curr_unit ;
 					print (array_key_exists($curr_unit, $unit_names))? "<TD onClick = 'viewU(" .$curr_unit . ")'><B>" . $theUnitName . "</B></TD>":	"<TD>[#" . $curr_unit . "]</TD>";
@@ -635,15 +637,32 @@ p.page { page-break-after: always; }
 					else {
 						print "<TD></TD>";
 						}
-					print "</TR>\n";
+						print "<TD></TD>";					
 					$statuses = $blank;															// initalize
 					$statuses[$row['status']] = date('H:i', strtotime($row['when_num']));					// MySQL format
 					$curr_unit = $row['unit'];
 					$curr_inc = $row['incident'];
 					$i++;
 					$theIncident_id = $row['incident'];
-
+						} else {	//	9/10/13
+						print "<TR CLASS='" . $evenodd[$i%2] . "'>";
+						$theUnitName = (array_key_exists($curr_unit, $unit_names))? shorten($unit_names[$curr_unit], 16): "#" . $curr_unit ;
+						print (array_key_exists($curr_unit, $unit_names))? "<TD onClick = 'viewU(" .$curr_unit . ")'><B>" . $theUnitName . "</B></TD>":	"<TD>[#" . $curr_unit . "]</TD>";
+						if (!empty($do_date)) {
+							print "<TD>" . date ('D, M j', strtotime($do_date)) . "</TD>";
+							$do_date = "";
+							} else {
+							print "<TD></TD>";
+							}
+						foreach($statuses as $key => $val) {
+							print "<TD ALIGN='center'>&nbsp;</TD>";
+							}
+						print "<TD></TD>";
+						print "<TD ALIGN='left'>" . $row['info'] . "</TD>";
+						$i++;					
+						}
 					}
+				print "</TR>\n";
 				}		// end while($row...)		 main loop - bottom
 
 			print "\n<TR CLASS='" . $evenodd[$i%2] . "'>";
@@ -667,7 +686,7 @@ p.page { page-break-after: always; }
 			else {
 				print "<TD></TD>";
 				}
-			print "</TR>\n";
+			print "<TD></TD></TR>\n";
 			}		// end if (mysql_affected_rows()>0)
 		else {
 			print "\n<TR CLASS='odd'><TD COLSPAN='99' ALIGN='center'><br /><I>No " . get_text("Unit") . " data for this period</I><BR /></TD></TR>\n";

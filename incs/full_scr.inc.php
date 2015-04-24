@@ -18,6 +18,7 @@
 7/3/11 added lines data, do_landb() - 
 6/22/12 set def_zoom as zoom limit
 5/30/13 Implement catch for when there are no allocated regions for current user. 
+8/28/13 Fixed no show of KML files
 */
 error_reporting(E_ALL);
 $curr_cats = get_category_butts();	//	get current categories.
@@ -155,11 +156,6 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 	</DIV>
 
 	<DIV ID = 'bottom_bar' class='td_fs_buttons' style='display: table-cell; position: fixed; bottom: 0%; left: 0%; width: 100%; z-index: 3; height: 5%; text-align: center; vertical-align: middle; padding-top: 5px; border-top: 4px outset #CECECE;'>
-
-	<DIV ID = 'msg_span' STYLE = "display:none;">
-		<SPAN ID = "has_message_text" CLASS = "heading"></SPAN>
-		<BUTTON VALUE="OK" onclick = "end_message_show();"  STYLE = "margin-left:20px">OK</BUTTON>
-	</DIV> <!-- new -->
 	<DIV ID = "links" STYLE = "display:inline;">
 	<B><NOBR>	<!-- 2/16/11 Change CSS classes -->
 	<FORM>		
@@ -225,29 +221,6 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 			document.write (div_style_str);
 
 	var user_id = <?php echo $_SESSION['user_id'];?>;		// 5/27/2013
-
-	var socket = new EasyWebSocket('ws://<?php echo "{$host}{$uri}"?>/');		// instantiate
-
-	socket.onmessage = function(event) {					// on incoming - 
-//	alert(232);
-	var ourArr = event.data.split("/");
-	if (ourArr[0] != user_id ) {							// is this mine?
-		var payload = ourArr.slice(1);						// no, drop user_id segment before showing it
-		payload = payload.join ("/");						// array back to string
-		$("has_message_text").innerHTML = payload;
-		$("links").style.display = "none"
-		$("msg_span").style.display = "inline-block"
-
-		window.opener.parent.frames["upper"].do_audible(); 	// sound off!
-
-		}				// end mine?
-	}				// end incoming
-
-	function end_message_show() {
-		$("has_message_text").innerHTML = "";
-		$("links").style.display = "inline";
-		$("msg_span").style.display = "none";	
-		}
 </script>
 		</TD></TR>
 		</TABLE></DIV>
@@ -416,9 +389,7 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 					    paths: 			points,
 					    strokeColor: 	add_hash("<?php echo $line_color;?>"),
 					    strokeOpacity: 	<?php echo $line_opacity;?>,
-					    strokeWeight: 	<?php echo $line_width;?>,
-					    fillColor: 		add_hash("<?php echo $fill_color;?>"),
-					    fillOpacity: 	<?php echo $fill_opacity;?>
+					    strokeWeight: 	<?php echo $line_width;?>
 						});
 <?php			} ?>				        
 					polyline.setMap(map);		
@@ -1210,20 +1181,6 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 	print "\tvar map_is_fixed = ";
 	print (($dzf==1) || ($dzf==3))? "true;\n":"false;\n";
 	
-//	$kml_olays = array();
-//	$dir = "./kml_files";
-//	$dh  = opendir($dir);
-//	$i = 1;
-//	$temp = explode ("/", $_SERVER['REQUEST_URI']);
-//	$temp[count($temp)-1] = "kml_files";				//
-//	$server_str = "http://" . $_SERVER['SERVER_NAME'] .":" .  $_SERVER['SERVER_PORT'] .  implode("/", $temp) . "/";
-//	while (false !== ($filename = readdir($dh))) {
-//		if (!is_dir($filename)) {
-//		    echo "\tvar kml_" . $i . " = new GGeoXml(\"" . $server_str . $filename . "\");\n";
-//		    $kml_olays[] = "map.addOverlay(kml_". $i . ");";
-//		    $i++;
-//		    }
-//		}
 ?>
 	
 	function do_mail_win() {			// 6/13/09
@@ -1952,9 +1909,7 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 			    paths: 			points,
 			    strokeColor: 	add_hash("<?php echo $line_color;?>"),
 			    strokeOpacity: 	<?php echo $line_opacity;?>,
-			    strokeWeight: 	<?php echo $line_width;?>,
-			    fillColor: 		add_hash("<?php echo $fill_color;?>"),
-			    fillOpacity: 	<?php echo $fill_opacity;?>
+			    strokeWeight: 	<?php echo $line_width;?>
 				});
 <?php	} ?>				        
 
@@ -2006,9 +1961,7 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 			    paths: 			points,
 			    strokeColor: 	add_hash("<?php echo $line_color;?>"),
 			    strokeOpacity: 	<?php echo $line_opacity;?>,
-			    strokeWeight: 	<?php echo $line_width;?>,
-			    fillColor: 		add_hash("<?php echo $fill_color;?>"),
-			    fillOpacity: 	<?php echo $fill_opacity;?>
+			    strokeWeight: 	<?php echo $line_width;?>
 				});
 <?php	} ?>				        
 
@@ -2675,7 +2628,7 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 	
 	//}
 	// =====================================End of functions to show facilities========================================================================
-	
+	do_kml();	//	8/28/13	
 //		for ($i = 0; $i<count($kml_olays); $i++) {				// emit kml overlay calls
 //			echo "\t\t" . $kml_olays[$i] . "\n";
 //			}
@@ -2686,7 +2639,7 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 
 	function do_landb_f() {				// JS function - 8/1/11
 //		alert(2629);
-		return true;
+//		return true;
 		var points = new Array();
 <?php
 		$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup` WHERE `line_status` = 0 AND (`use_with_bm` = 1 OR `use_with_r` = 1)";
@@ -2726,9 +2679,7 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 							paths: 			points,
 							strokeColor: 	add_hash("<?php echo $line_color;?>"),
 							strokeOpacity: 	<?php echo $line_opacity;?>,
-							strokeWeight: 	<?php echo $line_width;?>,
-							fillColor: 		add_hash("<?php echo $fill_color;?>"),
-							fillOpacity: 	<?php echo $fill_opacity;?>
+							strokeWeight: 	<?php echo $line_width;?>
 							});
 <?php				
 					} 
@@ -2847,6 +2798,5 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 	</SCRIPT>
 	
 <?php
-	
 	}				// end function full_scr() ===========================================================
 

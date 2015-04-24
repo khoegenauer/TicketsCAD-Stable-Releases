@@ -38,6 +38,7 @@ $iw_width= "300px";					// map infowindow with
 1/4/2013 V3 polylines and polygon, setMap conversions made 
 5/30/13 Implement catch for when there are no allocated regions for current user. 
 6/4/2013 beds information added for all operations
+8/28/13 Added mailgroup capability - email to mailgroup when facility set as originating or receiving facility. Also about status field.
 */
 
 @session_start();	
@@ -51,6 +52,8 @@ do_login(basename(__FILE__));
 
 $key_field_size = 30;
 $st_size = (get_variable("locale") ==0)?  2: 4;		
+
+$FacID = (isset($_GET['id'])) ? $_GET['id'] : 0;	
 
 extract($_GET);
 extract($_POST);
@@ -94,6 +97,17 @@ function get_icon_legend (){			// returns legend string
 		}
 	return $print;
 	}			// end function get_icon_legend ()
+	
+function get_mailgroup_name($id) {	//	8/28/13
+	if($id == 0) {
+		return "";
+		}
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]mailgroup` WHERE `id` = " . $id;
+	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
+	$row = stripslashes_deep(mysql_fetch_assoc($result));
+	$the_ret = $row['name'];
+	return $the_ret;
+	}
 ?>
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
@@ -183,6 +197,80 @@ $key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : "";
 			}
 		}		// end function ck_frames()
 
+	function file_window(id) {										// 9/10/13
+		var url = "file_upload.php?facility_id="+ id;
+		var nfWindow = window.open(url, 'NewFileWindow', 'resizable=1, scrollbars, height=600, width=600, left=100,top=100,screenX=100,screenY=100');
+		setTimeout(function() { nfWindow.focus(); }, 1);
+		}
+		
+	function get_files() {										// 9/10/13
+		var the_fac_id = <?php print $FacID;?>;
+		if(the_fac_id == 0) {
+			return;
+			}
+		$('the_file_list').innerHTML = "Please Wait, loading files";
+		randomnumber=Math.floor(Math.random()*99999999);
+		var url ="./ajax/file_list.php?facility_id=" + the_fac_id + "&version=" + randomnumber;
+		sendRequest (url, filelist_cb, "");
+		function filelist_cb(req) {
+			var theFiles=req.responseText;
+			$('the_file_list').innerHTML = theFiles;		
+			}
+		}
+
+	function checkAll() {	//	9/10/13
+		var theField = document.res_add_Form.elements["frm_group[]"];
+		for (i = 0; i < theField.length; i++) {
+			theField[i].checked = true ;
+			}
+		}
+
+	function uncheckAll() {	//	9/10/13
+		var theField = document.res_add_Form.elements["frm_group[]"];
+		for (i = 0; i < theField.length; i++) {
+			theField[i].checked = false ;
+			}
+		}
+		
+	function sendRequest(url,callback,postData) {								// 9/10/13
+		var req = createXMLHTTPObject();
+		if (!req) return;
+		var method = (postData) ? "POST" : "GET";
+		req.open(method,url,true);
+		if (postData)
+			req.setRequestHeader('Content-type','application/x-www-form-urlencoded');
+		req.onreadystatechange = function () {
+			if (req.readyState != 4) return;
+			if (req.status != 200 && req.status != 304) {
+				return;
+				}
+			callback(req);
+			}
+		if (req.readyState == 4) return;
+		req.send(postData);
+		}
+
+	var XMLHttpFactories = [
+		function () {return new XMLHttpRequest()	},
+		function () {return new ActiveXObject("Msxml2.XMLHTTP")	},
+		function () {return new ActiveXObject("Msxml3.XMLHTTP")	},
+		function () {return new ActiveXObject("Microsoft.XMLHTTP")	}
+		];
+
+	function createXMLHTTPObject() {
+		var xmlhttp = false;
+		for (var i=0;i<XMLHttpFactories.length;i++) {
+			try {
+				xmlhttp = XMLHttpFactories[i]();
+				}
+			catch (e) {
+				continue;
+				}
+			break;
+			}
+		return xmlhttp;
+		}
+		
 	function to_str(instr) {
 		function ord( string ) {
 		    return (string+'').charCodeAt(0);
@@ -782,9 +870,7 @@ $key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : "";
 					    paths: 			points,
 					    strokeColor: 	add_hash("<?php echo $line_color;?>"),
 					    strokeOpacity: 	<?php echo $line_opacity;?>,
-					    strokeWeight: 	<?php echo $line_width;?>,
-					    fillColor: 		add_hash("<?php echo $fill_color;?>"),
-					    fillOpacity: 	<?php echo $fill_opacity;?>
+					    strokeWeight: 	<?php echo $line_width;?>
 						});
 <?php			} ?>				        
 					polyline.setMap(map);		
@@ -1033,46 +1119,6 @@ function list_facilities($addon = '', $start) {
 //		alert("Validating");
 		checkForm(theForm);
 		}				// end function validate(theForm)			
-
-	function sendRequest(url,callback,postData) {								// 2/14/09
-		var req = createXMLHTTPObject();
-		if (!req) return;
-		var method = (postData) ? "POST" : "GET";
-		req.open(method,url,true);
-		req.setRequestHeader('User-Agent','XMLHTTP/1.0');
-		if (postData)
-			req.setRequestHeader('Content-type','application/x-www-form-urlencoded');
-		req.onreadystatechange = function () {
-			if (req.readyState != 4) return;
-			if (req.status != 200 && req.status != 304) {
-				return;
-				}
-			callback(req);
-			}
-		if (req.readyState == 4) return;
-		req.send(postData);
-		}
-
-	var XMLHttpFactories = [
-		function () {return new XMLHttpRequest()	},
-		function () {return new ActiveXObject("Msxml2.XMLHTTP")	},
-		function () {return new ActiveXObject("Msxml3.XMLHTTP")	},
-		function () {return new ActiveXObject("Microsoft.XMLHTTP")	}
-		];
-
-	function createXMLHTTPObject() {
-		var xmlhttp = false;
-		for (var i=0;i<XMLHttpFactories.length;i++) {
-			try {
-				xmlhttp = XMLHttpFactories[i]();
-				}
-			catch (e) {
-				continue;
-				}
-			break;
-			}
-		return xmlhttp;
-		}
 
 	function createMarker(point, tabs, color, id, fac_id) {						// (point, myinfoTabs,<?php print $row['type'];?>, i)
 		got_points = true;													// at least one
@@ -1349,9 +1395,7 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 				    paths: 			points,
 				    strokeColor: 	add_hash("<?php echo $line_color;?>"),
 				    strokeOpacity: 	<?php echo $line_opacity;?>,
-				    strokeWeight: 	<?php echo $line_width;?>,
-				    fillColor: 		add_hash("<?php echo $fill_color;?>"),
-				    fillOpacity: 	<?php echo $fill_opacity;?>
+				    strokeWeight: 	<?php echo $line_width;?>
 					});
 <?php		} ?>				        
 			polyline.setMap(map);		
@@ -1495,9 +1539,7 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 					paths: 			points,
 					strokeColor: 	add_hash("<?php echo $line_color;?>"),
 					strokeOpacity: 	<?php echo $line_opacity;?>,
-					strokeWeight: 	<?php echo $line_width;?>,
-					fillColor: 		add_hash("<?php echo $fill_color;?>"),
-					fillOpacity: 	<?php echo $fill_opacity;?>
+					strokeWeight: 	<?php echo $line_width;?>
 					});
 <?php		} ?>				        
 
@@ -1741,6 +1783,7 @@ var buttons_html = "";
 
 				`capab`= " . 		quote_smart(trim($_POST['frm_capab'])) . ",
 				`status_id`= " .	quote_smart(trim($_POST['frm_status_id'])) . ",
+				`status_about`= " . quote_smart(trim($_POST['frm_status_about'])) . ",
 				`lat`= " . 			$the_lat . ",
 				`lng`= " . 			$the_lng . ",
 				`contact_name`= " . quote_smart(trim($_POST['frm_contact_name'])) . ",
@@ -1756,8 +1799,10 @@ var buttons_html = "";
 				`pager_s`= " . 		quote_smart(trim($_POST['frm_pager_s'])) . ",
 				`type`= " . 		quote_smart(trim($_POST['frm_type'])) . ",
 				`user_id`= " . 		quote_smart(trim($_SESSION['user_id'])) . ",
+				`notify_mailgroup` = " . quote_smart(trim($_POST['frm_notify_mailgroup'])) . ",
+				`notify_email` = " . quote_smart(trim($_POST['frm_notify_email'])) . ",				
 				`updated`= " . 		quote_smart(trim($now)) . "
-				WHERE `id`= " . 	quote_smart(trim($_POST['frm_id'])) . ";";
+				WHERE `id`= " . 	quote_smart(trim($_POST['frm_id'])) . ";";	//	8/28/13
 
 			$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(),basename( __FILE__), __LINE__);
 
@@ -1792,9 +1837,7 @@ var buttons_html = "";
 		$frm_lng = (empty($_POST['frm_lng']))? 'NULL': quote_smart(trim($_POST['frm_lng']));		// 7/15/10
 		$now = mysql_format_date(time() - (get_variable('delta_mins')*60));							// 6/4/2013
 		$query = "INSERT INTO `$GLOBALS[mysql_prefix]facilities` (
-			`name`, `street`, `city`, `state`, `handle`, `icon_str`, `boundary`, `description`, 
-			`beds_a`, `beds_o`, `beds_info`,
-			`capab`, `status_id`, `contact_name`, `contact_email`, `contact_phone`, `security_contact`, `security_email`, `security_phone`, `opening_hours`, `access_rules`, `security_reqs`, `pager_p`, `pager_s`, `lat`, `lng`, `type`, `user_id`, `updated` )
+			`name`, `street`, `city`, `state`, `handle`, `icon_str`, `boundary`, `description`, `beds_a`, `beds_o`, `beds_info`, `capab`, `status_id`, `status_about`, `contact_name`, `contact_email`, `contact_phone`, `security_contact`, `security_email`, `security_phone`, `opening_hours`, `access_rules`, `security_reqs`, `pager_p`, `pager_s`, `lat`, `lng`, `type`, `user_id`, `notify_mailgroup`, `notify_email`, `updated` )
 			VALUES (" .
 				quote_smart(trim($_POST['frm_name'])) . "," .
 				quote_smart(trim($_POST['frm_street'])) . "," .
@@ -1811,6 +1854,7 @@ var buttons_html = "";
 
 				quote_smart(trim($_POST['frm_capab'])) . "," .
 				quote_smart(trim($_POST['frm_status_id'])) . "," .
+				quote_smart(trim($_POST['frm_status_about'])) . "," .
 				quote_smart(trim($_POST['frm_contact_name'])) . "," .
 				quote_smart(trim($_POST['frm_contact_email'])) . "," .
 				quote_smart(trim($_POST['frm_contact_phone'])) . "," .
@@ -1826,10 +1870,75 @@ var buttons_html = "";
 				$frm_lng . "," .
 				quote_smart(trim($_POST['frm_type'])) . "," .
 				quote_smart(trim($_SESSION['user_id'])) . "," .
-				quote_smart(trim($now)) . ");";
+				quote_smart(trim($_POST['frm_notify_mailgroup'])) . "," .
+				quote_smart(trim($_POST['frm_notify_email'])) . "," .
+				quote_smart(trim($now)) . ");";	//	8/28/13
 
 		$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
 		$new_id=mysql_insert_id();
+
+//	9/10/13 File Upload support
+		$print = "";
+		if ((isset($_FILES['frm_file'])) && ($_FILES['frm_file']['name'] != "")){
+			$nogoodFile = false;	
+			$blacklist = array(".php", ".phtml", ".php3", ".php4", ".js", ".shtml", ".pl" ,".py"); 
+			foreach ($blacklist as $file) { 
+				if(preg_match("/$file\$/i", $_FILES['frm_file']['name'])) { 
+					$nogoodFile = true;
+					}
+				}
+			if(!$nogoodFile) {
+				$exists = false;
+				$existing_file = "";
+				$upload_directory = "./files/";
+				if (!(file_exists($upload_directory))) {				
+					mkdir ($upload_directory, 0770);
+					}
+				chmod($upload_directory, 0770);	
+				$filename = rand(1,999999);
+				$realfilename = $_FILES["frm_file"]["name"];
+				$file = $upload_directory . $filename;
+					
+//	Does the file already exist in the files table		
+
+				$query = "SELECT * FROM `$GLOBALS[mysql_prefix]files` WHERE `orig_filename` = '" . $realfilename . "'";
+				$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);	
+				if(mysql_affected_rows() == 0) {	//	file doesn't exist already
+					if (move_uploaded_file($_FILES['frm_file']['tmp_name'], $file)) {	// If file uploaded OK
+						if (strlen(filesize($file)) < 20000000) {
+							$print .= "";
+							} else {
+							$print .= "Attached file is too large!";
+							}
+						} else {
+						$print .= "Error uploading file";
+						}
+					} else {
+					$row = stripslashes_deep(mysql_fetch_assoc($result));			
+					$exists = true;
+					$existing_file = $row['filename'];	//	get existing file name
+					}
+					
+				$from = $_SERVER['REMOTE_ADDR'];	
+				$filename = ($existing_file == "") ? $filename : $existing_file;	//	if existing file, use this file and write new db entry with it.
+				$query_insert  = "INSERT INTO `$GLOBALS[mysql_prefix]files` (
+						`title` , `filename` , `orig_filename`, `ticket_id` , `responder_id` , `facility_id`, `type`, `filetype`, `_by`, `_on`, `_from`
+					) VALUES (
+						'" . $_POST['frm_file_title'] . "', '" . $filename . "', '" . $realfilename . "', " . $id . ", 0,
+						0, 0, '" . $_FILES['frm_file']['type'] . "', $by, '" . $now . "', '" . $from . "'
+					)";
+				$result_insert	= mysql_query($query_insert) or do_error($query_insert,'mysql_query() failed', mysql_error(), basename( __FILE__), __LINE__);
+				if($result_insert) {	//	is the database insert successful
+					$dbUpdated = true;
+					} else {	//	problem with the database insert
+					$dbUpdated = false;				
+					}
+				}
+			} else {	// Problem with the file upload
+			$fileUploaded = false;
+			}	
+			
+// End of file upload
 
 		$status_id = $_POST['frm_status_id'];	//4/14/11
 		foreach ($_POST['frm_group'] as $grp_val) {	// 6/10/11
@@ -1874,14 +1983,18 @@ var buttons_html = "";
 					<INPUT TYPE="text" SIZE = 3 MAXLENGTH=3 NAME="frm_icon_str" VALUE="" />			
 			</TD></TR>
 <?php
-	if(get_num_groups() > 1) {
+	if(get_num_groups()) {
 		if((is_super()) && (COUNT(get_allocates(4, $_SESSION['user_id'])) > 1)) {		//	6/10/11
 ?>		
 			<TR CLASS='even' VALIGN="top">	<!--  6/10/11 -->
 			<TD CLASS="td_label"><A CLASS="td_label" HREF="#" TITLE="Sets Regions that Facility is allocated to - click + to expand, - to collapse"><?php print get_text("Region");?></A>: 
-			<SPAN id='expand_gps' onClick="$('groups_sh').style.display = 'inline-block'; $('expand_gps').style.display = 'none'; $('collapse_gps').style.display = 'inline-block';" style = 'display: inline-block; font-size: 16px; border: 1px solid;'><B>+</B></SPAN>
-			<SPAN id='collapse_gps' onClick="$('groups_sh').style.display = 'none'; $('collapse_gps').style.display = 'none'; $('expand_gps').style.display = 'inline-block';" style = 'display: none; font-size: 16px; border: 1px solid;'><B>-</B></SPAN></TD>
+			<SPAN id='expand_gps' onClick="$('checkButts').style.display = 'inline-block'; $('groups_sh').style.display = 'inline-block'; $('expand_gps').style.display = 'none'; $('collapse_gps').style.display = 'inline-block';" style = 'display: inline-block; font-size: 16px; border: 1px solid;'><B>+</B></SPAN>
+			<SPAN id='collapse_gps' onClick="$('checkButts').style.display = 'none'; $('groups_sh').style.display = 'none'; $('collapse_gps').style.display = 'none'; $('expand_gps').style.display = 'inline-block';" style = 'display: none; font-size: 16px; border: 1px solid;'><B>-</B></SPAN></TD>
 			<TD>
+			<DIV id='checkButts' style='display: none;'>
+				<SPAN id='checkbut' class='plain' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick='checkAll();'>Check All</SPAN>
+				<SPAN id='uncheckbut' class='plain' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick='uncheckAll();'>Uncheck All</SPAN>	
+			</DIV>
 			<?php
 			
 			$alloc_groups = implode(',', get_allocates(4, $_SESSION['user_id']));	//	6/10/11
@@ -1891,9 +2004,13 @@ var buttons_html = "";
 ?>		
 			<TR CLASS='even' VALIGN="top">	<!--  6/10/11 -->
 			<TD CLASS="td_label"><A CLASS="td_label" HREF="#" TITLE="Sets Regions that Facility is allocated to - click + to expand, - to collapse"><?php print get_text("Region");?></A>: 
-			<SPAN id='expand_gps' onClick="$('groups_sh').style.display = 'inline-block'; $('expand_gps').style.display = 'none'; $('collapse_gps').style.display = 'inline-block';" style = 'display: inline-block; font-size: 16px; border: 1px solid;'><B>+</B></SPAN>
-			<SPAN id='collapse_gps' onClick="$('groups_sh').style.display = 'none'; $('collapse_gps').style.display = 'none'; $('expand_gps').style.display = 'inline-block';" style = 'display: none; font-size: 16px; border: 1px solid;'><B>-</B></SPAN></TD>
+			<SPAN id='expand_gps' onClick="$('checkButts').style.display = 'inline-block'; $('groups_sh').style.display = 'inline-block'; $('expand_gps').style.display = 'none'; $('collapse_gps').style.display = 'inline-block';" style = 'display: inline-block; font-size: 16px; border: 1px solid;'><B>+</B></SPAN>
+			<SPAN id='collapse_gps' onClick="$('checkButts').style.display = 'none'; $('groups_sh').style.display = 'none'; $('collapse_gps').style.display = 'none'; $('expand_gps').style.display = 'inline-block';" style = 'display: none; font-size: 16px; border: 1px solid;'><B>-</B></SPAN></TD>
 			<TD>
+			<DIV id='checkButts' style='display: none;'>
+				<SPAN id='checkbut' class='plain' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick='checkAll();'>Check All</SPAN>
+				<SPAN id='uncheckbut' class='plain' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick='uncheckAll();'>Uncheck All</SPAN>				
+			</DIV>
 <?php
 
 			$alloc_groups = implode(',', get_allocates(4, $_SESSION['user_id']));	//	6/10/11
@@ -1905,9 +2022,13 @@ var buttons_html = "";
 ?>
 			<TR CLASS='even' VALIGN="top">	<!--  6/10/11 -->
 			<TD CLASS="td_label"><A CLASS="td_label" HREF="#" TITLE="Sets Regions that Facility is allocated to - click + to expand, - to collapse"><?php print get_text("Region");?></A>: 
-			<SPAN id='expand_gps' onClick="$('groups_sh').style.display = 'inline-block'; $('expand_gps').style.display = 'none'; $('collapse_gps').style.display = 'inline-block';" style = 'display: inline-block; font-size: 16px; border: 1px solid;'><B>+</B></SPAN>
-			<SPAN id='collapse_gps' onClick="$('groups_sh').style.display = 'none'; $('collapse_gps').style.display = 'none'; $('expand_gps').style.display = 'inline-block';" style = 'display: none; font-size: 16px; border: 1px solid;'><B>-</B></SPAN></TD>
-			<TD
+			<SPAN id='expand_gps' onClick="$('checkButts').style.display = 'inline-block'; $('groups_sh').style.display = 'inline-block'; $('expand_gps').style.display = 'none'; $('collapse_gps').style.display = 'inline-block';" style = 'display: inline-block; font-size: 16px; border: 1px solid;'><B>+</B></SPAN>
+			<SPAN id='collapse_gps' onClick="$('checkButts').style.display = 'none'; $('groups_sh').style.display = 'none'; $('collapse_gps').style.display = 'none'; $('expand_gps').style.display = 'inline-block';" style = 'display: none; font-size: 16px; border: 1px solid;'><B>-</B></SPAN></TD>
+			<TD>
+			<DIV id='checkButts' style='display: none;'>
+				<SPAN id='checkbut' class='plain' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick='checkAll();'>Check All</SPAN>
+				<SPAN id='uncheckbut' class='plain' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick='uncheckAll();'>Uncheck All</SPAN>		
+			</DIV>
 <?php
 			$alloc_groups = implode(',', get_allocates(4, $_SESSION['user_id']));	//	6/10/11
 			print get_user_group_butts_readonly($_SESSION['user_id'])		
@@ -1976,6 +2097,8 @@ var buttons_html = "";
 ?>
 			</SELECT>
 			</TD></TR>
+		<TR CLASS = "odd"><TD CLASS="td_label"><A CLASS="td_label" HREF="#" TITLE="About Facility status - information about particular status values for this facility">About Status</A></TD><TD><INPUT SIZE="61" TYPE="text" NAME="frm_status_about" VALUE="" MAXLENGTH="512"></TD></TR>	<!-- 8/28/13 -->
+		<TR class='spacer'><TD class='spacer' COLSPAN=99>&nbsp;</TD></TR>	
 		<TR CLASS='even'><TD CLASS="td_label"><A CLASS="td_label" HREF="#" TITLE="Location - type in location in fields or click location on map "><?php print get_text("Location"); ?></A>:</TD><TD><INPUT SIZE="61" TYPE="text" NAME="frm_street" VALUE="" MAXLENGTH="61"></TD></TR> <!-- 7/5/10 -->
 		<TR CLASS='odd'><TD CLASS="td_label"><A CLASS="td_label" HREF="#" TITLE="City - defaults to default city set in configuration. Type in City if required"><?php print get_text("City"); ?></A>:&nbsp;&nbsp;&nbsp;&nbsp;<button type="button" onClick="Javascript:loc_lkup(document.res_add_Form);"><img src="./markers/glasses.png" alt="Lookup location." /></button></TD> <!-- 7/5/10 -->
 		<TD><INPUT SIZE="32" TYPE="text" NAME="frm_city" VALUE="<?php print get_variable('def_city'); ?>" MAXLENGTH="32" onChange = "this.value=capWords(this.value)"> <!-- 7/5/10 -->
@@ -2029,9 +2152,43 @@ var buttons_html = "";
 <?php
 
 	}
+		$mg_select = "<SELECT NAME='frm_notify_mailgroup'>";	//	8/28/13
+		$mg_select .= "<OPTION VALUE=0>Select Mail List</OPTION>";	//	8/28/13
+		$query_mg = "SELECT * FROM `$GLOBALS[mysql_prefix]mailgroup`";	//	8/28/13
+		$result_mg = mysql_query($query_mg) or do_error($query_mg, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);	//	8/28/13
+		while ($row_mg = stripslashes_deep(mysql_fetch_assoc($result_mg))) {	//	8/28/13
+			$mg_select .= "<OPTION VALUE=" . $row_mg['id'] . ">" . $row_mg['name'] . "</OPTION>";
+			}
+		$mg_select .= "</SELECT>";
 ?>
-
-		<TR CLASS='even'><TD COLSPAN=4 ALIGN='center'><font color='red' size='-1'>*</FONT> Required</TD></TR>
+		<TR CLASS = "even"><TD CLASS="td_label"><A CLASS="td_label" HREF="#" TITLE="Notify Facility with selected mail list"><?php print get_text("Notify Mail List"); ?></A>:&nbsp;</TD><TD COLSPAN=3 ><?php print $mg_select;?></TD></TR>	<!-- 8/28/13 -->
+		<TR CLASS = "even"><TD CLASS="td_label"><A CLASS="td_label" HREF="#" TITLE="Notify Facility with this email address"><?php print get_text("Notify Email Address"); ?></A>:&nbsp;</TD><TD COLSPAN=3 ><INPUT SIZE="48" MAXLENGTH="128" TYPE="text" NAME="frm_notify_email" VALUE="" /></TD></TR> <!-- 8/28/13 -->
+<!-- 9/10/13 -->
+		<TR class='spacer'>
+			<TD COLSPAN='4' class='spacer'>&nbsp;</TD>
+		</TR>
+		<TR class='spacer'>
+			<TD COLSPAN='4' class='spacer'>&nbsp;</TD>
+		</TR>
+		<TR class='heading'>
+			<TD COLSPAN='4' class='heading' style='text-align: center;'>File Upload</TD>
+		</TR>
+		<TR class='even'>
+			<TD class='td_label' style='text-align: left;'>Choose a file to upload:</TD>
+			<TD COLSPAN='3' class='td_data' style='text-align: left;'><INPUT NAME="frm_file" TYPE="file" /></TD>
+		</TR>
+		<TR class='odd'>
+			<TD class='td_label' style='text-align: left;'>File Name</TD>
+			<TD COLSPAN='3'  class='td_data' style='text-align: left;'><INPUT NAME="frm_file_title" TYPE="text" SIZE="48" MAXLENGTH="128" VALUE=""></TD>
+		</TR>
+		<TR class='spacer'>
+			<TD COLSPAN='4' class='spacer'>&nbsp;</TD>
+		</TR>
+		<TR class='spacer'>
+			<TD COLSPAN='4' class='spacer'>&nbsp;</TD>
+		</TR>
+<!-- 9/10/13 -->
+		<TR><TD COLSPAN=4 ALIGN='center'><font color='red' size='-1'>*</FONT> Required</TD></TR>
 		<TR CLASS = "odd"><TD COLSPAN='2' ALIGN='center'>
 			<INPUT TYPE="button" VALUE="<?php print get_text("Cancel"); ?>" onClick="document.can_Form.submit();" STYLE = 'margin-left: 50px' >
 			<INPUT TYPE="reset" VALUE="<?php print get_text("Reset"); ?>" onClick = "do_add_reset(this.form);" STYLE = 'margin-left: 20px' />
@@ -2120,7 +2277,7 @@ var buttons_html = "";
 //		print do_calls($id);								// generate JS calls array
 ?>
 		</HEAD>
-		<BODY onLoad = "ck_frames(); " > 	<!-- <?php echo __LINE__; ?> -->
+		<BODY onLoad = "ck_frames(); get_files(); " > 	<!-- <?php echo __LINE__; ?> -->
 		<A NAME='top'>		<!-- 11/11/09 -->
 <?php
 		require_once('./incs/links.inc.php');
@@ -2139,11 +2296,11 @@ var buttons_html = "";
 				<INPUT TYPE="text" SIZE = 3 MAXLENGTH=3 NAME="frm_icon_str" VALUE="<?php print $row['icon_str'];?>" />			
 			</TD></TR>
 <?php
-		if(get_num_groups() > 1) {
+		if(get_num_groups()) {
 			if((is_super()) && (COUNT(get_allocates(4, $_SESSION['user_id'])) > 1)) {		//	6/10/11
 ?>			
 			<TR CLASS='even' VALIGN='top'>;
-			<TD CLASS='td_label'><?php print get_text('Region');?></A>:
+			<TD CLASS='td_label'><A CLASS="td_label" HREF="#" TITLE="Sets Regions that Facility is allocated to - click + to expand, - to collapse"><?php print get_text('Region');?></A>:
 			<SPAN id='expand_gps' onClick="$('groups_sh').style.display = 'inline-block'; $('expand_gps').style.display = 'none'; $('collapse_gps').style.display = 'inline-block';" style = 'display: inline-block; font-size: 16px; border: 1px solid;'><B>+</B></SPAN>
 			<SPAN id='collapse_gps' onClick="$('groups_sh').style.display = 'none'; $('collapse_gps').style.display = 'none'; $('expand_gps').style.display = 'inline-block';" style = 'display: none; font-size: 16px; border: 1px solid;'><B>-</B></SPAN></TD>
 			<TD>
@@ -2155,7 +2312,7 @@ var buttons_html = "";
 			} elseif((is_admin()) && (COUNT(get_allocates(4, $_SESSION['user_id'])) > 1)) {	//	6/10/11	
 ?>
 			<TR CLASS='even' VALIGN='top'>;
-			<TD CLASS='td_label'><?php print get_text('Region');?></A>:
+			<TD CLASS='td_label'><A CLASS="td_label" HREF="#" TITLE="Sets Regions that Facility is allocated to - click + to expand, - to collapse"><?php print get_text('Region');?></A>:
 			<SPAN id='expand_gps' onClick="$('groups_sh').style.display = 'inline-block'; $('expand_gps').style.display = 'none'; $('collapse_gps').style.display = 'inline-block';" style = 'display: inline-block; font-size: 16px; border: 1px solid;'><B>+</B></SPAN>
 			<SPAN id='collapse_gps' onClick="$('groups_sh').style.display = 'none'; $('collapse_gps').style.display = 'none'; $('expand_gps').style.display = 'inline-block';" style = 'display: none; font-size: 16px; border: 1px solid;'><B>-</B></SPAN></TD>
 			<TD>
@@ -2167,7 +2324,7 @@ var buttons_html = "";
 			} else {
 ?>
 			<TR CLASS='even' VALIGN='top'>;
-			<TD CLASS='td_label'><?php print get_text('Regions');?></A>:
+			<TD CLASS='td_label'><A CLASS="td_label" HREF="#" TITLE="Sets Regions that Facility is allocated to - click + to expand, - to collapse"><?php print get_text('Regions');?></A>:
 			<SPAN id='expand_gps' onClick="$('groups_sh').style.display = 'inline-block'; $('expand_gps').style.display = 'none'; $('collapse_gps').style.display = 'inline-block';" style = 'display: inline-block; font-size: 16px; border: 1px solid;'><B>+</B></SPAN>
 			<SPAN id='collapse_gps' onClick="$('groups_sh').style.display = 'none'; $('collapse_gps').style.display = 'none'; $('expand_gps').style.display = 'inline-block';" style = 'display: none; font-size: 16px; border: 1px solid;'><B>-</B></SPAN></TD>
 			<TD>
@@ -2214,7 +2371,7 @@ var buttons_html = "";
 		}
 ?>
 				</SELECT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-			<A HREF="#" TITLE="Calculate directions on dispatch? - required if you wish to use email directions to unit facility">Directions</A> &raquo;<INPUT TYPE="checkbox" NAME="frm_direcs_disp" checked /></TD>
+			<A CLASS="td_label' HREF="#" TITLE="Calculate directions on dispatch? - required if you wish to use email directions to unit facility">Directions</A> &raquo;<INPUT TYPE="checkbox" NAME="frm_direcs_disp" checked /></TD>
 				
 		</TD>
 		</TR>
@@ -2242,6 +2399,8 @@ var buttons_html = "";
 	$dis_rmv = " ENABLED";
 ?>
 			</TD></TR>
+		<TR CLASS = "odd"><TD CLASS="td_label"><A CLASS="td_label" HREF="#" TITLE="About Facility status - information about particular status values for this facility">About Status</A></TD><TD><INPUT SIZE="61" TYPE="text" NAME="frm_status_about" VALUE="<?php print $row['status_about'] ;?>" MAXLENGTH="512"></TD></TR>	<!-- 8/28/13 -->
+		<TR class='spacer'><TD class='spacer' COLSPAN=99>&nbsp;</TD></TR>		<!-- 8/28/13 -->
 		<TR CLASS='even'><TD CLASS="td_label"><A CLASS="td_label" HREF="#" TITLE="Location - type in location in fields or click location on map ">Location</A>:</TD><TD><INPUT SIZE="61" TYPE="text" NAME="frm_street" VALUE="<?php print $row['street'] ;?>"  MAXLENGTH="61"></TD></TR> <!-- 7/5/10 -->
 		<TR CLASS='odd'><TD CLASS="td_label"><A CLASS="td_label" HREF="#" TITLE="City - defaults to default city set in configuration. Type in City if required"><?php print get_text("City"); ?></A>:&nbsp;&nbsp;&nbsp;&nbsp;<button type="button" onClick="Javascript:loc_lkup(document.res_edit_Form);"><img src="./markers/glasses.png" alt="Lookup location." /></button></TD> <!-- 7/5/10 -->
 		<TD><INPUT SIZE="32" TYPE="text" NAME="frm_city" VALUE="<?php print $row['city'] ;?>" MAXLENGTH="32" onChange = "this.value=capWords(this.value)"> <!-- 7/5/10 -->
@@ -2279,7 +2438,7 @@ var buttons_html = "";
 ?>
 		<TR CLASS = "odd">
 			<TD CLASS="td_label">
-				<SPAN onClick = 'javascript: do_coords(document.res_edit_Form.frm_lat.value ,document.res_edit_Form.frm_lng.value  )' ><A HREF="#" TITLE="Latitude and Longitude - set from map click">
+				<SPAN onClick = 'javascript: do_coords(document.res_edit_Form.frm_lat.value ,document.res_edit_Form.frm_lng.value  )' ><A CLASS="td_label" HREF="#" TITLE="Latitude and Longitude - set from map click">
 				Lat/Lng</A></SPAN>:&nbsp;&nbsp;&nbsp;&nbsp;<?php print $lock_butt;?>
 				</TD>
 			<TD COLSPAN=3>
@@ -2309,7 +2468,18 @@ var buttons_html = "";
 		&nbsp;UTM:<INPUT TYPE="text" NAME="frm_ngs" VALUE='<?php print $utm_val;?>' SIZE=19 disabled /></TD></TR>	<!-- 9/13/08, 2/10/11 -->
 <?php 		
 		}
+		$mg_select = "<SELECT NAME='frm_notify_mailgroup'>";	//	8/28/13
+		$mg_select .= "<OPTION VALUE=0>Select Mail List</OPTION>";	//	8/28/13
+		$query_mg = "SELECT * FROM `$GLOBALS[mysql_prefix]mailgroup` ORDER BY `id` ASC";	//	8/28/13
+		$result_mg = mysql_query($query_mg) or do_error($query_mg, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);	//	8/28/13
+		while ($row_mg = stripslashes_deep(mysql_fetch_assoc($result_mg))) {	//	8/28/13
+			$sel = ($row['notify_mailgroup'] == $row_mg['id']) ? "SELECTED" : "";
+			$mg_select .= "\t<OPTION {$sel} VALUE='{$row_mg['id']}'>{$row_mg['name']} </OPTION>\n";
+			}
+		$mg_select .= "</SELECT>";
 ?>
+		<TR CLASS = "even"><TD CLASS="td_label"><A CLASS="td_label" HREF="#" TITLE="Notify Facility with selected mail list"><?php print get_text("Notify Mail List"); ?></A>:&nbsp;</TD><TD COLSPAN=3 ><?php print $mg_select;?></TD></TR>	<!-- 8/28/13 -->
+		<TR CLASS = "even"><TD CLASS="td_label"><A CLASS="td_label" HREF="#" TITLE="Notify Facility with this email address"><?php print get_text("Notify Email Address"); ?></A>:&nbsp;</TD><TD COLSPAN=3 ><INPUT SIZE="48" MAXLENGTH="128" TYPE="text" NAME="frm_notify_email" VALUE="<?php print $row['notify_email'] ;?>" /></TD></TR>	<!-- 8/28/13 -->
 		<TR><TD>&nbsp;</TD></TR>
 		<TR CLASS="even" VALIGN='baseline'><TD CLASS="td_label"><A CLASS="td_label" HREF="#" TITLE="Delete Facility from system">Remove Facility</A>:&nbsp;</TD><TD><INPUT TYPE="checkbox" VALUE="yes" NAME="frm_remove" <?php print $dis_rmv; ?>>
 		</TD></TR>
@@ -2360,7 +2530,17 @@ var buttons_html = "";
 </script>
 
 		<FORM NAME='can_Form' METHOD="post" ACTION = "<?php print basename( __FILE__);?>"></FORM>
-		<!-- 2431 -->
+		
+			<!-- 9/10/13 File List -->
+		<SPAN id='s_fl' class='plain' style='position: fixed; top: 10px; right: 0px; height: 20px; width: 100px; font-size: 1.2em; float: right;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick="$('file_list').style.display= 'block'; $('s_fl').style.display='none'; $('h_fl').style.display='inline-block';">Files</SPAN>
+		<DIV id='file_list' style='position: fixed; right: 10px; top: 10px; width: 400px; height: 600px; border: 2px outset #707070; text-align: center; display: none;'>
+			<SPAN id='h_fl' class='plain' style='float: right;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick="$('file_list').style.display= 'none'; $('h_fl').style.display='none'; $('s_fl').style.display='inline-block';">Hide</SPAN>
+			<DIV class='heading' style='text-align: center;'>FILE LIST</DIV><BR />
+			<SPAN id='nf_but' class='plain' style='float: none;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick='file_window(<?php print $id;?>);'>Add file</SPAN><BR /><BR />
+			<DIV id='the_file_list' style='width: 100%; height: 100%; overflow-y: auto; text-align: left;'></DIV>
+		</DIV>
+			<!-- 9/10/13 File List -->		
+
 		<A NAME="bottom" /> 
 		<DIV ID='to_top' style="position:fixed; bottom:50px; left:50px; height: 12px; width: 10px;" onclick = "location.href = '#top';"><IMG SRC="markers/up.png"  BORDER=0></div>		
 		</BODY>
@@ -2430,7 +2610,7 @@ var buttons_html = "";
 		</SCRIPT>
 		</HEAD>	<!-- <?php echo __LINE__; ?> -->
 <?php
-		print "\t<BODY onLoad = 'ck_frames()' > <!-- " . __LINE__ . "-->\n";
+		print "\t<BODY onLoad = 'ck_frames(); get_files();' > <!-- " . __LINE__ . "-->\n";
 		print "<A NAME='top'>\n";			// 11/11/09
 		require_once('./incs/links.inc.php');
 		print "\n<DIV ID='to_bottom' style='position:fixed; top:2px; left:50px; height: 12px; width: 10px;' onclick = 'to_bottom()'><IMG SRC='markers/down.png'  BORDER=0 /></DIV>\n";
@@ -2452,11 +2632,13 @@ var buttons_html = "";
 				<SPAN STYLE = "margin-left:40px;" CLASS="td_label">Icon:</SPAN>&nbsp;<?php print $row['icon_str'];?>
 				</TD></TR>
 			<TR CLASS = "odd"><TD CLASS="td_label">Regions: </TD>			<TD><?php print $fa_names;?></TD></TR><!-- 6/10/11 -->					
+			<TR class='spacer'><TD class='spacer' COLSPAN=99>&nbsp;</TD></TR>			
 			<TR CLASS = "even"><TD CLASS="td_label"><?php print get_text("Type"); ?>: </TD>
 				<TD><?php print $the_type;?>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 				</TD></TR>
-			<TR CLASS = "odd"><TD CLASS="td_label"><?php print get_text("Status"); ?>:</TD>		<TD><?php print $un_st_val;?>
-			</TD></TR>
+			<TR CLASS = "odd"><TD CLASS="td_label"><?php print get_text("Status"); ?>:</TD><TD><?php print $un_st_val;?></TD></TR>	<!-- 8/28/13 -->
+			<TR CLASS = "odd"><TD CLASS="td_label">About Status</TD>  <TD><?php print $row['status_about'] ;?></TD></TR>	<!-- 8/28/13 -->
+			<TR class='spacer'><TD class='spacer' COLSPAN=99>&nbsp;</TD></TR>
 			<TR CLASS = "even"><TD CLASS="td_label"><?php print get_text("Description"); ?>: </TD>	<TD><?php print $row['description'];?></TD></TR>
 
 					<!-- 6/4/2013  -->
@@ -2479,6 +2661,8 @@ var buttons_html = "";
 			<TR CLASS = "even"><TD CLASS="td_label"><?php print get_text("Security reqs"); ?>:</TD>	<TD><?php print $row['security_reqs'] ;?></TD></TR>
 			<TR CLASS = "odd"><TD CLASS="td_label"><?php print get_text("Primary pager"); ?>:</TD>	<TD><?php print $row['pager_p'] ;?></TD></TR>
 			<TR CLASS = "even"><TD CLASS="td_label"><?php print get_text("Secondary pager"); ?>:</TD>	<TD><?php print $row['pager_s'] ;?></TD></TR>
+			<TR CLASS = "odd"><TD CLASS="td_label"><?php print get_text("Notify Mail List"); ?>:</TD>	<TD><?php print get_mailgroup_name($row['notify_mailgroup']);?></TD></TR>	<!-- 8/28/13 -->
+			<TR CLASS = "even"><TD CLASS="td_label"><?php print get_text("Notify Email Address"); ?>:</TD>	<TD><?php print $row['notify_email'];?></TD></TR>				<!-- 8/28/13 -->
 			<TR CLASS = 'odd'><TD CLASS="td_label">As of:</TD>	<TD><?php print fac_format_date(strtotime($row['updated'])); ?></TD></TR>
 <?php
 		if (my_is_float($lat)) {
@@ -2570,7 +2754,16 @@ var buttons_html = "";
 			true);		
 </script>
 
-			<!-- 1408 -->
+			<!-- 9/10/13 File List -->
+			<SPAN id='s_fl' class='plain' style='position: fixed; top: 10px; right: 0px; height: 20px; width: 100px; font-size: 1.2em; float: right;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick="$('file_list').style.display= 'block'; $('s_fl').style.display='none'; $('h_fl').style.display='inline-block';">Files</SPAN>
+			<DIV id='file_list' style='position: fixed; right: 10px; top: 10px; width: 400px; height: 600px; border: 2px outset #707070; text-align: center; display: none;'>
+				<SPAN id='h_fl' class='plain' style='float: right;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick="$('file_list').style.display= 'none'; $('h_fl').style.display='none'; $('s_fl').style.display='inline-block';">Hide</SPAN>
+				<DIV class='heading' style='text-align: center;'>FILE LIST</DIV><BR />
+				<SPAN id='nf_but' class='plain' style='float: none;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick='file_window(<?php print $id;?>);'>Add file</SPAN><BR /><BR />
+				<DIV id='the_file_list' style='width: 100%; height: 100%; overflow-y: auto; text-align: left;'></DIV>
+			</DIV>
+			<!-- 9/10/13 File List -->			
+
 			<A NAME="bottom" /> 
 			<DIV ID='to_top' style="position:fixed; bottom:50px; left:50px; height: 12px; width: 10px;" onclick = "location.href = '#top';"><IMG SRC="markers/up.png"  BORDER=0></div>			
 			</BODY>

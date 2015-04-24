@@ -573,6 +573,12 @@ if((array_key_exists('func', $_REQUEST)) && ($_REQUEST['func'] == "do_db")) {	//
 		$query = "DELETE FROM `$GLOBALS[mysql_prefix]assigns` WHERE `ticket_id` = " . quote_smart($frm_ticket_id) . " AND `responder_id` = 0 LIMIT 1";
 		$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
 
+							//	Automatic Status Update by Dispatch Status
+		$use_status_update = get_variable('use_disp_autostat');		//	9/10/13
+		if($use_status_update == "1") {		//	9/10/13
+			auto_disp_status(1, $assigns[$i]);
+			}
+		
 							// apply status update to unit status
 
 		$query = "SELECT `id`, `contact_via`, `smsg_id` FROM `$GLOBALS[mysql_prefix]responder` WHERE `id` = " . quote_smart($assigns[$i])  ." LIMIT 1";		// 10/7/08

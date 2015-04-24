@@ -491,6 +491,17 @@ function get_setting_help($setting){/* get help for settings */
 		case "auto_refresh": 			return "Do/don&#39;t (1/0) Automatic refresh for Sit scr, Full scr, Mobile; slash-separated, with 1 = Yes.  (Default is 1/1/1.)";	 break;	// 5/21/2013	
 		case "broadcast": 				return "Do/don&#39;t (1/0) use &#39;broadcast to other users&#39; - aka HAS, for Hello-All-Stations  (Default is 0, for \"No\")";	 break;	// 5/21/2013	
 		case "hide_booked": 			return "Booked/scheduled runs don&#39;t appear on the situation screen until they are this-many hours from 'now'.  (Default is 48 hours.)";	 break;	// 5/21/2013	
+		case "use_responder_mobile": 	return "Use Responder Mobile (rm) page - provides for auto redirect to mobile page for smartphone devices";	 break;	// 9/10/13	
+		case "responder_mobile_tracking": 	return "Use inbuilt tracking from Responder Mobile (rm) page. 0 is switched off, a positive whole number is the number of minutes between updates.";	 break;	// 9/10/13	
+		case "local_maps": 			return "Use local maps (OSM) for Responder Mobile (rm) page. Requires download of map tiles from config page";	 break;	// 9/10/13	
+		case "cloudmade_api": 			return "Cloudmade API code. Used to provide night mode on Responder Mobile (rm) page.";	 break;	// 9/10/13	
+		case "responder_mobile_forcelogin": 			return "Booked/scheduled runs don&#39;t appear on the situation screen until they are this-many hours from 'now'.  (Default is 48 hours.)";	 break;	// 9/10/13	
+		case "use_disp_autostat": 		return "Use Automatic Status updates for Responder status based on changes in ispatch status - Needs setup through config page.";	 break;	// 9/10/13	
+		case "portal_contact_email": 	return "Contact Us email address that appears on the Portal Page";	 break;	// 9/10/13	
+		case "portal_contact_phone": 	return "Contact Us phone number that appears on the Portal Page.";	 break;	// 9/10/13	
+		case "notify_facilities": 		return "Do Notifies to specified address / address list when Receiving Facility or Incident at Facility set.";	 break;	// 9/10/13	
+		case "notify_in_types": 		return "Do Notifies to specified address for a particular incident type.";	 break;	// 9/10/13	
+		case "warn_proximity": 			return "For Location Warnings - proximity of warnings selected for current location";	 break;	// 9/10/13	
 		default: 						return "No help for '$setting'"; break;	//	 ics_top
 		}
 	}

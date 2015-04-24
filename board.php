@@ -375,7 +375,7 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 		var method = (postData) ? "POST" : "GET";
 //		req.open(method,url,true);
 		req.open(method,url,false);		// synchronous, 7/27/09
-		req.setRequestHeader('User-Agent','XMLHTTP/1.0');
+////		req.setRequestHeader('User-Agent','XMLHTTP/1.0');
 		if (postData)
 			req.setRequestHeader('Content-type','application/x-www-form-urlencoded');
 		req.onreadystatechange = function () {
@@ -2346,6 +2346,7 @@ setTimeout('do_post()', 1000);
 			$query .=  " WHERE `id` = " . quote_smart($_POST['frm_id']) . " LIMIT 1";		// 5/26/11
 
 			$result	= mysql_query($query) or do_error($query,'',mysql_error(), basename( __FILE__), __LINE__);
+			
 //						generate log entry for each changed event - 10/20/12
 			$as_query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE `id` = " . quote_smart($_POST['frm_id']) . " LIMIT 1";
 			$as_result	= mysql_query($as_query) or do_error($as_query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);

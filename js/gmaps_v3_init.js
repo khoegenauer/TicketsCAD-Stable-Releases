@@ -1,5 +1,6 @@
 /*
 1/11/2013 - initial release
+7/3/2013 removed disfunctional 'zoom_changed' listener
 */
 //	gmaps_v3_init(call_back, map_obj, 'map_canvas', ...
 

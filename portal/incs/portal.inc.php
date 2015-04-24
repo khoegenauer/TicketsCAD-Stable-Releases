@@ -12,7 +12,7 @@ function get_status_selection($the_id, $status_val_in) {					// returns select l
 	$guest = is_guest();
 	$dis = ($guest)? " DISABLED": "";								// 9/17/08
 	if($row['status'] == 'Tentative') {
-		$the_values = array();
+		$the_values = array('Tentative','Accepted','Resourced','Complete','Declined','Closed');
 		} elseif($row['status'] == 'Accepted') {
 		$the_values = array('Accepted','Resourced','Complete','Declined','Closed');
 		} elseif($row['status'] == 'Resourced') {	
@@ -21,10 +21,11 @@ function get_status_selection($the_id, $status_val_in) {					// returns select l
 		$the_values = array('Complete','Declined','Closed');		
 		} elseif($row['status'] == 'Declined') {
 		$the_values = array('Declined','Closed');	
+		} elseif($row['status'] == 'Closed') {
+		$the_values = array('Closed');	
 		} else {
-		$the_values = array();	
+		$the_values = array("{$row['status']}");	
 		}
-//	$the_values = array('Open','Tentative','Accepted','Resourced','Complete','Declined','Closed');
 	$outstr = "<SELECT id='frm_status_" . $the_id . "' name='frm_status_id' {$dis} style='font-size: .9em; width: 100%;' ONCHANGE = 'do_sel_update({$the_id}, this.value)' >";
 	foreach($the_values AS $val) {
 		$sel = ($row['status'] == $val)? " SELECTED": "";
