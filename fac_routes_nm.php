@@ -310,7 +310,6 @@ if (!empty($_POST)) {
 		if (!req) return;
 		var method = (postData) ? "POST" : "GET";
 		req.open(method,url,true);
-		req.setRequestHeader('User-Agent','XMLHTTP/1.0');
 		if (postData)
 			req.setRequestHeader('Content-type','application/x-www-form-urlencoded');
 		req.onreadystatechange = function () {
@@ -635,7 +634,6 @@ require_once('./incs/links.inc.php');
 		if (!req) return;
 		var method = (postData) ? "POST" : "GET";
 		req.open(method,url,true);
-		req.setRequestHeader('User-Agent','XMLHTTP/1.0');
 		if (postData)
 			req.setRequestHeader('Content-type','application/x-www-form-urlencoded');
 		req.onreadystatechange = function () {

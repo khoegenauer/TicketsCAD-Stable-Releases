@@ -14,7 +14,13 @@ $in_win = array_key_exists ("mode", $_GET);		// in
 
 if($istest) {print "_GET"; dump($_GET);}
 if($istest) {print "_POST"; dump($_POST);}
+$the_level = (isset($_SESSION['level'])) ? $_SESSION['level'] : 0 ;
 
+$query = "SELECT * FROM `$GLOBALS[mysql_prefix]states_translator`";
+$result	= mysql_query($query);
+while ($row = stripslashes_deep(mysql_fetch_assoc($result))){	
+	$states[$row['name']] = $row['code'];
+	}
 /*
 10/28/07 added onLoad = "document.add.frm_lat.disabled..
 11/38/07 added frame jump prevention
@@ -499,6 +505,10 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 			<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript" />
 			<META HTTP-EQUIV="Script-date" CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>" /> <!-- 7/7/09 -->
 			<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">	<!-- 3/15/11 -->
+			<link rel="stylesheet" href="./js/leaflet/leaflet.css" />
+			<!--[if lte IE 8]>
+				 <link rel="stylesheet" href="./js/leaflet/leaflet.ie.css" />
+			<![endif]-->
 			<SCRIPT SRC="./js/misc_function.js" TYPE="text/javascript"></SCRIPT>	<!-- 9/14/12 -->
 			<SCRIPT SRC="./js/jscolor/jscolor.js"></SCRIPT>	<!-- 9/14/12 -->
 		<SCRIPT>
@@ -634,110 +644,65 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 <META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE" />
 <META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE" />
 <META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript" />
-<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">			<!-- 3/15/11 -->
-    <STYLE TYPE="text/css">
-	#suggest{background:#fff; width:150px;	}
-	#suggest div{ background:#ddd; color:#000; padding-left:4px; cursor:hand; text-align:left;position:relative;	}
-	#suggest div.over{ color:#000; background:#fff;	}
-    </STYLE>
-
-
-<?php
-	if (($gmaps) && (!($in_win))) {
-		$api_key = get_variable('gmaps_api_key');
-		$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : "";
-	if((array_key_exists('HTTPS', $_SERVER)) && ($_SERVER['HTTPS'] == 'on')) {
-		$gmaps_url =  "https://maps.google.com/maps/api/js?" . $key_str . "sensor=false";
-		} else {
-		$gmaps_url =  "http://maps.google.com/maps/api/js?" . $key_str . "sensor=false";
-		}
-?>	
-<SCRIPT TYPE="text/javascript" SRC="<?php print $gmaps_url;?>"></SCRIPT>
-<script type="text/javascript" src="./js/geoxml_v3.js"></script>
-<SCRIPT SRC="./js/graticule_V3.js" type="text/javascript"></SCRIPT>
-<SCRIPT SRC="./js/gmaps_v3_init.js"	TYPE="text/javascript" ></SCRIPT>
-<?php
-		}
-?>	
-<SCRIPT SRC="./js/usng.js" TYPE="text/javascript"></SCRIPT>
-<SCRIPT SRC='./js/jscoord.js' TYPE="text/javascript"></SCRIPT>			<!-- coordinate conversion 12/10/10 -->	
-<SCRIPT  SRC="./js/lat_lng.js" TYPE="text/javascript"></SCRIPT>	<!-- 11/8/11 -->
-<SCRIPT  SRC="./js/geotools2.js" TYPE="text/javascript"></SCRIPT>	<!-- 11/8/11 -->
-<SCRIPT  SRC="./js/osgb.js" TYPE="text/javascript"></SCRIPT>	<!-- 11/8/11 -->	
-<SCRIPT SRC="./js/misc_function.js" TYPE="text/javascript"></SCRIPT> 	<!-- 7/22/10 -->
+<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">
+<link rel="stylesheet" href="./js/leaflet/leaflet.css" />
+<!--[if lte IE 8]>
+	 <link rel="stylesheet" href="./js/leaflet/leaflet.ie.css" />
+<![endif]-->
+<STYLE TYPE="text/css">
+#suggest{background:#fff; width:150px;	}
+#suggest div{ background:#ddd; color:#000; padding-left:4px; cursor:hand; text-align:left;position:relative;	}
+#suggest div.over{ color:#000; background:#fff;	}
+.disp_stat	{ FONT-WEIGHT: bold; FONT-SIZE: 9px; COLOR: #FFFFFF; BACKGROUND-COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif;}
+table.cruises { font-family: verdana, arial, helvetica, sans-serif; font-size: 11px; cellspacing: 0; border-collapse: collapse; }
+table.cruises td {overflow: hidden; }
+div.scrollableContainer { position: relative; padding-top: 2em; border: 1px solid #999; }
+div.scrollableContainer2 { position: relative; padding-top: 2em; }
+div.scrollingArea { max-height: 240px; overflow: auto; overflow-x: hidden; }
+div.scrollingArea2 { max-height: 480px; overflow: auto; overflow-x: hidden; }
+table.scrollable thead tr { left: -1px; top: 0; position: absolute; }
+table.cruises th { text-align: left; border-left: 1px solid #999; background: #CECECE; color: black; font-weight: bold; overflow: hidden; }
+.olPopupCloseBox{background-image:url(img/close.gif) no-repeat;cursor:pointer;}	
+</STYLE>
+<SCRIPT TYPE="text/javascript" SRC="./js/misc_function.js"></SCRIPT>
 <SCRIPT SRC="./js/suggest.js" TYPE="text/javascript"></SCRIPT>			<!-- 2/20/11 -->
-
-
+<SCRIPT TYPE="text/javascript" SRC="./js/domready.js"></script>
+<SCRIPT SRC="./js/messaging.js" TYPE="text/javascript"></SCRIPT>
+	<script src="./js/proj4js.js"></script>
+	<script src="./js/proj4-compressed.js"></script>
+	<script src="./js/leaflet/leaflet.js"></script>
+	<script src="./js/proj4leaflet.js"></script>
+	<script src="./js/leaflet/KML.js"></script>  
+	<script src="./js/leaflet-openweathermap.js"></script>
+	<script src="./js/esri-leaflet.js"></script>
+	<script src="./js/OSOpenspace.js"></script>
+	<script src="./js/Control.Geocoder.js"></script>
+	<SCRIPT SRC="./js/usng.js" TYPE="text/javascript"></SCRIPT>
+	<SCRIPT SRC='./js/jscoord.js' TYPE="text/javascript"></SCRIPT>			<!-- coordinate conversion 12/10/10 -->	
+	<SCRIPT SRC="./js/lat_lng.js" TYPE="text/javascript"></SCRIPT>	<!-- 11/8/11 -->
+	<SCRIPT SRC="./js/geotools2.js" TYPE="text/javascript"></SCRIPT>	<!-- 11/8/11 -->
+	<SCRIPT SRC="./js/osgb.js" TYPE="text/javascript"></SCRIPT>	<!-- 11/8/11 -->	
+	<script type="text/javascript" src="./js/osm_map_functions.js.php"></script>
+	<script type="text/javascript" src="./js/L.Graticule.js"></script>
+	<script type="text/javascript" src="./js/leaflet-providers.js"></script>
 <SCRIPT>
-
+	var protocols = new Array();		// 7/7/09
+	var states_arr = <?php echo json_encode($states); ?>;
 	function get_new_colors() {				// 5/4/11
 		window.location.href = '<?php print basename(__FILE__);?>';
 		}
-
-	function ck_frames() {		// onLoad = "ck_frames()"
-<?php if ($in_win) {echo "\n\t\t return;\n"; }?>	
-		if(self.location.href==parent.location.href) {
-			self.location.href = 'index.php';
-			}
-/*	document.onkeypress=function(e){
-		 var e=window.event || e
-		 alert("CharCode value: "+e.charCode)
-		 alert("Character: "+String.fromCharCode(e.charCode))
-		}		
-*/
-		}		// end function ck_frames()
-
+<?php
+	if(!$in_win) {
+?>
 	parent.frames["upper"].$("whom").innerHTML  = "<?php print $_SESSION['user'];?>";
 	parent.frames["upper"].$("level").innerHTML = "<?php print get_level_text($_SESSION['level']);?>";
 	parent.frames["upper"].$("script").innerHTML  = "<?php print LessExtension(basename( __FILE__));?>";
-
+<?php
+		}
+?>
 	var lat_lng_frmt = <?php print get_variable('lat_lng'); ?>;				// 9/9/08		
-
-	function $() {									// 2/11/09
-		var elements = new Array();
-		for (var i = 0; i < arguments.length; i++) {
-			var element = arguments[i];
-			if (typeof element == 'string')
-				element = document.getElementById(element);
-			if (arguments.length == 1)
-				return element;
-			elements.push(element);
-			}
-		return elements;
-		}
-	function isNullOrEmpty(str) {
-		if (null == str || "" == str) {return true;} else { return false;}
-		}
 	var starting = false;
 
-	function sv_win(theForm) {				// 2/11/09
-		if(starting) {return;}				// dbl-click proof
-		starting = true;					
-
-		var thelat = theForm.frm_lat.value;
-		var thelng = theForm.frm_lng.value;
-		var url = "street_view.php?thelat=" + thelat + "&thelng=" + thelng;
-		newwindow_sl=window.open(url, "sta_log",  "titlebar=no, location=0, resizable=1, scrollbars, height=450,width=640,status=0,toolbar=0,menubar=0,location=0, left=100,top=300,screenX=100,screenY=300");
-		if (!(newwindow_sl)) {
-			alert ("Street view operation requires popups to be enabled. Please adjust your browser options - or else turn off the Call Board option.");
-			return;
-			}
-		newwindow_sl.focus();
-		starting = false;
-		}		// end function sv win()
-
-
-	String.prototype.trim = function () {
-		return this.replace(/^\s*(\S*(\s+\S+)*)\s*$/, "$1");
-		};
-	
-	function chknum(val) { 
-		return ((val.trim().replace(/\D/g, "")==val.trim()) && (val.trim().length>0));}
-	
-	function chkval(val, lo, hi) { 
-		return  (chknum(val) && !((val> hi) || (val < lo)));}
-	
-	
 	starting=false;						// 12/16/09
 	function do_hist_win() {
 		if(starting) {return;}	
@@ -763,72 +728,6 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 		starting = false;
 		}		// function do hist_win()
 			
-	function do_coords(inlat, inlng) { 										 //9/14/08
-		if((inlat.length==0)||(inlng.length==0)) {return;}
-		var str = inlat + ", " + inlng + "\n";
-		str += ll2dms(inlat) + ", " +ll2dms(inlng) + "\n";
-		str += lat2ddm(inlat) + ", " +lng2ddm(inlng);		
-		alert(str);
-		}
-
-	function ll2dms(inval) {				// lat/lng to degr, mins, sec's - 9/9/08
-		var d = new Number(Math.abs(inval));
-		d  = Math.floor(d);
-		var mi = (Math.abs(inval)-d)*60;	// fraction * 60
-		var m = Math.floor(mi)				// min's as fraction
-		var si = (mi-m)*60;					// to sec's
-		var s = si.toFixed(1);
-		return d + '\260 ' + Math.abs(m) +"' " + Math.abs(s) + '"';
-		}
-
-	function lat2ddm(inlat) {				//  lat to degr, dec.min's - 9/9/089/7/08
-		var x = new Number(Math.abs(inlat));
-		var degs  = Math.floor(x);				// degrees
-		var mins = ((Math.abs(x-degs)*60).toFixed(1));
-		var nors = (inlat>0.0)? " N":" S";
-		return degs + '\260'  + mins +"'" + nors;
-		}
-	
-	function lng2ddm(inlng) {				//  lng to degr, dec.min's - 9/9/089/7/08
-		var x = new Number(Math.abs(inlng));
-		var degs  = Math.floor(x);				// degrees
-		var mins = ((Math.abs(x-degs)*60).toFixed(1));
-		var eorw = (inlng>0.0)? " E":" W";
-		return degs + '\260' + mins +"'" + eorw;
-		}
-
-	function do_lat_fmt(inlat) {				// 9/9/08
-		switch(lat_lng_frmt) {
-			case 0:
-				return inlat;
-			  	break;
-			case 1:
-				return ll2dms(inlat);
-			  	break;
-			case 2:
-				return lat2ddm(inlat);
-			 	break;
-			default:
-				alert ( "error <?php print __LINE__;?>");
-			}	
-		}
-
-	function do_lng_fmt(inlng) {
-		switch(lat_lng_frmt) {
-			case 0:
-				return inlng;
-			  	break;
-			case 1:
-				return ll2dms(inlng);
-			  	break;
-			case 2:
-				return lng2ddm(inlng);
-			 	break;
-			default:
-				alert ("error <?php print __LINE__;?>");
-			}	
-		}
-
 	function writeConsole(content) {
 		top.consoleRef=window.open('','myconsole',
 			'width=800,height=250' +',menubar=0' +',toolbar=0' +',status=0' +',scrollbars=1' +',resizable=1')
@@ -842,196 +741,12 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 		return window.screen.width + ' x ' + window.screen.height;
 		}
 
-	var map;						// note globals
-//	var geocoder = null;
-//	var rev_coding_on;	// 11/01/09
-//	geocoder = new GClientGeocoder();
 	var request;
-//	var querySting;   				// will hold the POSTed data
 	var tab1contents				// info window contents - first/only tab
 	var thePoint;
 	var baseIcon;
 	var cross;
 	
-	var grid_bool = false;		
-	function toglGrid() {						// toggle
-		grid_bool = !grid_bool;
-		if (grid_bool)	{ grid = new Graticule(map); }
-		else 			{ grid.setMap(null); }
-		}		// end function toglGrid()
-
-	function clearmap(){
-<?php
-	if ((!($gmaps)) || ($in_win)) {
-		print "\n\t return;\n";
-		}
-?>
-//		map.clearOverlays();
-		load(<?php echo get_variable('def_lat'); ?>, <?php echo get_variable('def_lng'); ?>, <?php echo get_variable('def_zoom'); ?>);
-//		if (grid) {map.addOverlay(new LatLonGraticule());}
-		}
-	
-	function do_marker(lat, lng, zoom) {		// 9/16/08 - 12/6/08
-		map.clearOverlays();
-		var center = isNullOrEmpty(lat)?  GLatLng(map.getCenter()) : new GLatLng(lat, lng);
-		var myzoom = isNullOrEmpty(zoom)? map.getZoom(): zoom;
-		map.setCenter(center, myzoom);
-		thisMarker  = new google.maps.Marker(center, {icon: cross});				// 9/16/08
-		thisMarker.setMap(map);
-		}
-		
-
-//										some globals		
-		var map = null;				// the map object - note GLOBAL
-		var myMarker;					// the marker object
-		var lat_var;					// see init.js
-		var lng_var;
-		var zoom_var;
-
-		var icon_file = "./markers/crosshair.png";
-	
-	function load(the_lat, the_lng, the_zoom) {				// onLoad function - 4/28/09
-<?php
-	if ((!($gmaps)) || ($in_win)) {
-		print "\n\t return;\n";
-		}
-?>	
-
-	function call_back (in_obj){				// callback function - from gmaps_v3_init()
-		do_lat(in_obj.lat);			// set form values
-		do_lng(in_obj.lng);
-		do_ngs();	
-		$("do_sv").style.display = "block";				// show streetview link	
-<?php								// 6/2/2013
-	if (intval(get_variable('reverse_geo'))==1) {
-?>
-		if (do_rev_geo) {
-		codeLatLng (in_obj.lat, in_obj.lng);				// 6/2/2013
-			}
-		else {
-			do_rev_geo = true;		
-			}
-<?php
-		}	// end 'reverse_geo'?
-?>
-		}			// end callback function
-
-		map = gmaps_v3_init(call_back, 'map_canvas', 
-			<?php echo get_variable('def_lat');?>, 
-			<?php echo get_variable('def_lng');?>, 
-			<?php echo get_variable('def_zoom');?>, 
-			icon_file, 
-			<?php echo get_variable('maptype');?>, 
-			false);		
-<?php 		
-			do_kml();
-?>
-		var do_rev_geo = true;
-
-		}			// end function load()
-
-	function URLEncode(plaintext ) {					// The Javascript escape and unescape functions do
-														// NOT correspond with what browsers actually do...
-		var SAFECHARS = "0123456789" +					// Numeric
-						"ABCDEFGHIJKLMNOPQRSTUVWXYZ" +	// Alphabetic
-						"abcdefghijklmnopqrstuvwxyz" +	// guess
-						"-_.!~*'()";					// RFC2396 Mark characters
-		var HEX = "0123456789ABCDEF";
-	
-		var encoded = "";
-		for (var i = 0; i < plaintext.length; i++ ) {
-			var ch = plaintext.charAt(i);
-		    if (ch == " ") {
-			    encoded += "+";				// x-www-urlencoded, rather than %20
-			} else if (SAFECHARS.indexOf(ch) != -1) {
-			    encoded += ch;
-			} else {
-			    var charCode = ch.charCodeAt(0);
-				if (charCode > 255) {
-				    alert( "Unicode Character '"
-	                        + ch
-	                        + "' cannot be encoded using standard URL encoding.\n" +
-					          "(URL encoding only supports 8-bit characters.)\n" +
-							  "A space (+) will be substituted." );
-					encoded += "+";
-				} else {
-					encoded += "%";
-					encoded += HEX.charAt((charCode >> 4) & 0xF);
-					encoded += HEX.charAt(charCode & 0xF);
-					}
-				}
-			} 			// end for(...)
-		return encoded;
-		};			// end function
-	
-	function URLDecode(encoded ){   					// Replace + with ' '
-	   var HEXCHARS = "0123456789ABCDEFabcdef";  		// Replace %xx with equivalent character
-	   var plaintext = "";   							// Place [ERROR] in output if %xx is invalid.
-	   var i = 0;
-	   while (i < encoded.length) {
-	       var ch = encoded.charAt(i);
-		   if (ch == "+") {
-		       plaintext += " ";
-			   i++;
-		   } else if (ch == "%") {
-				if (i < (encoded.length-2)
-						&& HEXCHARS.indexOf(encoded.charAt(i+1)) != -1
-						&& HEXCHARS.indexOf(encoded.charAt(i+2)) != -1 ) {
-					plaintext += unescape( encoded.substr(i,3) );
-					i += 3;
-				} else {
-					alert( '-- invalid escape combination near ...' + encoded.substr(i) );
-					plaintext += "%[ERROR]";
-					i++;
-				}
-			} else {
-				plaintext += ch;
-				i++;
-				}
-		} 				// end  while (...)
-		return plaintext;
-		};				// end function URLDecode()
-	
-	function do_lat (lat) {
-		document.add.frm_lat.value=lat;			// 9/9/08
-		document.add.show_lat.disabled=false;				// permit read/write
-		document.add.show_lat.value=do_lat_fmt(document.add.frm_lat.value);
-		document.add.show_lat.disabled=true;
-		}
-	function do_lng (lng) {
-		document.add.frm_lng.value=lng;
-		document.add.show_lng.disabled=false;
-		document.add.show_lng.value=do_lng_fmt(document.add.frm_lng.value);
-		document.add.show_lng.disabled=true;
-		}
-
-	function do_ngs() {											// LL to USNG - 6/2/2013
-		var loc = <?php print get_variable('locale');?>;
-		document.forms[0].frm_ngs.disabled=false;
-		if(loc == 0) { document.forms[0].frm_ngs.value = LLtoUSNG(document.forms[0].frm_lat.value, document.forms[0].frm_lng.value, 5);			}
-		if(loc == 1) { document.forms[0].frm_ngs.value = LLtoOSGB(document.forms[0].frm_lat.value, document.forms[0].frm_lng.value);			}
-		if(loc == 2) { document.forms[0].frm_ngs.value = LLtoOSGB(document.forms[0].frm_lat.value, document.forms[0].frm_lng.value);			}			
-		document.forms[0].frm_ngs.disabled=true;
-		}
-
-	function do_grids(theForm) {								// 12/13/10
-<?php															// 1/24/11
-			$locale = intval(trim(get_variable("locale"))); 
-			switch($locale) { 
-				case "0":
-					echo "\n\t\t do_usng(theForm);\n";
-					break;
-			
-				case "1":
-					echo "\n\t\t do_osgb(theForm);\n";
-
-
-					break;
-				default:																	// 8/10/09
-					echo "\n\t\t do_utm(theForm);\n";
-				}		// end switch
-?>
-		}
 	function do_usng(theForm) {								// 8/23/08, 12/5/10
 		theForm.frm_ngs.value = LLtoUSNG(theForm.frm_lat.value, theForm.frm_lng.value, 5);	// US NG
 		}
@@ -1073,46 +788,6 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 
 // *********************************************************************
 	var the_form;
-	function sendRequest(my_form, url,callback,postData) {		// ajax function set - 1/17/09
-		the_form = my_form;
-		var req = createXMLHTTPObject();
-		if (!req) return;
-		var method = (postData) ? "POST" : "GET";
-		req.open(method,url,true);
-		if (postData)
-			req.setRequestHeader('Content-type','application/x-www-form-urlencoded');
-		req.onreadystatechange = function () {
-			if (req.readyState != 4) return;
-			if (req.status != 200 && req.status != 304) {
-				alert('<?php print __LINE__;?>: HTTP error ' + req.status);
-				return;
-				}
-			callback(req);
-			}
-		if (req.readyState == 4) return;
-		req.send(postData);
-		}
-	
-	var XMLHttpFactories = [
-		function () {return new XMLHttpRequest()	},
-		function () {return new ActiveXObject("Msxml2.XMLHTTP")	},
-		function () {return new ActiveXObject("Msxml3.XMLHTTP")	},
-		function () {return new ActiveXObject("Microsoft.XMLHTTP")	}
-		];
-	
-	function createXMLHTTPObject() {
-		var xmlhttp = false;
-		for (var i=0;i<XMLHttpFactories.length;i++) {
-			try {
-				xmlhttp = XMLHttpFactories[i]();
-				}
-			catch (e) {
-				continue;
-				}
-			break;
-			}
-		return xmlhttp;
-		}
 
 // "Juan Wzzzzz;(123) 456-9876;1689 Abcd St;Abcdefghi;MD;16701;99.013297;-88.544775;"
 //  1           2              3            4         5  6     7         8
@@ -1140,7 +815,6 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 				$('td_misc').innerHTML = '&nbsp;' + result[9].trim();
 				$('tr_misc').style.display='';
 				pt_to_map (the_form, result[7].trim(), result[8].trim());				// 1/19/09
-				$("do_sv").style.display = "block";				// street view possible 2/11/09			
 				}
 			else if ((result[3].length>0) && (result[4].length>0) && (result[5].length>0)) {		// 4/27/10
 				loc_lkup(the_form);				
@@ -1164,55 +838,40 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 		}
 		
 // *********************************************************************
-	function pt_to_map (my_form, lat, lng) {						// 7/5/10
-		if(myMarker) { myMarker.setMap(null);}			// destroy predecessor
-			my_form.frm_lat.value=lat;	
-			my_form.frm_lng.value=lng;		
-			
-		my_form.show_lat.value=do_lat_fmt(lat);
-		my_form.show_lng.value=do_lng_fmt(lng);
-			
-		var loc = <?php print get_variable('locale');?>;
-		if(loc == 0) { my_form.frm_ngs.value=LLtoUSNG(lat, lng, 5); }
-		if(loc == 1) { my_form.frm_ngs.value=LLtoOSGB(lat, lng, 5); }
-		if(loc == 2) { my_form.frm_ngs.value=LLtoUTM(lat, lng, 5); }
-	
-		map.setCenter(new google.maps.LatLng(lat, lng), <?php print get_variable('def_zoom');?>);
-
-		var iconImg = new Image();														// obtain icon dimensions
-		iconImg.src ='./markers/crosshair.png';
-		myIcon.anchor= new google.maps.Point(iconImg.width/2, iconImg.height/2);		// 8/11/12 - center offset = half icon width and height
-		var dp_latlng = new google.maps.LatLng(lat, lng);
-
-		var myMarker = new google.maps.Marker({
-			position: dp_latlng,
-			icon: myIcon, 
-			draggable: true,
-			map: map
-			});
-		myMarker.setMap(map);		// add marker with icon
-			}				// end function pt_to_map ()
-		
-	function loc_lkup(my_form) {		   						// 7/5/10
-		if (!geocoder) {return;}		// no maps
-		if ((my_form.frm_city.value.trim()==""  || my_form.frm_state.value.trim()=="")) {
-			alert ("City and State are required for location lookup.");
-			return false;
+	function contains(array, item) {
+		for (var i = 0, I = array.length; i < I; ++i) {
+			if (array[i] == item) return true;
 			}
-
-		var myAddress = my_form.frm_street.value.trim() + ", " +my_form.frm_city.value.trim() + " "  +my_form.frm_state.value.trim();
-
-		geocoder.geocode( { 'address': myAddress}, function(results, status) {		
-			if (status == google.maps.GeocoderStatus.OK)	{
-//				myMarker.setMap(null);									// clear existing/default icon 
-
-				pt_to_map (my_form, results[0].geometry.location.lat(), results[0].geometry.location.lng());
-				var tick_lat = results[0].geometry.location.lat();	//	8/14/13
-				var tick_lng = results[0].geometry.location.lng();	//	8/14/13
-				}					
-			else 											{ alert("Geocode lookup failed: " + status);}
-			});				// end geocoder.geocode()
-		}				// end function loc_lkup()
+		return false;
+		}
+			
+	function do_lat (lat) {							// 9/14/08
+		document.forms[0].frm_lat.value=lat.toFixed(6);			// 9/9/08
+		document.forms[0].show_lat.disabled=false;
+		document.forms[0].show_lat.value=do_lat_fmt(document.forms[0].frm_lat.value);
+		document.forms[0].show_lat.disabled=true;
+		}
+	function do_lng (lng) {
+		document.forms[0].frm_lng.value=lng.toFixed(6);			// 9/9/08
+		document.forms[0].show_lng.disabled=false;
+		document.forms[0].show_lng.value=do_lng_fmt(document.forms[0].frm_lng.value);
+		document.forms[0].show_lng.disabled=true;
+		}
+			
+	function do_ngs() {											// LL to USNG
+		var loc = <?php print get_variable('locale');?>;
+		document.forms[0].frm_ngs.disabled=false;
+		if(loc == 0) {
+			document.forms[0].frm_ngs.value = LLtoUSNG(document.forms[0].frm_lat.value, document.forms[0].frm_lng.value, 5);
+			}
+		if(loc == 1) {
+			document.forms[0].frm_ngs.value = LLtoOSGB(document.forms[0].frm_lat.value, document.forms[0].frm_lng.value);
+			}
+		if(loc == 2) {
+			document.forms[0].frm_ngs.value = LLtoOSGB(document.forms[0].frm_lat.value, document.forms[0].frm_lng.value);
+			}			
+		document.forms[0].frm_ngs.disabled=true;
+			}
 
 	function find_warnings(tick_lat, tick_lng) {	//	9/10/13
 		randomnumber=Math.floor(Math.random()*99999999);
@@ -1279,106 +938,14 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 		return xmlhttp;
 		}
 
-	var geocoder;		// 4/7/2014
-<?php
-	if ($gmaps)  {		// 6/4/2013
-?>
-
-// **************************************************** Reverse Geocoder 10/13/09, 7/5/10
-
-	geocoder = new google.maps.Geocoder();
-	var address;
-	var rev_coding_on = '<?php print get_variable('reverse_geo');?>';		// 7/5/10	
-		
-	function codeLatLng(lat, lng) {
-		var latlng = new google.maps.LatLng(parseFloat(lat), parseFloat(lng));
-		geocoder.geocode({'latLng': latlng}, function(results, status) {
-			if (status == google.maps.GeocoderStatus.OK) {
-				if (results[1]) {
-				var addr_pieces = results[0].formatted_address.split(",");				
-				switch (addr_pieces.length) {
-					case 1:
-						document.add.frm_street.value = document.add.frm_city.value = "";				// state or country
-						document.add.frm_state.value=addr_pieces[0].substring(0,5).trim() ;			// state or country
-						break;
-				
-					case 2:
-						document.add.frm_street.value = "";					
-						document.add.frm_city.value=addr_pieces[0].substring(0,33).trim() ;			// city
-						var temp = addr_pieces[1].substring(0,5).trim().split(" ");					// zipcode
-						document.add.frm_state.value=temp[0].substring(0,5).trim() ;				// state or country	
-						break;
-				
-					case 3:
-						document.add.frm_street.value=addr_pieces[0].substring(0,97).trim() ;		// street
-						document.add.frm_city.value=addr_pieces[1].substring(0,33).trim() ;			// city
-						var temp = addr_pieces[2].substring(0,5).trim().split(" ");					// zipcode
-						document.add.frm_state.value=temp[0].substring(0,5).trim() ;				// state or country
-						break;
-				
-					default:
-						document.add.frm_street.value=addr_pieces[0].substring(0,97).trim() ;							// street
-						document.add.frm_city.value=addr_pieces[(addr_pieces.length-3)].substring(0,33).trim() ;		// city
-						var temp = addr_pieces[(addr_pieces.length-2)].substring(0,5).trim().split(" ");				// zipcode
-						if (temp.length == 2) {
-							document.add.frm_city.value=addr_pieces[(addr_pieces.length-3)].substring(0,33).trim() ;	// city						
-							document.add.frm_state.value=temp[0].substring(0,5).trim() ;								// US state							
-							}
-						else {
-							var the_city = addr_pieces[(addr_pieces.length-3)] + ", " + addr_pieces[(addr_pieces.length-2)] ;
-							document.add.frm_city.value=the_city.substring(0,33).trim() ;								// city						
-							document.add.frm_state.value=addr_pieces[(addr_pieces.length-1)].substring(0,5).trim()		// country							
-							}
-					}				// end switch
-				}
-			} else { alert("Geocoder lookup failed due to: " + status); }
-		});
-	}				// end function
-	
-
-
-	function getAddress(overlay, latlng) {		//7/5/10
-//		if (rev_coding_on == 1) {	
-//			alert(1076);
-			if (latlng != null) {
-
-				geocoder.getLocations(latlng, function(response) {
-				map.clearOverlays();  
-				if(response.Status.code != 200) {
-					alert("<?php print __LINE__;?>: address unavailable");
-				} else { 
-
-					place = response.Placemark[0];    
-					point = new google.maps.LatLng(place.Point.coordinates[1],place.Point.coordinates[0]);
-// 					locality = response.Placemark[0].AddressDetails.Country.AdministrativeArea.SubAdministrativeArea.Locality;   5/22/11
-					marker = new google.maps.Marker(point);
-					marker.setMap(map);
-					results = pars_goog_addr(place.address);
-//																7/3/2013 - enforce size limits
-					document.add.frm_street.value = results[0].substring(0, 95);		// 7/22/10 
-					document.add.frm_city.value = results[1].substring(0, 31) ;
-					
-					document.add.frm_state.value = results[2].substring(0, 3);
-					document.add.frm_street.focus();		// 7/22/10
-					
-					}
-				});
-				}
-//			}
-		}				// end function getAddress()
-
-// *****************************************************************************
-<?php
-	}				// end if ($gmaps)  -  6/4/2013
-?>
-
 	var tbd_str = "TBD";									// 1/11/09
 	var user_inc_name = false;							// 4/21/10
+	
 	function do_inc_name(str, indx) {								// 10/4/08, 7/7/09
 <?php
-//	$inc_num_ary = unserialize (get_variable('_inc_num'));					// 2/27/11
+	
 	$temp = get_variable('_inc_num');										// 3/2/11
-//	dump(strpos($temp, '{'));
+
 	$inc_num_ary = (strpos($temp, '{')>0)?  unserialize ($temp) :  unserialize (base64_decode($temp));
 
 	if (intval($inc_num_ary[4])>0) {
@@ -1389,11 +956,9 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 <?php
 		}
 ?>		
-		if (protocols[indx]) {
-//			$('proto_row').style.display = "block";
+		if (window.protocols && window.protocols[indx]) {
 			$('proto_cell').innerHTML = protocols[indx];
-			}
-		else {
+			} else {
 			$('proto_cell').innerHTML = "";		
 			}
 		}			// end function do_inc_name()
@@ -1443,7 +1008,7 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 //		if (theForm.frm_description.value == "")	{errmsg+= "\t<?php print get_text("Synopsis");?> is required\n";}
 //		theForm.frm_lat.disabled=false;														// 9/9/08
 <?php
-	if (($gmaps) && (!($in_win))) {
+	if ($gmaps) {
 ?>
 		if ((theForm.frm_lat.value == 0) || (theForm.frm_lng.value == 0))		{errmsg+= "\tMap position is required\n";}
 <?php
@@ -1494,7 +1059,6 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 			var curr_lng = fac_lng[index];
 			do_lat(curr_lat);
 			do_lng(curr_lng);
-			load(curr_lat, curr_lng, <?php echo get_variable('def_zoom'); ?>);			// show it
 			document.add.frm_lat.disabled=true;
 			document.add.frm_lng.disabled=true;
 	}					// end function do_fac_to_loc
@@ -1544,7 +1108,6 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 		$('proto_cell').innerHTML = "";					// 8/7/10
 		$('bldg_info').innerHTML = "";					// 4/27/2014
 		theForm.reset();
-		clearmap();		
 		}		// end function reset()
 
 	function do_problemstart(theForm, theBool) {							// 8/10/08
@@ -1640,33 +1203,6 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 			}
 		}
 		
-	function do_grid_to_ll(){						// grid to LL array			- 12/4/08
-<?php
-	switch(get_variable("locale")) { 				// 4/23/11
-		case 0:										// US NG
-?>	
-			tolatlng = new Array();
-			USNGtoLL(document.add.frm_ngs.value, tolatlng);					// returns array ?
-			var point = new google.maps.LatLng(tolatlng[0].toFixed(6) ,tolatlng[1].toFixed(6));
-			map.setCenter(point, <?php echo get_variable('def_zoom'); ?>);
-	
-			var marker = new google.maps.Marker(point);
-			document.add.frm_lat.value = point.lat(); document.add.frm_lng.value = point.lng(); 	
-			do_lat (point.lat());
-			do_lng (point.lng());
-//			do_ngs_utm(document.add);
-			do_grids(document.add);			// 12/13/10
-			load(point.lat(), point.lng(), <?php echo get_variable('def_zoom'); ?>);			// show it
-<?php
-		break;
-
-		default:		// ROW
-			print "\n\t alert('Unavailable');\n;";		
-		}			// end switch($locale)
-?>
-		}				// end function
-	
-	var protocols = new Array();		// 7/7/09
 	var fac_lat = [];
 	var fac_lng = [];
 
@@ -1674,9 +1210,7 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 		alert("You can't change this value");
 		return false;
 	}
-
-
-<?php
+ <?php
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `type`= 4 AND `resource_id` = '$_SESSION[user_id]';";	//	6/10/11
 	$result = mysql_query($query);	// 4/13/11
 	$al_groups = array();
@@ -1812,25 +1346,41 @@ $cid_lat = isset($cid_lat) ? $cid_lat : ""; // 8/8/11
 $cid_lng = isset($cid_llng) ? $cid_lng : ""; // 8/8/11
 $onload_str = "load(" .  get_variable('def_lat') . ", " . get_variable('def_lng') . "," . get_variable('def_zoom') . ");";
 $onload_str .= (is_float($cid_lat))? " pt_to_map( add, {$cid_lat} ,{$cid_lng});": "";
+$do_inwin = ($in_win) ? "" : "ck_frames()";
 //dump(__LINE__);
 //dump(is_float($cid_lat));
 //dump($onload_str);
 ?>
-<BODY onLoad="ck_frames(); do_lock_pe(document.add); document.add.frm_street.focus(); <?php echo $onload_str ;?>">  <!-- <?php echo __LINE__;?> -->		<!-- // 8/23/08 -->
+<BODY onLoad="<?php print $do_inwin;?>; do_lock_pe(document.add); document.add.frm_street.focus();">  <!-- <?php echo __LINE__;?> -->		<!-- // 8/23/08 -->
 <SCRIPT TYPE="text/javascript" src="./js/wz_tooltip.js"></SCRIPT>
 <div id = 'outer' style = "position:fixed; z-index: 998;">				<!-- 2/19/11 -->
 <div id="boxB" class="box" style="left:<?php print $from_left;?>px; top:<?php print $from_top;?>px;">
   <div class="bar" STYLE="width:12em; color:red; background-color : transparent;"
        onmousedown="dragStart(event, 'boxB')"><i>&nbsp;&nbsp;&nbsp;&nbsp;Drag me</i></div>
   <div class="content" style="width:auto;">
-  		<INPUT TYPE="button" VALUE="History"  onClick="do_hist_win();" STYLE = 'margin-top: 0px;'><BR />
-  		<INPUT TYPE="button" VALUE="<?php print get_text("Cancel"); ?>"  onClick="do_cancel(document.add);" STYLE = 'margin-top:4px;'><BR />
-  		<INPUT TYPE="reset" VALUE="<?php print get_text("Reset"); ?>" onclick= " do_reset(document.add);"  STYLE = 'margin-top:4px;'><BR />
-  		<INPUT TYPE="button" VALUE="<?php print get_text("Next"); ?>"  onClick="validate(document.add);" STYLE = 'margin-top:4px;'><BR />
-<?php if (!($in_win )) { ?>
-  		<INPUT TYPE="button" VALUE="<?php print get_text("Action"); ?>"  onClick="do_act_window('action_w.php?ticket_id=<?php echo $ticket_id;?>');" STYLE = 'margin-top:4px;'> <BR /> 
-  		<INPUT TYPE="button" VALUE="<?php print get_text("Patient"); ?>"  onClick="do_pat_window('patient_w.php?ticket_id=<?php echo $ticket_id;?>');" STYLE = 'margin-top:4px;'>  <!-- 6/23/11 -->
-<?php } ?>
+  		<INPUT TYPE="button" id='hist_but' CLASS='plain' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' VALUE="History"  onClick="do_hist_win();" STYLE = 'margin-top: 0px;'><BR />
+<?php
+	if($in_win) {
+?>
+  		<INPUT TYPE="button" id='can_but' CLASS='plain' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' VALUE="<?php print get_text("Cancel"); ?>"  onClick="window.close();" STYLE = 'margin-top:4px;'><BR />
+<?php
+		} else {
+?>
+  		<INPUT TYPE="button" id='can_but' CLASS='plain' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' VALUE="<?php print get_text("Cancel"); ?>"  onClick="do_cancel(document.add); document.can_Form.submit();" STYLE = 'margin-top:4px;'><BR />
+<?php
+		}
+?>
+  		<INPUT TYPE="reset" id='reset_but' CLASS='plain' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' VALUE="<?php print get_text("Reset"); ?>" onclick= " do_reset(document.add);"  STYLE = 'margin-top:4px;'><BR />
+  		<INPUT TYPE="button" id='sub_but_but' CLASS='plain' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' VALUE="<?php print get_text("Next"); ?>"  onClick="validate(document.add);" STYLE = 'margin-top:4px;'><BR />
+<?php 
+	if (!($in_win )) {
+
+ ?>
+  		<INPUT TYPE="button" id='act_but' CLASS='plain' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' VALUE="<?php print get_text("Action"); ?>"  onClick="do_act_window('action_w.php?ticket_id=<?php echo $ticket_id;?>');" STYLE = 'margin-top:4px;'> <BR /> 
+  		<INPUT TYPE="button" id='pat_but' CLASS='plain' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' VALUE="<?php print get_text("Patient"); ?>"  onClick="do_pat_window('patient_w.php?ticket_id=<?php echo $ticket_id;?>');" STYLE = 'margin-top:4px;'>  <!-- 6/23/11 -->
+<?php 
+		} 
+?>
   </div>
 </div>
 </div>
@@ -1957,15 +1507,16 @@ function do_nearby(the_form){		// 11/22/2012
 	}		// end do_nearby()
 
 function do_bldg(in_val) {									// called with zero-based array index - 3/29/2014
-	if (myMarker) {myMarker.setMap(null);}	// clear existing/default icon 
-
+	if(myMarker) {map.removeLayer(marker); }
 	var obj_bldg = bldg_arr[in_val];						// nth object
 	document.add.frm_street.value = obj_bldg.bldg_street;
 	document.add.frm_city.value = obj_bldg.bldg_city;
 	document.add.frm_state.value = obj_bldg.bldg_state;
+	var theLat = parseInt(obj_bldg.bldg_lat).toFixed(6);
+	var theLng = parseInt(obj_bldg.bldg_lon).toFixed(6);
 	if (document.add.frm_lat) {
-		document.add.frm_lat.value = document.add.show_lat.value = obj_bldg.bldg_lat.toString();
-		document.add.frm_lng.value = document.add.show_lng.value = obj_bldg.bldg_lon.toString();
+		document.add.frm_lat.value = document.add.show_lat.value = theLat.toString();
+		document.add.frm_lng.value = document.add.show_lng.value = theLng.toString();
 		}
 	if (obj_bldg.bldg_info.length > 0 ) {
 		var close_str = "<span onclick = \"$('bldg_info').style.display = 'none';\"><b><center><u>X</u></center></b></span>";
@@ -1973,8 +1524,6 @@ function do_bldg(in_val) {									// called with zero-based array index - 3/29/
 		$('bldg_info').style.display = "inline";	
 		}
 	loc_lkup(document.add) ;			// to map
-	$("do_sv").style.display = "block";				// show streetview link  			
-
 	}		// end function do_bldg()
 
 <?php								// 3/29/2014
@@ -2082,7 +1631,7 @@ if (mysql_num_rows($result_bldg) > 0) {
 			print "\t<OPTION VALUE=' {$temp_row['id']}'  CLASS='{$temp_row['group']}' title='{$temp_row['description']}'> {$temp_row['type']} </OPTION>\n";
 			if (!(empty($temp_row['protocol']))) {				// 7/7/09 - note string key
 				$temp = addslashes($temp_row['protocol']);
-				print "\n<SCRIPT>\n\t protocols[{$temp_row['id']}] = \"{$temp}\";\n</SCRIPT>\n";		// 7/16/09, 5/6/10
+				print "\n<SCRIPT>\n\t window.protocols[{$temp_row['id']}] = \"{$temp}\";\n</SCRIPT>\n";		// 7/16/09, 5/6/10
 				}
 			$i++;
 			}		// end while()
@@ -2383,7 +1932,7 @@ if($has_portal == 1) {
 	</TR>
 <?php
 		}				// end if (mysql_num_rows($result_sigs)>0)
-	if (($gmaps) && (!($in_win))) {
+	if ($gmaps) {
 ?>
 
 	<TR CLASS='odd'>
@@ -2413,9 +1962,6 @@ if($has_portal == 1) {
 	<TR class='spacer'>
 		<TD COLSPAN='3' class='spacer'>&nbsp;</TD>
 	</TR>
-	<TR class='spacer'>
-		<TD COLSPAN='3' class='spacer'>&nbsp;</TD>
-	</TR>
 	<TR class='heading'>
 		<TD COLSPAN='3' class='heading' style='text-align: center;'>File Upload</TD>
 	</TR>
@@ -2430,30 +1976,26 @@ if($has_portal == 1) {
 	<TR class='even'>
 		<TD COLSPAN='3'>&nbsp;</TD>
 	</TR>	
+	</TABLE>	
 		<INPUT TYPE="hidden" NAME="frm_lat" VALUE="">				<!-- // 9/9/08 -->
 		<INPUT TYPE="hidden" NAME="frm_lng" VALUE="">
 		<INPUT TYPE="hidden" NAME="ticket_id" VALUE="<?php print $ticket_id;?>">	<!-- 1/25/09, 3/10/09 -->
 		<INPUT TYPE='hidden' NAME="frm_do_scheduled" VALUE=0>	<!-- 1/1/11 -->
-	</FORM></TABLE>
+	</FORM>
 	</TD>
 <?php
-		if (($gmaps) && (!($in_win))){
+		if ($gmaps){
 ?>
 	
 	<TD>
 		<TABLE ID='four' border=0>
 			<TR>
-				<TD id='three' ALIGN='center'>
+				<TD id='three'>
 					<div id='map_canvas' style='z-index:1; width: <?php print get_variable('map_width');?>px; height: <?php print get_variable('map_height');?>px'>
 					</div>
 	<BR /><CENTER><FONT CLASS='header'><?php echo get_variable('map_caption');?></FONT><BR /><BR />
-					</TD></TR>
-			<TR><TD ALIGN='center' style = "white-space: nowrap;"><NOBR>
-					<SPAN ID='do_grid' onclick = "toglGrid()"><u>Grid</U></SPAN>					
-					<SPAN ID='do_sv' onClick = "sv_win(document.add)" style=' margin-left: 40px;display:none'><u>Street view</U></SPAN> <!-- 2/11/09 -->
-					</NOBR>
 				</TD>
-			</TR />
+			</TR>
 		</TABLE>
 	</TD>
 <?php
@@ -2468,4 +2010,55 @@ if($has_portal == 1) {
 ?>
 <FORM NAME='can_Form' ACTION="main.php">
 </FORM>	
+<SCRIPT>
+var map;				// make globally visible
+var thelevel = '<?php print $the_level;?>';
+var the_icon;
+var currentPopup;
+var marker;
+var myMarker;
+var markers;
+var zoom = <?php print get_variable('def_zoom');?>;
+var locale = <?php print get_variable('locale');?>;
+var my_Local = <?php print get_variable('local_maps');?>;
+var lon = <?php print get_variable('def_lng');?>;
+var lat = <?php print get_variable('def_lat');?>;
+var latLng;
+var in_local_bool = "0";
+var baseIcon = L.Icon.extend({options: {shadowUrl: './our_icons/shadow.png',
+	iconSize: [20, 32],	shadowSize: [37, 34], iconAnchor: [10, 31],	shadowAnchor: [10, 32], popupAnchor: [0, -20]
+	}
+	});
+var baseFacIcon = L.Icon.extend({options: {iconSize: [28, 28], iconAnchor: [14, 29], popupAnchor: [0, -20]
+	}
+	});
+var baseSqIcon = L.Icon.extend({options: {iconSize: [20, 20], iconAnchor: [10, 21], popupAnchor: [0, -20]
+	}
+	});
+var basecrossIcon = L.Icon.extend({options: {iconSize: [40, 40], iconAnchor: [20, 41], popupAnchor: [0, -41]
+	}
+	});
+var mapWidth = <?php print get_variable('map_width');?>;
+var mapHeight = <?php print get_variable('map_height');?>;;
+$('map_canvas').style.width = mapWidth + "px";
+$('map_canvas').style.height = mapHeight + "px";
+var theLocale = <?php print get_variable('locale');?>;
+var useOSMAP = <?php print get_variable('use_osmap');?>;
+init_map(2, <?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>, "", 13, theLocale, useOSMAP, "tr");
+map.setView([<?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>], 13);
+var bounds = map.getBounds();	
+var zoom = map.getZoom();
+var got_points = false;	// map is empty of points
+function onMapClick(e) {
+	if(marker) {map.removeLayer(marker);}
+	if(myMarker) {map.removeLayer(myMarker);}
+	var iconurl = "./our_icons/yellow.png";
+	icon = new baseIcon({iconUrl: iconurl});
+    myMarker = new L.marker(e.latlng, {icon:icon, draggable:'true'});
+    myMarker.addTo(map);
+	newGetAddress(e.latlng, "ni");
+	};
+
+map.on('click', onMapClick);
+</SCRIPT>
 </BODY></HTML>

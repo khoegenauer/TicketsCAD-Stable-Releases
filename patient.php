@@ -60,20 +60,6 @@ $facilitycontact = 	get_text("Facility contact");
 	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
 	<META HTTP-EQUIV="Script-date" CONTENT="8/16/08">
 	<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">
-<?php
-	if ($gmaps) {		// 8/4/11
-		$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : "";
-		if((array_key_exists('HTTPS', $_SERVER)) && ($_SERVER['HTTPS'] == 'on')) {
-			$gmaps_url =  "https://maps.google.com/maps/api/js?" . $key_str . "libraries=geometry,weather&sensor=false";
-			} else {
-			$gmaps_url =  "http://maps.google.com/maps/api/js?" . $key_str . "libraries=geometry,weather&sensor=false";
-			}
-?>
-	<SCRIPT TYPE="text/javascript" src="<?php print $gmaps_url;?>"></SCRIPT>
-	<SCRIPT SRC="./js/graticule.js" type="text/javascript"></SCRIPT>
-<?php
-		}
-	?>	
 <SCRIPT>
 function ck_frames() {		//  onLoad = "ck_frames()"
 <?php	if (array_key_exists('in_win', $_GET)) {echo "\n return;\n";} ?>	// 6/10/11
@@ -274,10 +260,11 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 	
 				$result = mysql_query("UPDATE `$GLOBALS[mysql_prefix]ticket` SET `updated` = '$frm_asof' WHERE id='$_GET[ticket_id]'  LIMIT 1") or do_error($query,mysql_error(), basename( __FILE__), __LINE__);
 				}
-			print "<BR><BR><FONT CLASS='header'>" . get_text("Patient") ." record has been added</FONT><BR /><BR />";
 			add_header($_GET['ticket_id']);
-			show_ticket($_GET['ticket_id']);
-//			notify_user($_GET['ticket_id'],$NOTIFY_ACTION);
+			$id = $_GET['ticket_id'];
+			print "<BR><BR><FONT CLASS='header'>" . get_text("Patient") ." record has been added</FONT><BR /><BR />";
+			print "<A HREF='main.php'><U>Continue</U></A>";
+			require_once('./forms/ticket_view_screen.php');
 			print "</BODY>";				// 10/19/08
 			
 			$addrs = notify_user($_GET['ticket_id'],$GLOBALS['NOTIFY_PERSON_CHG']);		// returns array or FALSE
@@ -303,7 +290,6 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 		if (!req) return;
 		var method = (postData) ? "POST" : "GET";
 		req.open(method,url,true);
-		req.setRequestHeader('User-Agent','XMLHTTP/1.0');
 		if (postData)
 			req.setRequestHeader('Content-type','application/x-www-form-urlencoded');
 		req.onreadystatechange = function () {
@@ -395,9 +381,8 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 				`fullname`	= " . 			quote_smart(addslashes(trim($_POST['frm_fullname']))) . ",
 				`dob`	= " .				quote_smart(addslashes(trim($_POST['frm_dob']))) . ",
 				`gender`	= " .			quote_smart(addslashes(trim($_POST['frm_gender_val']))) . ",
-				`insurance_id`	=" . 		quote_smart(addslashes(trim($_POST['frm_ins_id']))) . ",
-				`facility_id`	=" . 		quote_smart(addslashes(trim($_POST['frm_facility_id']))) . ",				
-				`facility_contact` = " .	quote_smart(addslashes(trim($_POST['frm_fac_cont']))) . ",";
+				`insurance_id`	=" . 		quote_smart(addslashes(trim($_POST['frm_ins_id']))) . ",";
+
 			}
 		else { $ins_data = "";}
 	    $query 	= "UPDATE `$GLOBALS[mysql_prefix]patient` SET 
@@ -408,6 +393,8 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 	    	`user`= " .  		quote_smart(addslashes(trim($_SESSION['user_id']))) . ",
 	    	`action_type` = " . quote_smart(addslashes(trim($GLOBALS['ACTION_COMMENT']))) .	",
 	    	`name` = " .  		quote_smart(addslashes(trim($_POST['frm_name']))) . ", 
+			`facility_id`	=" . 		quote_smart(addslashes(trim($_POST['frm_facility_id']))) . ",
+			`facility_contact` = " .	quote_smart(addslashes(trim($_POST['frm_fac_cont']))) . ",			
 	    	`updated` = " .  	quote_smart(addslashes(trim($now))) . "
 	    	WHERE id= " . 		quote_smart($_GET['id']) . " LIMIT 1";
 
@@ -433,7 +420,7 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 		<FONT CLASS="header">Edit <?php print get_text("Patient");?> Record</FONT><BR /><BR />
 		<FORM METHOD='post' NAME='patientEd' onSubmit='return validate(document.patientEd);' ACTION="patient.php?id=<?php print $_GET['id'];?>&ticket_id=<?php print $_GET['ticket_id'];?>&action=update"><TABLE BORDER="0">
 
-		<TR CLASS='even' ><TD><B><?php print get_text("Patient ID");?>: <font color='red' size='-1'>*</font></B></TD><TD><INPUT TYPE="text" NAME="frm_name" value="<?php print $row['name'];?>" size="32"></TD></TR>
+		<TR CLASS='even' ><TD CLASS='td_label'><B><?php print get_text("Patient ID");?>: <font color='red' size='-1'>*</font></B></TD><TD><INPUT TYPE="text" NAME="frm_name" value="<?php print $row['name'];?>" size="32"></TD></TR>
 <?php
 	$checks = array("", "", "", "", "");		// gender checks
 	$row_gender = ($row['gender'] != 0) ? $row['gender'] : 4;	//	7/12/13
@@ -598,9 +585,9 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 		$ins_sel_str .= "</SELECT>\n";
 ?>
 		<TR CLASS='odd' VALIGN='bottom'><TD CLASS="td_label"><?php echo $fullname;?>: &nbsp;&nbsp;</TD>
-			<TD><INPUT TYPE = 'text' NAME = 'frm_fullname' VALUE='' SIZE = '64' /></TD></TR>
+			<TD CLASS='td_data'><INPUT TYPE = 'text' NAME = 'frm_fullname' VALUE='' SIZE = '64' /></TD></TR>
 		<TR CLASS='even' VALIGN='bottom'><TD CLASS="td_label"><?php echo $dateofbirth;?>: &nbsp;&nbsp;</TD>
-			<TD><INPUT TYPE = 'text' NAME = 'frm_dob' VALUE='' SIZE = '24' /></TD></TR>
+			<TD CLASS='td_data'><INPUT TYPE = 'text' NAME = 'frm_dob' VALUE='' SIZE = '24' /></TD></TR>
 		<TR CLASS='odd' VALIGN='bottom'><TD CLASS="td_label"><?php echo $gender;?>:  <font color='red' size='-1'>*</font></B>&nbsp;&nbsp;</TD>
 			<TD class='td_label'>			
 				&nbsp;&nbsp;M&nbsp;&raquo;&nbsp;<input type = radio name = 'frm_gender' value = 1 onClick = 'this.form.frm_gender_val.value=this.value;' />
@@ -613,8 +600,15 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 			
 		<TR CLASS='odd'>
 			<TD CLASS="td_label">Facility:</TD><TD COLSPAN='2' class='td_label'>
-				<SELECT NAME="frm_facility_id"  tabindex=11 onChange="this.options[selectedIndex].value.trim())"><?php print $pulldown; ?></SELECT>&nbsp;&nbsp;&nbsp;
-			<?php echo $facilitycontact;?>:&nbsp;&nbsp;<INPUT TYPE = 'text' NAME = 'frm_fac_cont' VALUE='' SIZE = '32' /></TD></TR>
+				<SELECT NAME="frm_facility_id"  tabindex=11 onChange="this.options[selectedIndex].value.trim())"><?php print $pulldown; ?></SELECT>
+			</TD>
+		</TR>
+		<TR CLASS='odd'>
+			<TD CLASS="td_label"><?php echo $facilitycontact;?>:&nbsp;&nbsp;</TD>		
+			<TD CLASS='td_data'>
+				<INPUT TYPE = 'text' NAME = 'frm_fac_cont' VALUE='' SIZE = '32' />
+			</TD>
+		</TR>
 <?php
 		}		// end 	if($num_rows>0) 
 ?>		

@@ -1,7 +1,8 @@
 <?php
 /*
 2/9/10 - initial release
-5/25/10 - Changed default value of radio buttons for hid value to "n"
+5/25/10 - Changed default value of radio buttons for hide value to "n"
+3/13/2015 - added 'watch' attribute handling
 */
 ?>
 <SCRIPT>
@@ -30,11 +31,16 @@
 			</TD></TR>
 		<TR VALIGN="baseline" CLASS="odd"><TD CLASS="td_label" ALIGN="right">Description:</TD>
 			<TD><INPUT  ID="ID2"  MAXLENGTH="60" SIZE="60" type="text" NAME="frm_description" VALUE="" onFocus="JSfnChangeClass(this.id, 'dirty');" onChange = "this.value=JSfnTrim(this.value)"> </TD></TR>
-		<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label" ALIGN="right">Hide:</TD><TD VALIGN='baseline'><SPAN STYLE = 'margin-left:20px'><B>No &raquo;<INPUT TYPE='radio' NAME="frm_hide" VALUE= "n"  CHECKED /></SPAN><SPAN STYLE = 'margin-left:20px'>Yes &raquo;<INPUT TYPE='radio' NAME="frm_hide" VALUE= "y" /></TD></TR>
-		<TR VALIGN="baseline" CLASS="odd"><TD CLASS="td_label" ALIGN="right">Group:</TD>
+		<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label" ALIGN="right">Hide:</TD>
+					<TD VALIGN='baseline'><SPAN STYLE = 'margin-left:20px'><B>No &raquo;<INPUT TYPE='radio' NAME="frm_hide" VALUE= "n"  CHECKED /></SPAN>
+						<SPAN STYLE = 'margin-left:20px'>Yes &raquo;<INPUT TYPE='radio' NAME="frm_hide" VALUE= "y" /></TD></TR>
+		<TR VALIGN="baseline" CLASS="odd"><TD CLASS="td_label" ALIGN="right">Watch:</TD>	<!-- 3/13/2015  -->
+					<TD VALIGN='baseline'><SPAN STYLE = 'margin-left:20px'><B>No &raquo;<INPUT TYPE='radio' NAME="frm_watch" VALUE= "0"  CHECKED /></SPAN>
+						<SPAN STYLE = 'margin-left:20px'>Yes &raquo;<INPUT TYPE='radio' NAME="frm_watch" VALUE= "1" /></TD></TR>
+		<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label" ALIGN="right">Group:</TD>
 			<TD><INPUT  ID="ID4"  MAXLENGTH="20" SIZE="20" type="text" NAME="frm_group" VALUE="" onFocus="JSfnChangeClass(this.id, 'dirty');" onChange = "this.value=JSfnTrim(this.value)"></TD></TR>
-		<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label" ALIGN="right">Sort:</TD><TD><INPUT ID="ID5" MAXLENGTH=11 SIZE=11 TYPE= "text" NAME="frm_sort" VALUE="" onFocus="JSfnChangeClass(this.id, 'dirty');" onChange = "this.value=JSfnTrim(this.value)"/> </TD></TR>
-		<TR VALIGN="baseline" CLASS="odd"><TD CLASS="td_label" ALIGN="right">Background color:</TD>
+		<TR VALIGN="baseline" CLASS="odd"><TD CLASS="td_label" ALIGN="right">Sort:</TD><TD><INPUT ID="ID5" MAXLENGTH=11 SIZE=11 TYPE= "text" NAME="frm_sort" VALUE="" onFocus="JSfnChangeClass(this.id, 'dirty');" onChange = "this.value=JSfnTrim(this.value)"/> </TD></TR>
+		<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label" ALIGN="right">Background color:</TD>
 			<TD>			
 				<SELECT name='dmy_status_id' STYLE='background-color:transparent; color:black;' ONCHANGE =  "set_bg_vals (this.form);this.style.backgroundColor=this.options[this.selectedIndex].style.backgroundColor; this.style.color=this.options[this.selectedIndex].style.color;">				
 				<OPTION VALUE=0 STYLE='background-color:transparent; 	color:black;' SELECTED>None</OPTION>

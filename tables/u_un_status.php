@@ -2,6 +2,7 @@
 /*
 2/9/10 - initial release
 5/25/10 - Changed display of hide value to what exists in database
+3/13/2015 - added 'watch' attribute handling
 */
 ?>
 <SCRIPT>
@@ -39,23 +40,15 @@
 	<TR VALIGN="baseline" CLASS="odd"><TD CLASS="td_label" ALIGN="right">ID:</TD>
 		<TD><INPUT MAXLENGTH=bigint(4) SIZE=bigint(4) TYPE= "text" NAME="frm_id" VALUE="<?php print $row['id'] ;?>" onChange = "this.value=JSfnTrim(this.value)" disabled/> <SPAN class='warn' >numeric</SPAN></TD></TR>
 	<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label" ALIGN="right">Status val:</TD>
-		<TD><INPUT MAXLENGTH="11" SIZE="11" type="text" NAME="frm_status_val" VALUE="<?php print $row['status_val'] ;?>" onChange = "this.value=JSfnTrim(this.value)"/> <SPAN class='opt' >text</SPAN></TD></TR>
+		<TD><INPUT MAXLENGTH="20" SIZE="20" type="text" NAME="frm_status_val" VALUE="<?php print $row['status_val'] ;?>" onChange = "this.value=JSfnTrim(this.value)"/> <SPAN class='opt' >text</SPAN></TD></TR>
 <?php
 
 	$check_0 = $check_1 = $check_2 = "";
 	switch ($row['dispatch']) {
-		case 0:
-		    $check_0 = " CHECKED ";
-		    break;
-		case 1:
-		    $check_1 =  " CHECKED ";
-		    break;
-		case 2:
-		    $check_2 =  " CHECKED ";
-		    break;
-		default:
-			dump(__LINE__);
-			dump($row['dispatch']);
+		case 0: $check_0 = " CHECKED "; 	break;
+		case 1: $check_1 =  " CHECKED "; 	break;
+		case 2: $check_2 =  " CHECKED "; 	break;
+		default: dump(__LINE__); 			dump($row['dispatch']);
 		}
 ?>
 	<TR VALIGN="bottom" CLASS="odd"><TD CLASS="td_label" ALIGN="right">Can dispatch:</TD>
@@ -64,23 +57,15 @@
 			<SPAN STYLE = 'margin-left:20px'>No - enforced &raquo;<INPUT TYPE='radio' NAME="frm_dispatch" VALUE= "2" <?php print $check_2;?>/></SPAN>
 			</TD></TR>
 	<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label" ALIGN="right">Description:</TD>
-		<TD><INPUT MAXLENGTH="11" SIZE="11" type="text" NAME="frm_description" VALUE="<?php print $row['description'] ;?>" onChange = "this.value=JSfnTrim(this.value)"/> <SPAN class='opt' >text</SPAN></TD></TR>
+		<TD><INPUT MAXLENGTH="60" SIZE="60" type="text" NAME="frm_description" VALUE="<?php print $row['description'] ;?>" onChange = "this.value=JSfnTrim(this.value)"/> <SPAN class='opt' >text</SPAN></TD></TR>
 
 <?php
 $row_hide = $row['hide'];
 
-switch($row_hide) {
-		case "n":
-			$checked1_value = "CHECKED";
-			$checked2_value = "";
-			break;
-		case "y":
-			$checked1_value = "";
-			$checked2_value = "CHECKED";		
-			break;
-		default:
-			$checked1_value = "CHECKED";
-			$checked2_value = "";
+	switch($row_hide) {
+		case "n":	$checked1_value = "CHECKED"; 	$checked2_value = ""; 			break;
+		case "y":	$checked1_value = ""; 			$checked2_value = "CHECKED"; 	break;
+		default: 	$checked1_value = "CHECKED"; 	$checked2_value = "";
 		}
 ?>
 	<TR VALIGN="baseline" CLASS="odd">
@@ -90,9 +75,22 @@ switch($row_hide) {
 			<SPAN STYLE = 'margin-left:20px;'>Yes &raquo; <INPUT TYPE='radio' NAME="frm_hide" VALUE= "y" <?php print $checked2_value;?>/>
 			</TD></TR>		
 
-	<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label" ALIGN="right">Group:</TD>
+<?php						// 3/13/2015
+	switch($row['watch']) {
+		case "0":	$checked1_value = "CHECKED"; 	$checked2_value = ""; 			break;
+		default: 	$checked1_value = ""; 			$checked2_value = "CHECKED";
+		}
+?>
+	<TR VALIGN="baseline" CLASS="even">
+		<TD CLASS="td_label" ALIGN="right">Watch:</TD>
+		<TD VALIGN='baseline'><B>
+			<SPAN STYLE = 'margin-left:20px;'>No &raquo; <INPUT TYPE='radio' NAME="frm_watch" VALUE= "0" <?php print $checked1_value;?>/>
+			<SPAN STYLE = 'margin-left:20px;'>Yes &raquo; <INPUT TYPE='radio' NAME="frm_watch" VALUE= "1" <?php print $checked2_value;?>/>
+			</TD></TR>
+
+	<TR VALIGN="baseline" CLASS="odd"><TD CLASS="td_label" ALIGN="right">Group:</TD>
 		<TD><INPUT MAXLENGTH="20" SIZE="20" type="text" NAME="frm_group" VALUE="<?php print $row['group'] ;?>" onChange = "this.value=JSfnTrim(this.value)"/> <SPAN class='opt' >text</SPAN></TD></TR>
-	<TR VALIGN="baseline" CLASS="odd"><TD CLASS="td_label" ALIGN="right">Sort:</TD><TD><INPUT MAXLENGTH=int(11) SIZE=int(11) TYPE= "text" NAME="frm_sort" VALUE="<?php print $row['sort'] ;?>" onChange = "this.value=JSfnTrim(this.value)"/> <SPAN class='opt' >numeric</SPAN></TD></TR>
+	<TR VALIGN="baseline" CLASS="even"><TD CLASS="td_label" ALIGN="right">Sort:</TD><TD><INPUT MAXLENGTH=int(11) SIZE=int(11) TYPE= "text" NAME="frm_sort" VALUE="<?php print $row['sort'] ;?>" onChange = "this.value=JSfnTrim(this.value)"/> <SPAN class='opt' >numeric</SPAN></TD></TR>
 		<TR VALIGN="baseline" CLASS="odd"><TD CLASS="td_label" ALIGN="right">Background color:</TD>
 			<TD>
 				<SELECT name='dmy_status_id' STYLE='background-color:<?php print $row['bg_color']; ?>; color:<?php print $row['text_color']; ?>;' ONCHANGE =  "set_bg_vals (this.form);this.style.backgroundColor=this.options[this.selectedIndex].style.backgroundColor; this.style.color=this.options[this.selectedIndex].style.color;">				

@@ -574,6 +574,7 @@ function get_facilitydetails($value) {
 		}
 	return $return;
 	}
+	
 if((!empty($_POST)) && (empty($_GET))) {
 	$theDetails = get_requester_details($_SESSION['user_id']);
 	$userName = $_POST['frm_username'];

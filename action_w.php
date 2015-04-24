@@ -18,10 +18,13 @@
 3/15/11 changed default.css to stylesheet.php
 1/22/11 Added refresh of window opener when Finished adding action.
 4/9/2014 addslashes included for string apostrophe handling
+12/13/2014 corrections applied to 4/9/2014 changes
 */
 error_reporting(E_ALL);
 
 session_start();
+if (!array_key_exists ("user_id", $_SESSION)) {exit();}		//3/6/2015 - if logged out then kill this window
+
 require_once('./incs/functions.inc.php');
 do_login(basename(__FILE__));
 require_once($_SESSION['fmp']);		// 8/27/10
@@ -170,7 +173,7 @@ $get_action = (empty($_GET['action']))? "form" : $_GET['action'];		// 10/21/08
 					$sep = " ";
 					}
 				}
-			$_POST['frm_description'] = strip_html($_POST['frm_description']); //fix formatting, custom tags etc.
+			$_POST['frm_description'] = addslashes(strip_html($_POST['frm_description'])); //fix formatting, custom tags etc.
 
 			$frm_meridiem_asof = array_key_exists('frm_meridiem_asof', ($_POST))? $_POST['frm_meridiem_asof'] : "" ;
 
@@ -184,25 +187,25 @@ $get_action = (empty($_GET['action']))? "form" : $_GET['action'];		// 10/21/08
      			`action_type` = '{$GLOBALS['ACTION_COMMENT']}' AND
      			`updated` = '{$frm_asof}' AND
      			`responder` = '{$responder}' ";
-*/													// 4/9/2014
 	     		$query 	= "INSERT INTO `$GLOBALS[mysql_prefix]action` 
-	     			(`description`,`ticket_id`,`date`,`user`,`action_type`, `updated`, `responder`) VALUES (
-	     				addslashes({$_POST['frm_description']}), 
+	     			(`description`,`ticket_id`,`date`,`user`,`action_type`, `updated`, `responder`) VALUES ("
+	     				. addslashes($_POST['frm_description']) . ",
 	     				'{$_GET['ticket_id']}', 
 	     				'{$now}', 
-	     				{$_SESSION['user_id']}, 
-	     				addslashes({$GLOBALS['ACTION_COMMENT']}), 
-	     				'{$frm_asof}', 
-	     				addslashes({$responder})
+	     				{$_SESSION['user_id']}, "
+	     				. addslashes($GLOBALS['ACTION_COMMENT']) . ",
+	     				'{$frm_asof}', "
+	     				. addslashes($responder) ."
 	     				)";		
 
      			
 			$result	= mysql_query($query) or do_error($query,'mysql_query() failed',mysql_error(), basename(__FILE__), __LINE__);
 			if (mysql_affected_rows()==0) {		// not a duplicate - 8/15/10
+*/													// 4/9/2014 - 12/13/2014 - 3/6/2015
 				
 	     		$query 	= "INSERT INTO `$GLOBALS[mysql_prefix]action` 
 	     			(`description`,`ticket_id`,`date`,`user`,`action_type`, `updated`, `responder`) VALUES (
-	     				'{$_POST['frm_description']}', 
+	     				" . quote_smart($_POST['frm_description']) . ",
 	     				'{$_GET['ticket_id']}', 
 	     				'{$now}', 
 	     				{$_SESSION['user_id']}, 
@@ -216,7 +219,7 @@ $get_action = (empty($_GET['action']))? "form" : $_GET['action'];		// 10/21/08
 				do_log($GLOBALS['LOG_ACTION_ADD'], $_GET['ticket_id'], 0,  mysql_insert_id());		// 3/18/10
 				$query = "UPDATE `$GLOBALS[mysql_prefix]ticket` SET `updated` = '$frm_asof' WHERE `id`='" . $_GET['ticket_id'] . "' LIMIT 1";
 				$result = mysql_query($query) or do_error($query,$query, mysql_error(), basename(__FILE__), __LINE__);
-				}		// end insert process
+//				}		// end insert process
 				
 //			add_header($_GET['ticket_id']);
 			print "<br /><FONT CLASS='header' STYLE = 'margin-left:200px;'>Action record has been added</FONT><BR /><BR />";
@@ -251,7 +254,6 @@ $get_action = (empty($_GET['action']))? "form" : $_GET['action'];		// 10/21/08
 		if (!req) return;
 		var method = (postData) ? "POST" : "GET";
 		req.open(method,url,true);
-		req.setRequestHeader('User-Agent','XMLHTTP/1.0');
 		if (postData)
 			req.setRequestHeader('Content-type','application/x-www-form-urlencoded');
 		req.onreadystatechange = function () {
@@ -428,6 +430,42 @@ $get_action = (empty($_GET['action']))? "form" : $_GET['action'];		// 10/21/08
 		
 	else if ($get_action == 'form') {
 		$do_yr_asof = true;
+		$user_level = is_super() ? 9999 : $_SESSION['user_id']; 		
+		$regions_inuse = get_regions_inuse($user_level);	//	6/10/11
+		$group = get_regions_inuse_numbers($user_level);	//	6/10/11		
+
+		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `type`= 4 AND `resource_id` = '$_SESSION[user_id]' ORDER BY `id` ASC;";	// 4/13/11
+		$result = mysql_query($query);	// 4/13/11
+		$al_groups = array();
+		$al_names = "";	
+		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{	// 4/13/11
+			$al_groups[] = $row['group'];
+			if(!(is_super())) {
+				$query2 = "SELECT * FROM `$GLOBALS[mysql_prefix]region` WHERE `id`= '$row[group]';";	// 4/13/11
+				$result2 = mysql_query($query2);	// 4/13/11
+				while ($row2 = stripslashes_deep(mysql_fetch_assoc($result2))) 	{	// 4/13/11		
+					$al_names .= $row2['group_name'] . ", ";
+					}
+				} else {
+					$al_names = "ALL. Superadmin Level";
+				}
+			}
+			
+		if(isset($_SESSION['viewed_groups'])) {	//	6/10/11
+			$curr_viewed= explode(",",$_SESSION['viewed_groups']);
+			} else {
+			$curr_viewed = $al_groups;
+			}
+
+		$curr_names="";	//	6/10/11
+		$z=0;	//	6/10/11
+		foreach($curr_viewed as $grp_id) {	//	6/10/11
+			$counter = (count($curr_viewed) > ($z+1)) ? ", " : "";
+			$curr_names .= get_groupname($grp_id);
+			$curr_names .= $counter;
+			$z++;
+			}			
+		
 ?>
 		<SPAN STYLE='margin-left:60px;'><FONT CLASS="header">Add Action</FONT></SPAN><BR /><BR />
 		<FORM METHOD="post" NAME="add_frm" onSubmit='return validate(this.form);' ACTION="action_w.php?ticket_id=<?php print $_GET['ticket_id'];?>&action=add">
@@ -438,15 +476,46 @@ $get_action = (empty($_GET['action']))? "form" : $_GET['action'];		// 10/21/08
 <?php
 //						generate dropdown menu of responders
 
+		if(!isset($curr_viewed)) {	
+			if(count($al_groups == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
+				$where = "WHERE `a`.`type` = 2";
+				} else {
+				$x=0;	//	6/10/11
+				$where = "WHERE (";	//	6/10/11
+				foreach($al_groups as $grp) {	//	6/10/11
+					$where2 = (count($al_groups) > ($x+1)) ? " OR " : ")";	
+					$where .= "`a`.`group` = '{$grp}'";
+					$where .= $where2;
+					$x++;
+					}
+				$where .= "AND `a`.`type` = 2";	//	6/10/11					
+				}
+			} else {
+			if(count($curr_viewed == 0)) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13
+				$where = "WHERE `a`.`type` = 2";
+				} else {				
+				$x=0;	//	6/10/11
+				$where = "WHERE (";	//	6/10/11
+				foreach($curr_viewed as $grp) {	//	6/10/11
+					$where2 = (count($curr_viewed) > ($x+1)) ? " OR " : ")";	
+					$where .= "`a`.`group` = '{$grp}'";
+					$where .= $where2;
+					$x++;
+					}
+				$where .= "AND `a`.`type` = 2";	//	6/10/11						
+				}
+			}	
+
 		$query = "SELECT *, UNIX_TIMESTAMP(updated) AS `updated`, `t`.`id` AS `type_id`, `r`.`id` AS `unit_id`, `r`.`name` AS `unit_name`,
 			`s`.`description` AS `stat_descr`,  `r`.`description` AS `unit_descr`, 
 			(SELECT  COUNT(*) as numfound FROM `$GLOBALS[mysql_prefix]assigns` 
 				WHERE `$GLOBALS[mysql_prefix]assigns`.`responder_id` = unit_id  AND `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' ) 
 				AS `nr_assigned` 
 			FROM `$GLOBALS[mysql_prefix]responder` `r` 
+			LEFT JOIN `$GLOBALS[mysql_prefix]allocates` `a` ON ( `r`.`id` = a.resource_id )		
 			LEFT JOIN `$GLOBALS[mysql_prefix]unit_types` `t` ON ( `r`.`type` = t.id )	
 			LEFT JOIN `$GLOBALS[mysql_prefix]un_status` `s` ON ( `r`.`un_status_id` = s.id ) 		
-			ORDER BY `nr_assigned` DESC,  `handle` ASC, `r`.`name` ASC";											// 2/1/10, 3/15/10
+			$where GROUP BY unit_id ORDER BY `nr_assigned` DESC, `handle` ASC, `r`.`name` ASC";											// 2/1/10, 3/15/10
 
 //		dump($query);	
 		$result = mysql_query($query) or do_error($query,'mysql_query() failed', mysql_error(), basename(__FILE__), __LINE__);

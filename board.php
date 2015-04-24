@@ -136,9 +136,11 @@ if($istest) {
 	dump($_POST);
 	}
 
-if(($_SESSION['level'] == $GLOBALS['LEVEL_UNIT']) && (intval(get_variable('restrict_units')) == 1)) {
+if(isset($_SESSION['level'])) {
+	if(($_SESSION['level'] == $GLOBALS['LEVEL_UNIT']) && (intval(get_variable('restrict_units')) == 1)) {
 	print "Not Authorized";
 	exit();
+	}
 	}
 
 function show_top() {				// generates the document introduction
@@ -380,7 +382,6 @@ $evenodd = array ("even", "odd");	// CLASS names for alternating table row color
 		var method = (postData) ? "POST" : "GET";
 //		req.open(method,url,true);
 		req.open(method,url,false);		// synchronous, 7/27/09
-////		req.setRequestHeader('User-Agent','XMLHTTP/1.0');
 		if (postData)
 			req.setRequestHeader('Content-type','application/x-www-form-urlencoded');
 		req.onreadystatechange = function () {
@@ -2722,7 +2723,7 @@ setTimeout('do_post()', 1000);
 						print "\t<TD ALIGN='left' CLASS='$theClass' >" . $row['on_scene_miles'] . "&nbsp;</TD>\n";	
 						print "\t<TD ALIGN='left' CLASS='$theClass' >" . $row['end_miles'] . "&nbsp;</TD>\n";
 						if($row['miles'] != NULL) {	//	10/12/23
-							$dist = $row_miles;
+							$dist = $row['miles'];
 							} elseif(($row['miles'] == NULL) && ((my_is_int($row['start_miles'])) && (my_is_int($row['end_miles'])))) {
 							$dist = $row['end_miles'] -  $row['start_miles'];
 							} else {

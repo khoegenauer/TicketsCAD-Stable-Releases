@@ -33,100 +33,143 @@ $id =	(array_key_exists('id', ($_GET)))?	$_GET['id']  :	NULL;
 
 $result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]warnings` WHERE id='$id'");
 $row = mysql_fetch_assoc($result);
+$lat = $row['lat'];
+$lng = $row['lng'];
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 	<HEAD><TITLE>Location Warning Details</TITLE>
 	<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">
-	<STYLE type="text/css">
-	.hover 	{ text-align: center; margin-left: 4px; float: none; font: normal 12px Arial, Helvetica, sans-serif; color:#FF0000; border-width: 1px; border-STYLE: inset; border-color: #FFFFFF;
-  				  padding: 4px 0.5em;text-decoration: none; background-color: #DEE3E7; font-weight: bolder;}
-	.plain 	{ text-align: center; margin-left: 4px; float: none; font: normal 12px Arial, Helvetica, sans-serif; color:#000000;  border-width: 1px; border-STYLE: outset; border-color: #FFFFFF;
-  				  padding: 4px 0.5em;text-decoration: none; background-color: #EFEFEF; font-weight: bolder;}
-	.wrap_data { width: 200px; background-color: inherit;	font-size: 12px; color: #000000; font-style: normal; font-family: Verdana, Arial, Helvetica, sans-serif; text-decoration: none; }
-	.wrap_label { width: 100px; background-color: #707070; font-size: 12px; color: #FFFFFF; font-weight: bold; font-style: normal; font-family: Verdana, Arial, Helvetica, sans-serif; text-decoration: none; }
-	.tab_row { border: 1px solid #CECECE; width: 300px; }
+	<link rel="stylesheet" href="./js/leaflet/leaflet.css" />
+	<!--[if lte IE 8]>
+		 <link rel="stylesheet" href="./js/leaflet/leaflet.ie.css" />
+	<![endif]-->
+	<STYLE>
+		.disp_stat	{ FONT-WEIGHT: bold; FONT-SIZE: 9px; COLOR: #FFFFFF; BACKGROUND-COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif;}
+		#regions_control { font-family: verdana, arial, helvetica, sans-serif; font-size: 5px; background-color: #FEFEFE; font-weight: bold;}
+		table.cruises { font-family: verdana, arial, helvetica, sans-serif; font-size: 11px; cellspacing: 0; border-collapse: collapse; }
+		table.cruises td {overflow: hidden; }
+		div.scrollableContainer { position: relative; padding-top: 2em; border: 1px solid #999; }
+		div.scrollableContainer2 { position: relative; padding-top: 2em; }
+		div.scrollingArea { max-height: 240px; overflow: auto; overflow-x: hidden; }
+		div.scrollingArea2 { max-height: 480px; overflow: auto; overflow-x: hidden; }
+		table.scrollable thead tr { left: -1px; top: 0; position: absolute; }
+		table.cruises th { text-align: left; border-left: 1px solid #999; background: #CECECE; color: black; font-weight: bold; overflow: hidden; }
+		div.tabBox {}
+		div.tabArea { font-size: 80%; font-weight: bold; padding: 0px 0px 3px 0px; }
+		span.tab { background-color: #CECECE; color: #8060b0; border: 2px solid #000000; border-bottom-width: 0px; -moz-border-radius: .75em .75em 0em 0em;	border-radius-topleft: .75em; border-radius-topright: .75em;
+				padding: 2px 1em 2px 1em; position: relative; text-decoration: none; top: 3px; z-index: 100; }
+		span.tabinuse {	background-color: #FFFFFF; color: #000000; border: 2px solid #000000; border-bottom-width: 0px;	border-color: #f0d0ff #b090e0 #b090e0 #f0d0ff; -moz-border-radius: .75em .75em 0em 0em;
+				border-radius-topleft: .75em; border-radius-topright: .75em; padding: 2px 1em 2px 1em; position: relative; text-decoration: none; top: 3px;	z-index: 100;}
+		span.tab:hover { background-color: #FEFEFE; border-color: #c0a0f0 #8060b0 #8060b0 #c0a0f0; color: #ffe0ff;}
+		div.content { font-size: 80%; background-color: #F0F0F0; border: 2px outset #707070; -moz-border-radius: 0em .5em .5em 0em;	border-radius-topright: .5em; border-radius-bottomright: .5em; padding: .5em;
+				position: relative;	z-index: 101; cursor: normal; height: 250px;}
+		div.contentwrapper { width: 260px; background-color: #F0F0F0; cursor: normal;}
   	</STYLE>	
-<?php
-	$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : "";
-	if((array_key_exists('HTTPS', $_SERVER)) && ($_SERVER['HTTPS'] == 'on')) {
-		$gmaps_url =  "https://maps.google.com/maps/api/js?" . $key_str . "libraries=geometry&sensor=false";
-		} else {
-		$gmaps_url =  "http://maps.google.com/maps/api/js?" . $key_str . "libraries=geometry&sensor=false";
-		}
-?>
-	<SCRIPT TYPE="text/javascript" src="<?php print $gmaps_url;?>"></SCRIPT>
-	<SCRIPT TYPE="text/javascript" src="./js/elabel_v3.js"></SCRIPT>
-	<SCRIPT TYPE="text/javascript" SRC="./js/gmaps_v3_init.js"></script>
-	<SCRIPT SRC="./js/graticule_V3.js" type="text/javascript"></SCRIPT>
-	<SCRIPT SRC="./js/usng.js" TYPE="text/javascript"></SCRIPT>
-	<SCRIPT SRC='./js/jscoord.js' TYPE="text/javascript"></SCRIPT>
-	<SCRIPT SRC="./js/lat_lng.js" TYPE="text/javascript"></SCRIPT>
-	<SCRIPT SRC="./js/osgb.js" TYPE="text/javascript"></SCRIPT>
-	<SCRIPT SRC="./js/misc_function.js" TYPE="text/javascript"></SCRIPT>
-	<SCRIPT SRC="./js/suggest.js" TYPE="text/javascript"></SCRIPT>
+	<SCRIPT TYPE="text/javascript" SRC="./js/misc_function.js"></SCRIPT>	<!-- 5/3/11 -->	
+	<SCRIPT TYPE="text/javascript" SRC="./js/domready.js"></script>
+	<SCRIPT SRC="./js/messaging.js" TYPE="text/javascript"></SCRIPT><!-- 10/23/12-->
+	<script src="./js/proj4js.js"></script>
+	<script src="./js/proj4-compressed.js"></script>
+	<script src="./js/leaflet/leaflet.js"></script>
+	<script src="./js/proj4leaflet.js"></script>
+	<script src="./js/leaflet/KML.js"></script>  
+	<script src="./js/leaflet-openweathermap.js"></script>
+	<script src="./js/esri-leaflet.js"></script>
+	<script src="./js/OSOpenspace.js"></script>
+	<script src="./js/Control.Geocoder.js"></script>
+	<script type="text/javascript" src="./js/osm_map_functions.js.php"></script>
+	<script type="text/javascript" src="./js/L.Graticule.js"></script>
+	<script type="text/javascript" src="./js/leaflet-providers.js"></script>
 	<SCRIPT>
+	window.onresize=function(){set_size()};
+
+	window.onload = function(){set_size();};
+	
+	var layercontrol;	
+	
 	function ck_frames() {		// onLoad = "ck_frames()"
 		}		// end function ck_frames()
 
-	function $() {
-		var elements = new Array();
-		for (var i = 0; i < arguments.length; i++) {
-			var element = arguments[i];
-			if (typeof element == 'string')
-				element = document.getElementById(element);
-			if (arguments.length == 1)
-				return element;
-			elements.push(element);
+	var baseIcon = L.Icon.extend({options: {shadowUrl: './our_icons/shadow.png',
+		iconSize: [20, 32],	shadowSize: [37, 34], iconAnchor: [10, 31],	shadowAnchor: [10, 32], popupAnchor: [0, -20]
 			}
-		return elements;
+		});
+	var baseFacIcon = L.Icon.extend({options: {iconSize: [28, 28], iconAnchor: [14, 29], popupAnchor: [0, -20]
 		}
-
-	function do_hover (the_id) {
-		CngClass(the_id, 'hover');
-		return true;
+		});
+	var baseSqIcon = L.Icon.extend({options: {iconSize: [20, 20], iconAnchor: [10, 21], popupAnchor: [0, -20]
 		}
-
-	function do_plain (the_id) {
-		CngClass(the_id, 'plain');
-		return true;
+		});
+	var basecrossIcon = L.Icon.extend({options: {iconSize: [40, 40], iconAnchor: [20, 41], popupAnchor: [0, -41]
 		}
+		});
 
-	function CngClass(obj, the_class){
-		$(obj).className=the_class;
-		return true;
-		}
-
-	var baseIcon;
-	var cross;
 	var icon_file = "./markers/sm_red.png";
-	var map_obj = null;				// the map object - note GLOBAL
-	var myMarker;					// the marker object
 	
-	function do_marker(lat, lng, zoom) {
-		var point = new google.maps.LatLng(lat, lng);
-		myMarker = new google.maps.Marker({position: point, map: map_obj, icon: icon_file});
-		map_obj.setCenter(point, zoom);
-		myMarker.setMap(map_obj);
+	function set_size() {
+		if (typeof window.innerWidth != 'undefined') {
+			viewportwidth = window.innerWidth,
+			viewportheight = window.innerHeight
+			} else if (typeof document.documentElement != 'undefined'	&& typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+			viewportwidth = document.documentElement.clientWidth,
+			viewportheight = document.documentElement.clientHeight
+			} else {
+			viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+			viewportheight = document.getElementsByTagName('body')[0].clientHeight
+			}
+		mapWidth = viewportwidth * .99;
+		mapHeight = viewportheight * .60;
+		outerwidth = viewportwidth * .99;
+		outerheight = viewportheight * .95;
+		colwidth = outerwidth * .42;
+		colheight = outerheight * .95;
+		listHeight = viewportheight * .7;
+		listwidth = colwidth * .95
+		inner_listwidth = listwidth *.9;
+		celwidth = listwidth * .20;
+		res_celwidth = listwidth * .15;
+		fac_celwidth = listwidth * .15;
+		$('outer').style.width = outerwidth + "px";
+		$('outer').style.height = outerheight + "px";
+		$('map_canvas').style.width = mapWidth + "px";
+		$('map_canvas').style.height = mapHeight + "px";
 		}
-
-	function load(the_lat, the_lng, the_zoom) {
-		function call_back (in_obj){				// callback function - from gmaps_v3_init()
-			}			// end callback function
-
-		map_obj = gmaps_v3_init(call_back, 'map_canvas', 
-			<?php echo get_variable('def_lat');?>, 
-			<?php echo get_variable('def_lng');?>, 
-			the_zoom, 
-			icon_file, 
-			<?php echo get_variable('maptype');?>, 
-			false);	
-
-		do_marker(the_lat, the_lng, the_zoom);
-		}			// end function load()
+		
+	function do_tab(tabid, suffix, lat, lng) {
+		theTabs = new Array(1,2,3);
+		for(var key in theTabs) {
+			if(key == (suffix -1)) {
+				}
+			}
+		if(tabid == "tab1") {
+			if($('tab1')) {CngClass('tab1', 'tabinuse');}
+			if($('tab2')) {CngClass('tab2', 'tab');}
+			if($('tab3')) {CngClass('tab3', 'tab');}
+			if($('content2')) {$("content2").style.display = "none";}
+			if($('content3')) {$("content3").style.display = "none";}
+			if($('content1')) {$("content1").style.display = "block";}
+			} else if(tabid == "tab2") {
+			if($('tab2')) {CngClass('tab2', 'tabinuse');}
+			if($('tab1')) {CngClass('tab1', 'tab');}
+			if($('tab3')) {CngClass('tab3', 'tab');}
+			if($('content1')) {$("content1").style.display = "none";}
+			if($('content3')) {$("content3").style.display = "none";}
+			if($('content2')) {$("content2").style.display = "block";}
+			} else {
+			if($('tab3')) {CngClass('tab3', 'tabinuse');}
+			if($('tab1')) {CngClass('tab1', 'tab');}
+			if($('tab2')) {CngClass('tab2', 'tab');}
+			if($('content1')) {$("content1").style.display = "none";}
+			if($('content2')) {$("content2").style.display = "none";}
+			if($('content3')) {$("content3").style.display = "block";}
+			init_minimap(3, lat,lng, "", 13, <?php print get_variable('locale');?>, 1);
+			minimap.setView([lat,lng], 13);
+			}
+		}
 	</SCRIPT>
 </HEAD>
-<BODY onLoad = 'load(<?php print $row['lat'];?>, <?php print $row['lng'];?>, 15); ck_frames();'>
+<BODY onLoad='ck_frames();'>
 <TABLE ALIGN = 'center'><TR><TD>
 
 <CENTER><BR /><BR clear=all/><BR /></CENTER>
@@ -147,10 +190,10 @@ $row = mysql_fetch_assoc($result);
 					<TD class='wrap_label'>State</TD><TD class='wrap_data'><?php print $row['state'];?></TD>
 				</TR>
 				<TR class='tab_row'>
-					<TD class='wrap_label'>Latitude</TD><TD class='wrap_data'><?php print $row['lat'];?></TD>
+					<TD class='wrap_label'>Latitude</TD><TD class='wrap_data'><?php print $lat;?></TD>
 				</TR>
 				<TR class='tab_row'>
-					<TD class='wrap_label'>Longitude</TD><TD class='wrap_data'><?php print $row['lng'];?></TD>
+					<TD class='wrap_label'>Longitude</TD><TD class='wrap_data'><?php print $lng;?></TD>
 				</TR>
 				<TR class='tab_row'>
 					<TD class='wrap_label'>Description</TD><TD class='wrap_data'><?php print $row['description'];?></TD>
@@ -177,4 +220,19 @@ $row = mysql_fetch_assoc($result);
 <INPUT TYPE='hidden' NAME='status' VALUE=''>
 </FORM>
 </TD></TR></TABLE>
+<SCRIPT>
+var map;
+var minimap;
+var latLng;
+var in_local_bool = "0";
+var mapWidth = 800;
+var mapHeight = 450;
+$('map_canvas').style.width = mapWidth + "px";
+$('map_canvas').style.height = mapHeight + "px";
+var theLocale = <?php print get_variable('locale');?>;
+init_map(3, <?php print $lat;?>, <?php print $lng;?>, "", 13, theLocale, 1);
+map.setView([<?php print $lat;?>, <?php print $lng;?>], 13);
+var bounds = map.getBounds();
+var zoom = map.getZoom();
+</SCRIPT>
 </BODY></HTML>

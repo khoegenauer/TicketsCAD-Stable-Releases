@@ -3,6 +3,19 @@
 */
 //error_reporting(E_ALL);
 require_once('../incs/functions.inc.php'); 
+if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) { 
+	define("PROTOCOL", "https://");
+	} else { 
+	define("PROTOCOL", "http://"); 
+	}
+define("WEBHOST_URL", PROTOCOL.$_SERVER['HTTP_HOST']);
+define("THISDIR_URL", PROTOCOL.$_SERVER['HTTP_HOST'].dirname($_SERVER['PHP_SELF']));
+$url = WEBHOST_URL;
+$thisurl = THISDIR_URL;
+$logo = $thisurl . "/logo.png";
+$image = $thisurl . "/t.png";
+$parent = dirname($thisurl);
+$icons_dir = $parent . "/rm/roadinfo_icons/";
 $now = mysql_format_date(time() - (get_variable('delta_mins')*60));	
 function output_xml_field($col_name,$value) {
 	$value = str_replace('&', '&amp;',	$value);
@@ -41,18 +54,18 @@ header("Content-type: text/xml");
 $XML = "<?xml version=\"1.0\"?>\n";
 $XML .= "<rss version=\"2.0\" xmlns:georss=\"http://www.georss.org/georss\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\">\n";
 $XML .= "\t<channel>\n";
-$XML .= "\t\t<description>Road Conditions provided by Gloucestershire and Worcestershire 4x4 Response</description>\n";	
-$XML .= "\t\t<link>http://gw4x4r.co.uk</link>\n";		
+$XML .= "\t\t<description><![CDATA[Incidents being run by " . get_variable('host') . "]]></description>\n";	
+$XML .= "\t\t<link>" . $url . "</link>\n";		
 $XML .= "\t\t<pubDate>" . $now . "</pubDate>\n";
 $XML .= "\t\t<lastBuildDate>" . $now . "</lastBuildDate>\n";
 $XML .= "\t\t<language>en-gb</language>\n";
-$XML .= "\t\t<managingEditor>webmaster@gw4x4r.co.uk</managingEditor>\n";
-$XML .= "\t\t<webMaster>webmaster@gw4x4r.co.uk</webMaster>\n";
+$XML .= "\t\t<managingEditor>" . get_variable('email_reply_to') . "</managingEditor>\n";
+$XML .= "\t\t<webMaster>" . get_variable('email_reply_to') . "</webMaster>\n";
 $XML .= "\t\t<image>\n";
-$XML .= "\t\t\t<url>http://www.gw4x4r.co.uk/gw4x4r_logo.jpg</url>\n";
-$XML .= "\t\t\t<link>http://www.gw4x4r.co.uk/tickets_training/rss/road_conditions.php</link>\n";
+$XML .= "\t\t\t<url>" . $logo . "</url>\n";
+$XML .= "\t\t\t<link>". $thisurl . "/road_conditions.php</link>\n";
 $XML .= "\t\t\t<width>40</width>\n";
-$XML .= "\t\t\t<title>Road Conditions provided by Gloucestershire and Worcestershire 4x4 Response</title>\n";
+$XML .= "\t\t\t<title><![CDATA[Road Conditions provided by " . get_variable('host') . "]]></title>\n";
 $XML .= "\t\t</image>\n";
 $XML .= "\t\t<title>Road Conditions</title>\n";
 while($row = mysql_fetch_array($result,MYSQL_ASSOC)) {
@@ -64,10 +77,10 @@ while($row = mysql_fetch_array($result,MYSQL_ASSOC)) {
 	$XML .= "Reported: " . $row['as_of'] . "<BR />";
 	$XML .= "Location: " . $row['address'] . "<BR />";
 	$XML .= "Latitude: " . $row['lat'] . ", Longitude: " . $row['lng'] . "<BR />";
-	$XML .= "<img src=\"http://www.gw4x4r.co.uk/tickets_training/rm/roadinfo_icons/" . $row['type_icon'] . "\" height='40'>]]></description>\n";
+	$XML .= "<img src=\"" . $icons_dir . $row['type_icon'] . "\" height='40'>]]></description>\n";
 	$XML .= "\t\t\t<category>" . $row['type'] . "</category>\n";
-	$XML .= "\t\t\t<image>http://www.gw4x4r.co.uk/tickets_training/rm/roadinfo_icons/" . $row['type_icon'] . "</image>\n";
-	$XML .= "\t\t\t<link>http://gw4x4r.co.uk</link>\n";	
+	$XML .= "\t\t\t<image>" . $icons_dir . $row['type_icon'] . "</image>\n";
+	$XML .= "\t\t\t<link>" . $thisurl . "/view.php?id=" . $row['feed_id'] . "</link>\n";	
 	$XML .= "\t\t\t<georss:point>" . $row['lat'] . " " . $row['lng'] . "</georss:point>\n";
 	$XML .= "\t\t</item>\n";
 	$i++;

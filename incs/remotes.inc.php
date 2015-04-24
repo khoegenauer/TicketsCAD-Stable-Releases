@@ -28,6 +28,7 @@ error_reporting(E_ALL);
 1/30/2014 - Added function do_xastir
 2/14/2014 - redid instam IAW revised API, no master key usage
 5/12/2014 - revised to handle movement detection
+3/3/2015 - revised aprs movement detection, like_ify() lookup
 */
 
 $thirty_days = 30*24*60*60;							// seconds - 7/4/2013
@@ -342,6 +343,7 @@ function aprs_date_ok ($indate) {	// checks for date/time within 48 hours
 	}
 
 function do_aprs() {				// 7/2/2013 - populates the APRS tracks table and updates responder position data
+//	snap ( basename(__FILE__), __LINE__);
 	function log_aprs_err($message) {								// error logger - 4/29/12
 		@session_start();
 		if (!(array_key_exists ( "aprs_err", $_SESSION ))) {		// limit to once per session
@@ -387,8 +389,9 @@ function do_aprs() {				// 7/2/2013 - populates the APRS tracks table and update
 	$query	= "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `mobile`= 1 AND `aprs`= 1 AND `callsign` <> ''";  // work each call sign, 8/10/09
 	$result	= mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);
 	$positions = array();	
+//	snap ( __LINE__, mysql_num_rows($result));
 
-	if (mysql_affected_rows() > 0) {			// 
+	if (mysql_num_rows($result) > 0) {			//
 		$call_str = $sep = "";
 		while ($row = @mysql_fetch_assoc($result)) {	
 			$lat = (!(empty($row['lat']))) ? $row['lat']: get_variable('def_lat');
@@ -402,6 +405,7 @@ function do_aprs() {				// 7/2/2013 - populates the APRS tracks table and update
 		$data=get_remote($the_url);				// returns JSON-decoded values
 		if ((!(is_array($data))) && (!(is_object($data)))) {				// 4/29/12
 			log_aprs_err("APRS JSON data format error");
+			snap ( basename(__FILE__), __LINE__);
 			}
 		$temp = $data->result;
 		
@@ -411,6 +415,7 @@ function do_aprs() {				// 7/2/2013 - populates the APRS tracks table and update
 			for ($i=0; $i< ($data->found ) ; $i++) {		// extract fields from each entry
 				$entry = (object) $data->entries[$i];
 				$callsign_in = $entry->name;
+				$callsign_in_rev = like_ify($callsign_in);		// 3/3/2015 - revise callsign for LIKE lookup
 				
 				$lat = $entry->lat;
 				$lng = $entry->lng;
@@ -419,35 +424,37 @@ function do_aprs() {				// 7/2/2013 - populates the APRS tracks table and update
 				@($mph = $entry->speed);
 				@($alt = @$entry->altitude);
 				$packet_date = $entry->lasttime;
-				$p_d_timestamp = mysql_format_date($packet_date);		// datetime format				
 																		// 4/25/11, 4/18/12
 				if ( sane ( floatval ($lat), floatval ($lng), intval ($updated) ) ) {
-					$query = "UPDATE `$GLOBALS[mysql_prefix]responder` SET 
-						`lat` = '$lat', `lng` ='$lng'						
-						WHERE ( (`aprs` = 1 )
-						AND (`callsign` = '{$callsign_in}' ) )";
+//							3/3/2015 - note `packet_date` datetime format two places - match on callsign and packet date?
+					$query = "SELECT `latitude`, `packet_date` FROM `$GLOBALS[mysql_prefix]tracks` WHERE
+						`source` LIKE '{$callsign_in_rev}' AND `packet_date` = ( SELECT MAX(`packet_date`) FROM `$GLOBALS[mysql_prefix]tracks` ) LIMIT 1 ";		// note LIKE argument
 
 					$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-//									any movement?
-					if (mysql_affected_rows() > 0 ) { 		// 6/21/2013 - 7/2/2013
-//						snap ( basename(__FILE__), __LINE__);					
-					$query = "UPDATE `$GLOBALS[mysql_prefix]responder` SET 
-							`updated` = '" . now_ts() . "'
-							WHERE ( (`aprs` = 1)
-						AND (`callsign` = '{$callsign_in}'))";
-						$result_temp = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__); //11/15/11									
+					$row = mysql_fetch_assoc($result);
+
+/*					if ( (false == ($row = mysql_fetch_assoc($result))) || ($row['latitude'] != $lat) ) {} -- handles empty tracks table */
 					
-					$our_hash = $callsign_in . (string) (abs($lat) + abs($lng)) ;				// a hash - for dupe prevention
+					if (floatval ($row['latitude']) != floatval ($lat)) {				// tracks db vs incoming - a position change?
+						$our_hash = $callsign_in . (string) (abs($lat) + abs($lng)) ;	// a hash - use tbd
 	
 					$query = "INSERT INTO `$GLOBALS[mysql_prefix]tracks` (
-						packet_id, source, latitude, longitude, speed, course, altitude, packet_date, updated) VALUES (
-						'{$our_hash}', '{$callsign_in}', '{$lat}', '{$lng}', '{$mph}', '{$course}', '{$alt}', '{$p_d_timestamp}', '{$now}')";
+							`packet_id`, `source`, `latitude`, `longitude`, `speed`, `course`, `altitude`, `packet_date`, `updated`) VALUES (
+							'{$our_hash}', '{$callsign_in}', '{$lat}', '{$lng}', '{$mph}', '{$course}', '{$alt}', FROM_UNIXTIME({$packet_date}), '{$now}')";
+
+						$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+
+						$query = "UPDATE `$GLOBALS[mysql_prefix]responder` SET
+							`updated` = '" . now_ts() . "',
+							`lat` = '{$lat}',
+							`lng` = '{$lng}'
+							WHERE ( (`aprs` = 1)
+							AND (`callsign` LIKE '{$callsign_in_rev}'))";				// note LIKE argument
+						$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__); //11/15/11
+						}		// end new position data
 	
-					$result = mysql_query($query);				// ignore duplicate/errors
-						}				// end if (mysql_affected_rows() > 0 ) 
 					}			// end if (sane())	
 				}		// end for ($i...)	
-
 			}				// end ( JSON data OK)
 		}		// end (mysql_affected_rows() > 0) - any APRS units?
 	}		// end function do_aprs() 

@@ -175,7 +175,8 @@ function template_205 ($item) {
 <META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
 <META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
 <META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
-<script type = "javascript" src = "./js/jquery.min.js"></script>
+<script src = "./js/jquery-1.4.2.min.js"></script>
+<script src="./js/misc_function.js" TYPE="text/javascript"></script>	<!-- 9/14/12 -->
 
 <SCRIPT> 
 	String.prototype.trim = function () {
@@ -255,13 +256,24 @@ switch ($step) {
 		$item[62] =  in_text  (62, 5, 62, $the_time);  	
 
 ?>
+<!-- 1/1/2015 -->
+<STYLE TYPE="text/css">
+.box { background-color: transparent; border: 0px solid #000000; color: #000000; padding: 0px; position: absolute; z-index:1000; }
+.bar { background-color: #DEE3E7; color: #000000; cursor: move; font-weight: bold; padding: 2px 1em 2px 1em;  z-index:1000; }
+.content { padding: 1em; }
+</STYLE>
+
 <BODY onload = "document.form_205.f1.focus();">		<!-- <?php echo __LINE__ ; ?> -->
 
-<div id ='nav' style="position:fixed; top:200px; left:150px;">
+<div id="boxB" class="box" style="left:5px; top:20px;">
+  <div class="bar" STYLE="width:12em; color:red; background-color : transparent;"
+       onmousedown="dragStart(event, 'boxB')"><i>&nbsp;&nbsp;&nbsp;&nbsp;Drag us</i></div>
+  <div class="content" style="width:auto;">
 	<input type = "reset"><br /><br />
 	<input type = "button" value = 'Cancel' onclick = "document.can_form.submit()" />
 	<br /><br />
 	<input type = "button" value = 'OK - Mail this' onclick = "validate(document.form_205);"/>
+	</div>
 </div>
 
 <center><br />

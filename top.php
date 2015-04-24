@@ -78,26 +78,9 @@ $browser = trim(checkBrowser(FALSE));						// 6/12/10
 <STYLE type="text/css">
 	table			{border-collapse:collapse;}
 	table, td, th	{border:0px solid black;}
-	.signal_r { margin-left: 4px;  font: normal 12px Arial, Helvetica, sans-serif; color:#FFFFFF; border-width: 1px; border-STYLE: inset; border-color: #FF3366;
-  				  padding: 1px 0.5em;text-decoration: none;float: left;color: black;background-color: #FF3366;font-weight: bolder;}
-	.signal_o { margin-left: 4px;  font: normal 12px Arial, Helvetica, sans-serif; color:#FFFFFF; border-width: 1px; border-STYLE: inset; border-color: #FF3366;
-  				  padding: 1px 0.5em;text-decoration: none;float: left;color: black;background-color: #CC9900;font-weight: bolder;}
-	.signal_b { margin-left: 4px;  font: normal 12px Arial, Helvetica, sans-serif; color:#FFFFFF; border-width: 1px; border-STYLE: inset; border-color: #00CCFF;
-  				  padding: 1px 0.5em;text-decoration: none;float: left;color: black;background-color: #00CCFF;font-weight: bolder;}
-	.signal_w { margin-left: 4px; font: normal 12px Arial, Helvetica, sans-serif; color:#FFFFFF; border-width: 2px; border-STYLE: inset; border-color: #3366FF;
-  				  padding: 1px 0.5em;text-decoration: none;float: left;color: white;background-color: #3366FF;font-weight: bolder;}
-	.hover 	{ margin-left: 4px;  font: normal 12px Arial, Helvetica, sans-serif; color:#FF0000; border-width: 1px; border-STYLE: outset; border-color: #FFFFFF;
-  				  padding: 4px 0.5em;text-decoration: none;float: left;color: black;background-color: #DEE3E7;font-weight: bolder;}
-	.plain 	{ margin-left: 4px;  font: normal 12px Arial, Helvetica, sans-serif; color:#000000;  border-width: 1px; border-STYLE: inset; border-color: #FFFFFF;
-  				  padding: 4px 0.5em;text-decoration: none;float: left;color: black;background-color: #EFEFEF;font-weight: bolder;}
 	.message { FONT-WEIGHT: bold; FONT-SIZE: 20px; COLOR: #0000FF; FONT-STYLE: normal; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif;}
-
-	.hover_lo 	{ margin-left: 4px;  font: normal 12px Arial, Helvetica, sans-serif; color:#FF0000; border-width: 1px; border-STYLE: outset; border-color: #FFFFFF;
-  				  padding: 1px 0.5em;text-decoration: none; color: black;background-color: #DEE3E7;font-weight: bolder;}
-	.plain_lo 	{  margin-left: 4px; font: normal 12px Arial, Helvetica, sans-serif; color:#000000;  border-width: 3px; border-STYLE: hidden; border-color: #FFFFFF;}
 	input		{background-color:transparent;}		/* Benefit IE radio buttons */
-  	</STYLE>
-<link rel="stylesheet" type="text/css" href="/fvlogger/logger.css" /> 
+</STYLE>
 <SCRIPT SRC="./js/misc_function.js"></SCRIPT>	<!-- 1/6/11 JSON call-->
 <SCRIPT SRC='./js/md5.js'></SCRIPT>				<!-- 11/30/08 -->
 <SCRIPT>
@@ -156,7 +139,6 @@ if(file_exists("./incs/modules.inc.php")) {
 	var msgs_interval = null;		//	10/23/12
 	var emsgs_interval = null;		//	10/23/12
 	var pos_interval = null;
-	var file_interval = null;
 	var lit=new Array();
 	var lit_r = new Array();
 	var lit_o = new Array();
@@ -242,7 +224,7 @@ if(file_exists("./incs/modules.inc.php")) {
 			var the_arr_lgth = the_id_arr.length;		// sanity check
 			}
 		catch (e) {
-			alert("<?php echo 'error: ' . basename(__FILE__) . '@' .  __LINE__;?>");
+//			alert("<?php echo 'error: ' . basename(__FILE__) . '@' .  __LINE__;?>");
 //			do_logout();				// 2/10/12
 			return;
 			}			
@@ -396,14 +378,13 @@ if(file_exists("./incs/modules.inc.php")) {
 						}
 					}
 				mu_get();				// start loop
-				do_positions();	//	1/3/14
-				do_conditions(); //	1/3/14
+//				do_positions();	//	1/3/14
+//				do_conditions(); //	1/3/14
 				var is_messaging = parseInt("<?php print get_variable('use_messaging');?>");
 				if((is_messaging == 1) || (is_messaging == 2) || (is_messaging == 3)) {
 				get_msgs();
 					nm_init();
 					}
-				do_filelist();	//	9/10/13
 				}				// end function init_cb()
 		}				// end function mu_init()
 
@@ -526,93 +507,6 @@ if(file_exists("./incs/modules.inc.php")) {
 			}
 		}
 		
-// for road conditions		
-	function do_conditions() {	//	1/3/14
-		var randomnumber=Math.floor(Math.random()*99999999);		
-	  	// call the server to execute the server side operation
-		if (window.XMLHttpRequest) {
-			condxmlHttp = new XMLHttpRequest();
-			condxmlHttp.open("GET", "./ajax/alertlist.php?version=" + randomnumber, true);
-			condxmlHttp.onreadystatechange = readConditions;
-			condxmlHttp.send(null);
-			}
-		}
-		
-	function readConditions() {	//	1/3/14
-		if (condxmlHttp.readyState == 4) {
-			if (condxmlHttp.status == 200) {
-				var conditions = JSON.decode(condxmlHttp.responseText);
-				for(var key in conditions) {
-					if(conditions[key][0] != 0) {
-					var the_condID = conditions[key][0];
-					var the_condTitle = conditions[key][1];
-					var the_condTypeTitle = conditions[key][2];
-					var the_condAddress = conditions[key][3];
-					var the_condDescription = conditions[key][4];
-					var the_iconurl = "./rm/roadinfo_icons/" + conditions[key][5];
-					var the_condDate = conditions[key][6];
-					var the_condLat = conditions[key][7];
-					var the_condLng = conditions[key][8];
-					var info = "<TABLE class='infowin'>";
-					info += "<TH COLSPAN=2 class='header'>" + the_condTitle + "</TH>";
-					info += "<TR class='even'><TD class='td_label'><B><?php print get_text('Type');?></B></TD><TD class='td_data'>" + the_condTypeTitle + "</TD></TR>";
-					info += "<TR class='odd'><TD class='td_label'><B><?php print get_text('Address');?></B></TD><TD class='td_data'>" + the_condAddress + "</TD></TR>";
-					info += "<TR class='odd'><TD class='td_label'><B><?php print get_text('Updated');?></B></TD><TD class='td_data'>" + the_condDate + "</TD></TR></TABLE>";
-					if(typeof parent.frames["main"].createConditionMarker == 'function') { 
-						parent.frames["main"].createConditionMarker(the_condLat, the_condLng, the_condID, info, "roadinfo", the_iconurl)
-						}
-					}	
-				}
-			}
-			}
-		conditions_get();		
-		}
-		
-	function conditions_get() {			// set cycle, 1/3/14
-		if (pos_interval!=null) {return;}			// ????
-		pos_interval = window.setInterval('do_conditions_loop()', 30000);
-		}			// end function mu get()	
-		
-	function do_conditions_loop() {	//	1/3/14
-		var randomnumber=Math.floor(Math.random()*99999999);		
-	  	// call the server to execute the server side operation
-		if (window.XMLHttpRequest) {
-			condxmlHttp = new XMLHttpRequest();
-			condxmlHttp.open("GET", "./ajax/responder_data.php?version=" + randomnumber, true);
-			condxmlHttp.onreadystatechange = readConditions2;
-			condxmlHttp.send(null);
-			}
-		}
-		
-	function readConditions2() {	//	1/3/14
-		if (condxmlHttp.readyState == 4) {
-			if (condxmlHttp.status == 200) {
-				var conditions = JSON.decode(condxmlHttp.responseText);
-				for(var key in conditions) {
-					if(conditions[key][0] != 0) {
-					var the_condID = conditions[key][0];
-					var the_condTitle = conditions[key][1];
-					var the_condTypeTitle = conditions[key][2];
-					var the_condAddress = conditions[key][3];
-					var the_condDescription = conditions[key][4];
-					var the_iconurl = "./rm/roadinfo_icons/" + conditions[key][5];
-					var the_condDate = conditions[key][6];
-					var the_condLat = conditions[key][7];
-					var the_condLng = conditions[key][8];
-					var info = "<TABLE class='infowin'>";
-					info += "<TH class='header'>" + the_condTitle + "</TH>";
-					info += "<TR class='even'><TD class='td_label'><B><?php print get_text('Alert Type');?></B></TD><TD class='td_data'>" + the_condTypeTitle + "</TD></TR>";
-					info += "<TR class='odd'><TD class='td_label'><B><?php print get_text('Address');?></B></TD><TD class='td_data'>" + the_condAddress + "</TD></TR>";
-					info += "<TR class='odd'><TD class='td_label'><B><?php print get_text('Updated');?></B></TD><TD class='td_data'>" + the_condDate + "</TD></TR></TABLE>";
-					if(typeof parent.frames["main"].createConditionMarker == 'function') { 
-						parent.frames["main"].createConditionMarker(the_condLat, the_condLng, the_condID, info, "roadinfo", the_iconurl)
-						}
-					}	
-				}
-			}
-		}
-		}
-		
 	function do_set_sess_exp() {			// set session expiration  - 1/11/10
 		var randomnumber=Math.floor(Math.random()*99999999);		
 		sendRequest ('set_cook_exp.php?version=' + randomnumber,set_cook_exp_handleResult, "");	
@@ -626,7 +520,6 @@ if(file_exists("./incs/modules.inc.php")) {
 		if (!req) return;
 		var method = (postData) ? "POST" : "GET";
 		req.open(method,url,true);
-//		req.setRequestHeader('User-Agent','XMLHTTP/1.0');
 		if (postData)
 			req.setRequestHeader('Content-type','application/x-www-form-urlencoded');
 		req.onreadystatechange = function () {
@@ -845,8 +738,6 @@ if(file_exists("./incs/modules.inc.php")) {
 		msgs_interval = null;	//	10/23/12
 		clearInterval(emsgs_interval);	//	10/23/12
 		emsgs_interval = null;	//	10/23/12
-		clearInterval(file_interval);	//	10/25/13
-		file_interval = null;	//	10/25/13
 		$('whom').innerHTML=NOT_STR; 
 		is_initialized = false;
 		nmis_initialized = false;	//	10/23/12
@@ -927,45 +818,6 @@ if(file_exists("./incs/modules.inc.php")) {
 		$("has_message_row").style.display = "none";
 		
 		}
-
-	function do_filelist() {	//	9/10/13, 10/25/13
-		randomnumber=Math.floor(Math.random()*99999999);
-		var url ="./ajax/gen_file_list.php?version=" + randomnumber;
-		sendRequest (url, genfile_cb, "");
-		function genfile_cb(req) {
-			var the_files=JSON.decode(req.responseText);
-			if(the_files[0] != "") {
-				$('files').style.display = "inline-block";
-			$('file_list').innerHTML = the_files[0];
-			$('file_list2').innerHTML = the_files[1];
-				} else {
-				$('files').style.display = "none";
-				}
-			}
-		do_filelist2();
-			}
-	
-	function do_filelist2() {	//	10/25/13
-		if (file_interval!=null) {return;}
-		file_interval = window.setInterval('file_loop()', 60000);
-		}
-
-	function file_loop() {	//	10/25/13
-		randomnumber=Math.floor(Math.random()*99999999);
-		var url ="./ajax/gen_file_list.php?version=" + randomnumber;
-		sendRequest (url, genfile_cb, "");
-		function genfile_cb(req) {
-			var the_files=JSON.decode(req.responseText);
-			if(the_files[0] != "") {
-				$('files').style.display = "inline-block";
-				$('file_list').innerHTML = the_files[0];
-				$('file_list2').innerHTML = the_files[1];
-				} else {
-				$('files').style.display = "none";
-				}
-			}
-		}
-		
 
 //	============== module window openers ===========================================
 
@@ -1085,7 +937,7 @@ if(file_exists("./incs/modules.inc.php")) {
 			params  = 'width='+screen.width;
 			params += ', height='+screen.height;
 			params += ', top=0, left=0', scrollbars = 1
-			params += ', fullscreen=no';
+			params += ', resizable=1';
 			newwindow_fs=window.open("full_scr.php", "full_scr", params);
 			if (isNull(newwindow_fs)) {
 				alert ("This operation requires popups to be enabled. Please adjust your browser options.");
@@ -1204,7 +1056,6 @@ function get_daynight() {
 				window.clearInterval(nm_interval);	//	10/23/12
 				window.clearInterval(msgs_interval);	//	10/23/12
 				window.clearInterval(emsgs_interval);	//	10/23/12
-				window.clearInterval(file_interval);	//	10/23/12
 				get_new_colors();								// reloads top				
 				}									// end function day_night_callback()				
 		}
@@ -1221,16 +1072,6 @@ function get_daynight() {
 		catch (e) {
 			}
 		}		// end do_manual()
-		
-		function do_files() {	//	9/10/13
-			hide_butts();								// hide buttons
-			$("file_buts_row").style.display = "inline-block";
-			}
-			
-		function hide_files() {	//	9/10/13
-			$("file_buts_row").style.display = "none";
-			show_butts();
-			}
 		
 		function can_has () {							// cancel HAS function - return to normal display
 			$("has_form_row").style.display = "none";
@@ -1390,6 +1231,8 @@ function get_daynight() {
 		<TR><TD ID = 'buttons' STYLE = "display:none">
 			<SPAN ID = 'main'  CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
 				onClick ="go_there('main.php', this.id);"><?php print get_text("Situation"); ?></SPAN>
+<!--		<SPAN ID = 'mi'  CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
+				onClick ="go_there('maj_inc.php', this.id);">Maj Incs</SPAN> -->
 			<SPAN ID = 'add'  CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
 				onClick = "go_there('add.php', this.id);"><?php print get_text("New"); ?></SPAN>
 			<SPAN ID = 'resp'  CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
@@ -1429,6 +1272,8 @@ if((get_variable('use_messaging') == 1) || (get_variable('use_messaging') == 2) 
 				onClick = "go_there('help.php', this.id);"><?php print get_text("Help"); ?></SPAN>
 			<SPAN ID = 'log'  CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
 				onClick = "do_sta_log()"><?php print get_text("Log"); ?></SPAN>
+			<SPAN ID = 'rc'  CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
+				onClick = "go_there('rc_redirect.php', this.id)">Road Cond</SPAN>
 			<SPAN ID = 'full'  CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
 				onClick = "starting=false; do_full_scr()"><?php print get_text("Full scr"); ?></SPAN>			
 			<SPAN ID = 'links'  CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
@@ -1438,9 +1283,6 @@ if((get_variable('use_messaging') == 1) || (get_variable('use_messaging') == 2) 
 <!-- ================== -->
 			<SPAN ID = 'term' CLASS = 'plain' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
 				onClick = "go_there('mobile.php', this.id);"><?php print get_text("Mobile"); ?></SPAN>	<!-- 7/27/10 -->
-<!-- ================== -->
-			<SPAN ID = 'files'  CLASS = 'plain' style='display: none;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
-				onClick = "do_files();"><?php print get_text("Files");?></SPAN>	<!-- 9/10/13 -->
 <!-- ================== -->
 			<SPAN ID = 'reqs'  CLASS = 'plain' style='display: none;' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
 				onClick = "go_there('./portal/requests.php', this.id);"></SPAN>	<!-- 10/23/12 -->
@@ -1463,15 +1305,6 @@ if((get_variable('use_messaging') == 1) || (get_variable('use_messaging') == 2) 
 ?>				
 			</TD>
 			</TR>
-		<TR ID='file_buts_row' WIDTH='100%' STYLE="display: none; text-align: center;">	<!-- 9/10/13 -->
-			<TD ALIGN=CENTER WIDTH='100%'><CENTER>
-				<SPAN STYLE = "margin-left:150px; ">
-					<SPAN id='file_list' style='display: inline; float: none;'></SPAN>
-					<SPAN id='can_files' class='plain' style='float: right;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick='hide_files();'>Cancel</SPAN>
-					<SPAN id='file_list2' style='display: inline; float: right;'></SPAN>
-				</SPAN>
-			</TD></CENTER>
-		</TR>
 		<TR ID = 'has_form_row' STYLE = "display:none;">
 			<TD ALIGN=CENTER>				
 				<SPAN ID = "has_span" >

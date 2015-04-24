@@ -336,24 +336,20 @@ function get_bnd_session() {
 	$boundaries = array();
 	$boundaries = get_sess_boundaries();
 	$bnds_sess = array();
-	$bn=0;
 	if(!empty($boundaries)) {
 		foreach($boundaries as $key => $value) {	
 			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]mmarkup` WHERE `id`='{$value}'";	
 			$result = mysql_query($query)or do_error($query, mysql_error(), basename(__FILE__), __LINE__);
 			$row = stripslashes_deep(mysql_fetch_assoc($result));
-			$boundary_names[$bn] = $row['line_name'];
-			$bn++;
+			$boundary_names[$row['id']] = $row['line_name'];
 			}	
-		$i = 0;
 		foreach($boundary_names as $key => $value) {
 			$bnd_key = "show_hide_bnds_" . $value;
 			if(isset($_SESSION[$bnd_key])) {
-				$bnds_sess[$i] = ($_SESSION[$bnd_key]);
+				$bnds_sess[$key] = ($_SESSION[$bnd_key]);
 			} else {
-				$bnds_sess[$i] = "s";
+				$bnds_sess[$key] = "s";
 			}		
-			$i++;
 			}
 			return $bnds_sess;
 		} else {
@@ -362,7 +358,6 @@ function get_bnd_session() {
 	}	//	end function get_bnd_session()
 	
 function get_bnd_session_names() {
-	$bn=0;
 	$tmp = array();
 	$tmp = get_sess_boundaries();
 	if(!empty($tmp)) {
@@ -370,8 +365,7 @@ function get_bnd_session_names() {
 			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]mmarkup` WHERE `id`='{$value}'";	
 			$result = mysql_query($query)or do_error($query, mysql_error(), basename(__FILE__), __LINE__);
 			$row = stripslashes_deep(mysql_fetch_assoc($result));
-			$boundary_names[$bn] = $row['line_name'];
-			$bn++;
+			$boundary_names[$row['id']] = $row['line_name'];
 			}
 		return $boundary_names;
 		} else {
@@ -426,7 +420,7 @@ function get_fac_session_status() {
 		if(isset($_SESSION[$fac_cat_key])) {
 			$fac_category_stat[$i] = ($_SESSION[$fac_cat_key]);
 		} else {
-			$fac_category_stat[$i] = "h";
+			$fac_category_stat[$i] = "s";
 		}		
 		$i++;
 		}

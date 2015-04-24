@@ -1480,7 +1480,7 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 				$street = empty($row['tick_street'])? "" : $row['tick_street'] . "<BR/>" . $row['tick_city'] . " " . $row['state'] ;
 				$todisp = (is_guest())? "": "&nbsp;<A HREF='routes.php?ticket_id=" . $the_id . "'><U>Dispatch</U></A>";	// 8/2/08
 				$now = now(); 					
-
+				$now_ts = now_ts();		// timestamp format - 12/13/2014
 				if ($row['status']== $GLOBALS['STATUS_CLOSED']) {
 					$strike = "<strike>"; $strikend = "</strike>";
 					}
@@ -1496,7 +1496,7 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 				sidebar_line += "<DIV CLASS='in_type <?php print $background_col;?> <?php print $severityclass;?>'><DIV class='incs' onClick = 'myclick(<?php print $sb_indx;?>);' onmouseout=\"UnTip()\" onmouseover=\"Tip('<?php print $row['type'];?>')\"><?php print $strike;?>&nbsp;<?php print shorten($row['type'], $shorten_length);?><?php print $strikend;?></DIV></DIV>";
 				sidebar_line += "<DIV CLASS='in_1 <?php print $background_col;?> <?php print $severityclass;?>'><DIV class='incs' onClick = 'myclick(<?php print $sb_indx;?>);' onmouseout=\"UnTip()\" onmouseover=\"Tip('<?php print $row['tick_street']  . " " . $row['tick_city'] . " " . $row['tick_state'];?>')\"><?php print $strike;?>&nbsp;<?php print shorten(($row['tick_street'] . ' ' . $row['tick_city'] . " " . $row['tick_state']), $shorten_length);?>&nbsp;<?php print $strikend;?></DIV></DIV>";
 				sidebar_line += "<DIV CLASS='in_date <?php print $background_col;?> <?php print $severityclass;?>'><DIV class='incs' onClick = 'myclick(<?php print $sb_indx;?>);' onmouseout=\"UnTip()\" onmouseover=\"Tip('<?php print format_date($row['problemstart']);?>')\"><?php print $strike;?>&nbsp;<?php print shorten(format_date($row['problemstart']), $shorten_length);?><?php print $strikend;?></DIV></DIV>";
-				sidebar_line += "<DIV CLASS='in_dur <?php print $background_col;?> <?php print $severityclass;?>'><DIV class='incs' onClick = 'myclick(<?php print $sb_indx;?>);' onmouseout=\"UnTip()\" onmouseover=\"Tip('<?php print my_date_diff($row['problemstart'], $now);?>')\"><?php print $strike;?>&nbsp;<?php print shorten(my_date_diff($row['problemstart'], $now), $shorten_length);?><?php print $strikend;?></DIV></DIV></BR>";
+				sidebar_line += "<DIV CLASS='in_dur <?php print $background_col;?> <?php print $severityclass;?>'><DIV class='incs' onClick = 'myclick(<?php print $sb_indx;?>);' onmouseout=\"UnTip()\" onmouseover=\"Tip('<?php print my_date_diff(mysql_format_date($row['problemstart']), $now_ts);?>')\"><?php print $strike;?>&nbsp;<?php print shorten(my_date_diff(mysql_format_date($row['problemstart']), $now_ts), $shorten_length);?><?php print $strikend;?></DIV></DIV></BR>";
 
 <?php
 				$rand = ($istest)? "&rand=" . chr(rand(65,90)) : "";													// 10/21/08
@@ -1943,7 +1943,6 @@ function fs_get_disp_status ($row_in) {			// 3/25/11
 			boundary.push(polyline);
 			bound_names.push("<?php print $bn_name;?>"); 
 			polyline.setMap(map);
-
 <?php
 		}	//	End while
 //-------------------------END OF UNIT RING FENCE STUFF-------------------------		

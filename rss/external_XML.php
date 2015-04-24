@@ -1,5 +1,4 @@
 <?php
-print "Hello World";
 error_reporting(E_ALL);
 require_once('../incs/functions.inc.php');
 

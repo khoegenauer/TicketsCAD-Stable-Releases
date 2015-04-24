@@ -134,7 +134,7 @@ if (mysql_num_rows($result) == 0) { 				// 8/6/08
 		$ret_arr[$i][3] = $fromname;
 		$ret_arr[$i][4] = $respstring;
 		$ret_arr[$i][5] = stripslashes_deep(shorten($msg_row['subject'], 18));
-		$ret_arr[$i][6] = stripslashes_deep(shorten($the_message, 2000));
+		$ret_arr[$i][6] = htmlentities(shorten($the_message, 2000));
 		$ret_arr[$i][7] = format_date_2(strtotime($msg_row['date']));
 		$ret_arr[$i][8] = get_owner($msg_row['_by']);	
 		$ret_arr[$i][9] = $the_class;

@@ -418,6 +418,7 @@ function get_setting_help($setting){/* get help for settings */
 		case "_version": 				return "Tickets version number"; break;
 		case "abbreviate_affected": 	return "Abbreviates \"affected\" string at this length when listing tickets, 0 to turn off"; break;
 		case "abbreviate_description": 	return "Abbreviates descriptions at this length when listing tickets, 0 to turn off"; break;
+		case "access_requests": 		return "Allow new users to request access from login screen - swithes on request access button"; break;
 		case "allow_custom_tags": 		return "Enable/disable use of custom tags for rowbreak, italics etc."; break;
 		case "allow_notify": 			return "Allow/deny notification of ticket updates"; break;
 		case "auto_poll":				return "APRS/Instamapper will be polled every n minutes.  Use 0 for no poll"; break;
@@ -439,6 +440,7 @@ function get_setting_help($setting){/* get help for settings */
 		case "gmaps_api_key":			return "Google maps API key - see HELP/README re how to obtain"; break;	
 		case "guest_add_ticket": 		return "Allow guest users to add tickets - NOT RECOMMENDED"; break;
 		case "host": 					return "Hostname where Tickets is run"; break;
+		case "ics_date": 				return "Date format for ICS forms. Format dates according to php function date() variables"; break;
 		case "kml_files":  				return "Do/don&#39;t (1/0) display KML files"; break;
 		case "lat_lng":					return "Lat/lng display: (0) for DDD.ddddd, (1) for DDD MMM SS.ss, (2) for DDD MM.mm"; break;		// 9/13/08
 		case "link_capt":				return "Caption to be used for external link button"; break;
@@ -448,7 +450,9 @@ function get_setting_help($setting){/* get help for settings */
 		case "map_height":				return "Map height - pixels"; break;
 		case "map_width":				return "Map width - pixels"; break;
 		case "military_time": 			return "Enter dates as military time (no am/pm)"; break;
+		case "openspace_api": 			return "UK use only, API key for Openspace use to show UK Ordnance Survey Maps"; break;
 		case "quick":					return "Do/don&#39;t (1/0) bypass user notification steps for quicker operation"; break;			// 3/11/09
+		case "restrict_units": 			return "Restrict units from seing other areas of Tickets, only mobile screen."; break;
 		case "restrict_user_add": 		return "Restrict user to only post tickets as himself"; break;
 		case "restrict_user_tickets": 	return "Restrict to showing only tickets to current user"; break;
 		case "serial_no_ap": 			return "Don&#39;t (0), Do prepend (1), or Append(2) ticket ID# to incident name"; break;												// 9/13/08
@@ -502,6 +506,13 @@ function get_setting_help($setting){/* get help for settings */
 		case "notify_facilities": 		return "Do Notifies to specified address / address list when Receiving Facility or Incident at Facility set.";	 break;	// 9/10/13	
 		case "notify_in_types": 		return "Do Notifies to specified address for a particular incident type.";	 break;	// 9/10/13	
 		case "warn_proximity": 			return "For Location Warnings - proximity of warnings selected for current location";	 break;	// 9/10/13	
+		case "warn_proximity_units": 	return "For Location Warnings, measurment units - M = Miles, K =  Kilometres";	 break;	// 9/10/13	
+		case "use_osmap": 				return "Use UK Ordnance survey maps. Only works if locale is 1 and Openspace API set. Shows link in infowindow for OS Map popup.";	 break;
+		case "xastir_db": 				return "If using private Xastir server for APRS tracking, the database name that the APRS data is written to.";	 break;
+		case "xastir_dbpass": 			return "For Xastir Database, the password for access";	 break;
+		case "xastir_dbuser": 			return "For Xastir Database the MySQL user id.";	 break;	
+		case "xastir_server": 			return "The address of the Xastir Database, localhost by default.";	 break;
+
 		default: 						return "No help for '$setting'"; break;	//	 ics_top
 		}
 	}

@@ -260,6 +260,7 @@ $GLOBALS['LOG_UNIT_STATUS']			=20;
 $GLOBALS['LOG_UNIT_COMPLETE']		=21;		// 	run complete
 $GLOBALS['LOG_UNIT_CHANGE']			=22;
 $GLOBALS['LOG_UNIT_TO_QUARTERS']	=23;		// 3/11/12
+$GLOBALS['LOG_UNIT_COMMENT']   		=24;		// 3/18/15  
 
 $GLOBALS['LOG_CALL_EDIT']			=29;		// 6/17/11
 $GLOBALS['LOG_CALL_DISP']			=30;		// 1/20/09
@@ -361,8 +362,10 @@ $GLOBALS['MSGTYPE_IC_SMS_DF']	= 6;	//	10/23/12
 
 $GLOBALS['NM_LAT_VAL'] 		= 0.999999;												// 3/27/2013	
 
-$GLOBALS['LOC_TYPES_BG']	= '#FF0000';	//	8/9/13
-$GLOBALS['LOC_TYPES_TEXT']	= '#FFFFFF';	//	8/9/13
+$GLOBALS['LOC_TYPES_NAMES']	= array('Violence','Frequent','Health','Environmental','General');
+$GLOBALS['LOC_TYPES'] = array(0,1,2,3,4);		//	11/10/14
+$GLOBALS['LOC_TYPES_BG']	= array('#FF0000','#FFFFFF','#0000CC','#00CC00','#FF0000');		//	11/10/14
+$GLOBALS['LOC_TYPES_TEXT']	= array('#FFFFFF','#FF0000','#FFFFFF','#000000','#FFFFFF');		//	11/10/14
 
 $evenodd = array ("even", "odd", "heading");	// class names for alternating table row css colors
 
@@ -482,7 +485,7 @@ function show_assigns($which, $id_in){				// 10/20/12
 		FROM `$GLOBALS[mysql_prefix]assigns` `a`
 		LEFT JOIN `$GLOBALS[mysql_prefix]responder` `r`	ON (`r`.`id` = `a`.`responder_id`)
 		LEFT JOIN `$GLOBALS[mysql_prefix]ticket` `t`	ON (`t`.`id` = `a`.`ticket_id`)
-		WHERE `a`.`{$which_ar[$which]}` = {$id_in} ORDER BY `problemstart_i` ASC";
+		WHERE `a`.`{$which_ar[$which]}` = {$id_in} ORDER BY `problemstart_i` DESC LIMIT 50";
 	$as_result	= mysql_query($as_query) or do_error($as_query,'mysql_query() failed',mysql_error(), basename( __FILE__), __LINE__);
 	$out_str = $the_handle = "";
 	$i=0;		// line counter
@@ -916,7 +919,7 @@ function show_unit_log ($theid, $show_cfs=FALSE) {								// 9/10/13
 		LEFT JOIN `$GLOBALS[mysql_prefix]un_status` s 	ON (l.info = s.id)
 		LEFT JOIN `$GLOBALS[mysql_prefix]user` u 		ON (l.who = u.id)
 		WHERE `l`.`responder_id` = {$theid} 
-		ORDER BY `when` ASC";								// 10/2/12
+		ORDER BY `when` DESC LIMIT 100";								// 10/2/12
 	$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);
 	$i = 0;
 	$print = "<TABLE ALIGN='left' CELLSPACING = 1 WIDTH='100%'>";
@@ -1168,7 +1171,7 @@ function get_regions_inuse_numbers($user) {		//	6/10/11
 	}
 
 function test_allocates($resource, $al_group, $type) {	//	6/10/11
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates`WHERE `resource_id` = '$resource' AND `group` = '$al_group' AND `type` = '$type'";	
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `resource_id` = '$resource' AND `group` = '$al_group' AND `type` = '$type'";	
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
 	$found = mysql_num_rows($result);
 	if($found == 0) {
@@ -1355,7 +1358,7 @@ function do_error($err_function, $err, $custom_err='', $file='', $line=''){ /* r
 	die('<B>Execution stopped.</B></FONT>');
 	}
 
-function add_header($ticket_id, $no_edit = FALSE) {		// 11/27/09, 3/30/10, 8/27/10
+function add_header($ticket_id, $no_edit = FALSE, $show_ed_button = FALSE) {		// 11/27/09, 3/30/10, 8/27/10
 //	global {$_SESSION['fip']}, $fmp, {$_SESSION['editfile']}, {$_SESSION['addfile']}, {$_SESSION['unitsfile']}, {$_SESSION['facilitiesfile']}, {$_SESSION['routesfile']}, {$_SESSION['facroutesfile']};
 //	print "<A HREF='{$_SESSION['editfile']}?id=$ticket_id&delete=1'>" . get_text("Delete") . " </A> | ";
 	$win_height =  get_variable('map_height') + 240;
@@ -1366,11 +1369,13 @@ function add_header($ticket_id, $no_edit = FALSE) {		// 11/27/09, 3/30/10, 8/27/
 	print "<A HREF='#' onClick = \"var popWindow = window.open('incident_popup.php?id=$ticket_id', 'PopWindow', 'resizable=1, scrollbars, height={$win_height}, width={$win_width}, left=50,top=50,screenX=50,screenY=50'); popWindow.focus();\">" . get_text("Popup") . "</A> |"; // 7/3/10
 
 	if (can_edit()){
+		if($show_ed_button) {
 		print "<A HREF='{$_SESSION['editfile']}?id=$ticket_id'>" . get_text("Edit") . " </A> | ";
+			}
 
 		if (!is_closed($ticket_id)) {
-			print "<A HREF='action.php?ticket_id=$ticket_id'>" . get_text("Add Action") . "</A> | ";
-			print "<A HREF='patient.php?ticket_id=$ticket_id'>" . get_text("Add Patient") . "</A> | ";
+			print "<A HREF='action.php?ticket_id=$ticket_id'>Add " . get_text("Action") . "</A> | ";
+			print "<A HREF='patient.php?ticket_id=$ticket_id'>Add " . get_text("Patient") . "</A> | ";
 			}
 		print "<A HREF='config.php?func=notify&id=$ticket_id'>" . get_text("Notify") . " </A> | ";
 		}
@@ -1965,13 +1970,17 @@ function do_kml() {									// emits JS for kml-type files in noted directory - 
 		$server_str = "./kml_files/";
 		$i=1;
 		while (false !== ($filename = readdir($dh))) {
+			$temp = explode(".", $filename);
+			$thefileName = $temp[0];
 			switch (get_ext($filename)) {						// drop all other types, incl directories
 				case "kml":
 				case "kmz":
 				case "xml":
 					$url = $server_str . $filename;
-					echo "\twindow.xml_" . $i . " = new GeoXml(\"xml_" . $i . "\", map, \"" . $url . "\", {nozoom: true});\n";
-					echo "xml_" . $i . ".parse();";
+					echo "map.attributionControl.setPrefix('');\n";
+					echo "var xml_" . $i ." = new L.KML('" . $url . "', {async: true});\n";
+					echo "map.addLayer(xml_" . $i . ");\n";
+					echo "layercontrol.addOverlay(xml_" . $i . ", '" . $thefileName . "');\n";
 					$i++;
 					break;
 // ---------------------------------
@@ -1981,8 +1990,10 @@ function do_kml() {									// emits JS for kml-type files in noted directory - 
 					$lines = file($the_addr );
 					foreach ($lines as $line_num => $line) {				// Loop through our array.
 						if(isValidURL( trim($line))) {
-							echo "\twindow.xml_" . $i . " = new GeoXml(\"xml_" . $i . "\", map, \"" . $url . "\", {nozoom: true});\n";
-							echo "xml_" . $i . ".parse();";
+							echo "map.attributionControl.setPrefix('');\n";
+							echo "var xml_" . $i ." = new L.KML('" . $url . "', {async: true});\n";
+							echo "map.addLayer(xml_" . $i . ");\n";
+							echo "layercontrol.addOverlay(xml_" . $i . ", '" . $thefileName . "');\n";
 							}
 						$i++;
 						}
@@ -2882,11 +2893,25 @@ function get_units_legend() {		// returns string as centered span - 2/8/10
 		LEFT JOIN `$GLOBALS[mysql_prefix]unit_types` ON `$GLOBALS[mysql_prefix]unit_types`.`id` = `$GLOBALS[mysql_prefix]responder`.`type` ORDER BY `mytype`";
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 
-	$out_str = "<SPAN CLASS = 'odd' ALIGN = 'center'><SPAN CLASS = 'even' ALIGN = 'center'> Units: </SPAN>&nbsp;";
+	$out_str = "<SPAN CLASS = 'even' ALIGN = 'center'><SPAN CLASS = 'even' ALIGN = 'center'> Units: </SPAN>&nbsp;";
 	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
 		$the_bg_color = 	$GLOBALS['UNIT_TYPES_BG'][$row['icon']];	
 		$the_text_color = 	$GLOBALS['UNIT_TYPES_TEXT'][$row['icon']];		
 		$out_str .= "<SPAN STYLE='background-color:{$the_bg_color}; opacity: .7; color:{$the_text_color}'> {$row['mytype']}</SPAN>&nbsp;";
+		}
+	return $out_str .= "</SPAN>";	
+	}										// end function get_units_legend()
+
+function get_wl_legend() {		// returns string as centered span - 2/8/10
+	$out_str = "<SPAN class = 'even' ALIGN = 'center'><SPAN CLASS = 'even' ALIGN='center'> Warn Location Types: </SPAN>&nbsp;";	//	3/15/11
+	$warn_types = array();
+	foreach($GLOBALS['LOC_TYPES'] as $val) {
+		$warn_types[$val] = $GLOBALS['LOC_TYPES_NAMES'][$val];
+		}
+	foreach ($warn_types as $key => $value) {
+		$the_bg_color = 	$GLOBALS['LOC_TYPES_BG'][$key];	
+		$the_text_color = 	$GLOBALS['LOC_TYPES_TEXT'][$key];		
+		$out_str .= "<SPAN STYLE='background-color:{$the_bg_color}; opacity: .7; color:{$the_text_color}'> {$GLOBALS['LOC_TYPES_NAMES'][$key]}</SPAN>&nbsp;";
 		}
 	return $out_str .= "</SPAN>";	
 	}										// end function get_units_legend()
@@ -2896,7 +2921,7 @@ function get_facilities_legend() {		// returns string as centered row - 2/8/10
 		LEFT JOIN `$GLOBALS[mysql_prefix]fac_types` ON `$GLOBALS[mysql_prefix]fac_types`.`id` = `$GLOBALS[mysql_prefix]facilities`.`type` ORDER BY `mytype`";
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 
-	$out_str = "<SPAN class='even' ALIGN = 'center'><SPAN CLASS = 'even' ALIGN='center'> Facilities: </SPAN>&nbsp;";	//	3/15/11
+	$out_str = "<SPAN class = 'even' ALIGN = 'center'><SPAN CLASS = 'even' ALIGN='center'> Facilities: </SPAN>&nbsp;";	//	3/15/11
 	while ($row = stripslashes_deep(mysql_fetch_array($result))) {
 		$the_bg_color = 	$GLOBALS['FACY_TYPES_BG'][$row['icon']];	
 		$the_text_color = 	$GLOBALS['FACY_TYPES_TEXT'][$row['icon']];		
@@ -3068,6 +3093,20 @@ function get_text($which){		/* get replacement text from db captions table, retu
 	return (array_key_exists($which, $text_array))? $text_array[$which] : $which ;
 	}
 
+$tips_array = array();
+function get_tip($which){		/* get replacement text from db tips table, returns FALSE if absent  */
+	global $tips_array;
+	if (empty($tips_array)) {	// populate it to avoid hammering db
+		$result = mysql_query("SELECT * FROM `$GLOBALS[mysql_prefix]tips`") or do_error("get_tip({$which})::mysql_query()", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+		while ($row = stripslashes_deep(mysql_fetch_assoc($result))){
+			$title = $row['title']; 
+			$tip = $row['tip'] ;
+			$tips_array[$title] = $tip;
+			}
+		}
+	return (array_key_exists($which, $tips_array))? $tips_array[$which] : $which ;
+	}
+
 function can_edit() {										// 8/27/10
 	$oper_can_edit = ((is_user()) && (get_variable('oper_can_edit') == 1));	
 	return (is_administrator() || is_super() || ($oper_can_edit));
@@ -3213,6 +3252,7 @@ function get_hints($instr) {		// returns associative array - 11/30/10
 	}						// end function
 	
 function get_regions_buttons($user_id) {		//	4/12/12
+	global $evenodd;
 	$regs_viewed = "";
 	if(isset($_SESSION['viewed_groups'])) {
 		$regs_viewed= explode(",",$_SESSION['viewed_groups']);
@@ -3221,16 +3261,18 @@ function get_regions_buttons($user_id) {		//	4/12/12
 	$result2 = mysql_query($query2) or do_error($query2, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
 
 	$al_buttons="";	
+	$i = 1;
 	while ($row2 = stripslashes_deep(mysql_fetch_assoc($result2))) 	{		//	4/12/12
 		if(!empty($regs_viewed)) {
 			if(in_array($row2['group'], $regs_viewed)) {
-				$al_buttons.="<SPAN class='reg_button'><INPUT TYPE='checkbox' CHECKED name='frm_group[]' VALUE='{$row2['group']}'></INPUT>" . get_groupname($row2['group']) . "</SPAN>";
+				$al_buttons.="<SPAN CLASS = '{$evenodd[$i%2]}'style='font-size: .7em;'><INPUT TYPE='checkbox' CHECKED name='frm_group[]' VALUE='{$row2['group']}'>" . get_groupname($row2['group']) . "</INPUT></SPAN><BR />";
 			} else {
-				$al_buttons.="<SPAN class='reg_button'><INPUT TYPE='checkbox' name='frm_group[]' VALUE='{$row2['group']}'></INPUT>" . get_groupname($row2['group']) . "</SPAN>";
+				$al_buttons.="<SPAN CLASS = '{$evenodd[$i%2]}' style='font-size: .7em;'><INPUT TYPE='checkbox' name='frm_group[]' VALUE='{$row2['group']}'>" . get_groupname($row2['group']) . "</INPUT></SPAN><BR />";
 			}
 			} else {
-				$al_buttons.="<SPAN class='reg_button'><INPUT TYPE='checkbox' CHECKED name='frm_group[]' VALUE='{$row2['group']}'></INPUT>" . get_groupname($row2['group']) . "</SPAN>";
+				$al_buttons.="<SPAN CLASS = '{$evenodd[$i%2]}' style='font-size: .7em;'><INPUT TYPE='checkbox' CHECKED name='frm_group[]' VALUE='{$row2['group']}'>" . get_groupname($row2['group']) . "</INPUT></SPAN><BR />";
 			}
+		$i++;
 		}
 	return $al_buttons;
 	}
@@ -3340,6 +3382,33 @@ function get_respondername($id) {
 	return $ret_val;
 	}
 	
+function like_ify($instr) {			// 3/6/2015	-- converts non-alphanumerics to underscores for use with mysql 'like'
+	return  preg_replace("/[^a-zA-Z0-9]+/", "_", $instr);
+	}
+
+function get_facilityname($id) {
+	$query = "SELECT `id`, `name`, `handle` FROM `$GLOBALS[mysql_prefix]facilities` WHERE `id`=" . $id . " LIMIT 1";
+	$result = mysql_query($query) or do_error($query, $query, mysql_error(), basename( __FILE__), __LINE__);
+	if ((mysql_num_rows($result))==0)  {
+		$ret_val = "NA";
+		} else {
+		$row = stripslashes_deep(mysql_fetch_array($result));
+		$ret_val = $row['handle'];
+		}
+	return $ret_val;
+	}
+
+function get_state_abb($name) {
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]states_translator` WHERE `name` = '" . $name . "'";
+	$result	= mysql_query($query);
+	if(mysql_num_rows($result > 0)) {
+		$row = stripslashes_deep(mysql_fetch_array($result));
+		return $row['code'];
+		} else {
+		return $name;
+		}
+	}
+
 function shut_down(){				// 5/25/11
 	do_log($GLOBALS['LOG_INTRUSION'],0);	
 ?>
@@ -3477,6 +3546,82 @@ function list_files($ticket_id=0, $responder_id=0, $facility_id=0, $type=0, $por
 		$print .="<TR style='width: 100%;'><TD style='width: 100%; text-align: center;'>No Files</TD></TR></TABLE>";
 		}	//	end else
 		
+	return $print;
+	}
+	
+function add_sidebar($regions = TRUE, $files = TRUE, $messages = TRUE, $controls = TRUE, $allowedit=FALSE, $ticket_id = 0, $responder_id = 0, $facility_id = 0, $mi_id = 0) {
+	$print = "<DIV id='window_sidebar' style='position: fixed; top: 30px; right: 0px; width: auto; height: 500px; font-size: 1.2em; z-index: 50000; background-color: #000000;'>";
+	if($regions) {
+		$print .= "<DIV id='regions_control_outer' style='position: fixed; top: 30px; right: 0px; max-height: 500px; font-size: 1.2em; z-index: 9999;'>
+			<SPAN id='s_rc' class='plain' style='position: fixed; top: 30px; right: 0px; width: 35px; display: inline-block; cursor: pointer; padding: 2px; background-color: #FEFEFE;' 
+			onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' 
+			onClick=\"sidebar_buttonactions('s_rc');\">
+			<IMG src='./images/regs_butt.jpg'></SPAN>
+			<SPAN id='h_rc' class='plain' style='z-index: 9999; width: 26px; display: none; cursor: pointer;' 
+			onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' 
+			onClick=\"sidebar_buttonactions('h_rc');\">
+			<IMG src='./images/hide_butt.jpg'></SPAN>
+			<DIV ID = 'regions_control' style='padding: 3px; border: 1px outset #707070; height: 480px; width: 250px; display: none; overflow-y: auto; overflow-x: hidden; font-size: 0.8em; float: right;'><CENTER><IMG src='./images/owmloading.gif'></CENTER></DIV>
+		</DIV>";
+		}
+	if($files) {
+		$print .= "<DIV id='file_list_outer' style='position: fixed; top: 30px; right: 0px; height: 500px; font-size: 1.2em; z-index: 9999;'>
+			<SPAN id='s_fl' class='plain' style='position: fixed; top: 130px; right: 0px; width: 35px; display: inline-block; cursor: pointer; padding: 2px; background-color: #FEFEFE;' 
+			onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' 
+			onClick=\"sidebar_buttonactions('s_fl'); load_files(". $ticket_id . ", " . $responder_id . ", " . $facility_id . ", " . $mi_id . ", " . $allowedit . ", 'name', 'ASC', 1)\">
+			<IMG src='./images/files_butt.jpg'></SPAN>
+			<SPAN id='h_fl' class='plain' style='z-index: 9999; width: 26px; display: none; cursor: pointer;' 
+			onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' 
+			onClick=\"sidebar_buttonactions('h_fl');\">
+			<IMG src='./images/hide_butt.jpg'></SPAN>
+			<DIV class='even' ID = 'fileList' style='position: relative; height: 550px; width: 500px; float: right; display: none; border: 1px outset #707070;'>
+				<SPAN class='heading' style='width: 500px; text-align: center; display: inline-block;'>Files</SPAN></BR>
+				<DIV style='margin: 10px;'>
+					<DIV class=\"scrollableContainer2\" id='thefileslist' style='display: none;'>
+						<DIV class=\"scrollingArea2\" id='file_list'><CENTER><IMG src='./images/owmloading.gif'></CENTER></DIV>				
+					</DIV>
+				</DIV>
+			</DIV>
+		</DIV>";
+		}
+	if($messages) {
+		$print .= "<DIV id='msgs_list_outer' style='position: fixed; top: 30px; right: 0px; height: 500px; font-size: 1.2em; z-index: 9999;'>
+			<SPAN id='s_ms' class='plain' style='position: fixed; top: 230px; right: 0px; width: 35px; display: inline-block; cursor: pointer; padding: 2px; background-color: #FEFEFE;'
+			onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' 
+			onClick=\"sidebar_buttonactions('s_ms'); get_mainmessages(". $ticket_id . ", " . $responder_id . ", " . $facility_id . ", " . $mi_id . ", sortby, sort, 'inbox');\">
+			<IMG src='./images/msgs_butt.jpg'></SPAN>
+			<SPAN id='h_ms' class='plain' style='z-index: 9999; width: 26px; display: none; cursor: pointer;'
+			onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' 
+			onClick=\"sidebar_buttonactions('h_ms');\">
+			<IMG src='./images/hide_butt.jpg'></SPAN>
+			<DIV ID = 'message_list' class='even' style='position: relative;height: 550px; width: 810px; float: right; display: none; border: 1px outset #707070;'>
+				<SPAN class='heading' style='width: 810px; text-align: center; display: inline-block;'>Messages&nbsp;&nbsp;<SPAN id='foldername'>Inbox</SPAN></SPAN></BR>
+				<DIV id='folderlist' class='odd' style='width: 100px; border: 1px outset #707070; display: inline-block; float: left; height: 510px;'>
+				<SPAN id='in_but' class='plain' style='width: 80px;'onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick=\"inboxorsent(". $ticket_id . ", " . $responder_id . ", " . $facility_id . ", " . $mi_id . ", sortby, sort, 'inbox');\">INBOX</SPAN><BR />
+				<SPAN id='sent_but' class='plain' style='width: 80px;'onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick=\"inboxorsent(". $ticket_id . ", " . $responder_id . ", " . $facility_id . ", " . $mi_id . ", sortby, sort, 'sent');\">SENT ITEMS</SPAN><BR />
+				</DIV>
+				<DIV id='messages' style='width: 700px; border: 1px outset #707070;  display: inline-block; float: right;'>
+					<DIV class=\"scrollableContainer2\" id='messageslist' style='display: none; float: right;'>
+						<DIV class=\"scrollingArea2\" id='the_msglist'><CENTER><IMG src='./images/owmloading.gif'></CENTER></DIV>				
+					</DIV>	
+				</DIV>
+			</DIV>
+		</DIV>";
+		}
+	if($controls) {
+		$print .= "<DIV id='controls_outer' style='position: fixed; top: 30px; right: 0px; max-height: 500px; font-size: 1.2em; z-index: 9999;'>
+			<SPAN id='s_ct' class='plain' style='position: fixed; top: 330px; right: 0px; width: 35px; display: inline-block; cursor: pointer; padding: 2px; background-color: #FEFEFE;;' 
+			onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' 
+			onClick=\"sidebar_buttonactions('s_ct');\">
+			<IMG src='./images/controls_butt.jpg'></SPAN>
+			<SPAN id='h_ct' class='plain' style='z-index: 9999; width: 26px; display: none; cursor: pointer;' 
+			onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' 
+			onClick=\"sidebar_buttonactions('h_ct');\">
+			<IMG src='./images/hide_butt.jpg'></SPAN>
+			<DIV id='controls' style='padding: 3px; border: 1px outset #707070; background-color: #FEFEFE; height: auto; width: 200px; display: none; font-size: 0.8em; float: right;'></DIV>
+		</DIV>";
+		}
+	$print .= "</DIV>";
 	return $print;
 	}
 ?>

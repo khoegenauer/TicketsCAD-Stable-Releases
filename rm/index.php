@@ -234,6 +234,11 @@ $logged_in_load = ($logged_in == 1) ? "get_conditions(); get_ticket_markers(" . 
 <SCRIPT SRC="../js/lat_lng.js" TYPE="text/javascript"></SCRIPT>
 <SCRIPT SRC="../js/geotools2.js" TYPE="text/javascript"></SCRIPT>
 <SCRIPT SRC="../js/osgb.js" TYPE="text/javascript"></SCRIPT>
+<script src="./js/leaflet-openweathermap.js"></script>
+<script src="./js/esri-leaflet.js"></script>
+<script src="./js/Control.Geocoder.js"></script>
+<script src="../js/L.Graticule.js" TYPE="text/javascript"></script>
+<script src="../js/leaflet-providers.js" TYPE="text/javascript"></script>
 <script>
 var the_counter = 0;
 var current_butt_id = "sb1";
@@ -2140,8 +2145,8 @@ function setDirections(toAddress, recfacAddress) {
 	$('directions_wrapper').style.display = 'block';	
 	$('directions').innerHTML = "Getting Route.....";
 	fromAddress = the_lat + " " + the_lng;
-	fromMarker = new L.Marker(new L.latLng([12.999070,77.568679])).addTo(map);
-	toMarker=new L.Marker(new L.latLng([13.006610,77.578130])).addTo(map);
+	fromMarker = new L.Marker(new L.latLng([fromAddress])).addTo(map);
+	toMarker=new L.Marker(new L.latLng([toAddress])).addTo(map);
 	if(recfacAddress != "") {
 		transit = "," + [toAddress] + ",";
 		toAddress = recfacAddress;

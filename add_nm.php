@@ -338,7 +338,6 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 		if (!req) return;
 		var method = (postData) ? "POST" : "GET";
 		req.open(method,url,true);
-		req.setRequestHeader('User-Agent','XMLHTTP/1.0');
 		if (postData)
 			req.setRequestHeader('Content-type','application/x-www-form-urlencoded');
 		req.onreadystatechange = function () {
@@ -949,7 +948,6 @@ $maptype = get_variable('maptype');	// 08/02/09
 		if (!req) return;
 		var method = (postData) ? "POST" : "GET";
 		req.open(method,url,true);
-		req.setRequestHeader('User-Agent','XMLHTTP/1.0');
 		if (postData)
 			req.setRequestHeader('Content-type','application/x-www-form-urlencoded');
 		req.onreadystatechange = function () {

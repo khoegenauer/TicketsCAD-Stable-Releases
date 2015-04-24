@@ -115,7 +115,7 @@ if (mysql_num_rows($result) == 0) { 				// 8/6/08
 		$ret_arr[$counter][3] = $fromname;
 		$ret_arr[$counter][4] = $respstring;
 		$ret_arr[$counter][5] = stripslashes_deep(shorten($msg_row['subject'], 18));
-		$ret_arr[$counter][6] = stripslashes_deep(shorten($the_message, 2000));
+		$ret_arr[$counter][6] = htmlentities(shorten($the_message, 2000));
 		$ret_arr[$counter][7] = format_date_2(strtotime($msg_row['date']));
 		$ret_arr[$counter][8] = get_owner($msg_row['_by']);	
 		$ret_arr[$counter][9] = $the_class;

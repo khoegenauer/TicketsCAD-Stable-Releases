@@ -13,13 +13,10 @@ require_once('incs/functions.inc.php');		//7/28/10
 function template_205a ($item) {
 	$table_style = 		' width:auto; border-collapse: collapse; border:2px solid black; background-color: white; ';
 	$footer_style = 	' width:auto; border-collapse: collapse; border:1px solid black; background-color: white; ';
-	$tr_fat_style = 	' height: 40px; vertical-align:text-top;';
 	$tr_thin_style = 	' height: 21px; vertical-align:middle;';
-	$tr_plain_style = 	' height: 21px; ';
 	$td_heading_style = ' FONT-WEIGHT: 900; FONT-SIZE: 10px; border-collapse: collapse; border:1px solid black; ';
 	$td_plain_style = 	' FONT-WEIGHT: 400; FONT-SIZE: 10px; text-align: left; border-collapse: collapse; border:1px solid black; ';
 	$td_plain_c_style = ' FONT-WEIGHT: 400; FONT-SIZE: 10px; text-align: center; border-collapse: collapse; border:1px solid black; ';
-	$input_style = 		' font-size: 12px; font-family: monospace; ';
 
 	$out_str = "\n
 		<table style = '{$table_style}'>\n
@@ -103,6 +100,7 @@ function template_205a ($item) {
 <META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
 <META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
 <script src = "./js/jquery-1.4.2.min.js"></script>
+<script src="./js/misc_function.js" TYPE="text/javascript"></script>	<!-- 9/14/12 -->
 
 <SCRIPT>
  
@@ -113,20 +111,6 @@ function template_205a ($item) {
 </SCRIPT>
 <STYLE>
 Body 		{ BACKGROUND-COLOR: #EFEFEF; MARGIN:0; FONT-WEIGHT: normal; FONT-SIZE: 12px; COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; TEXT-DECORATION: none }
-/*
-table 		{ width:auto; border-collapse: collapse; border:2px solid black; }
-table.upper	{ width:auto; border-collapse: collapse; border:none; }
-tr.fat 		{ background-color: white; height: 40px; vertical-align:text-top;}
-tr.thin 	{ background-color: white; height: 21px; vertical-align:middle;}
-tr.plain 	{ background-color: white; height: 21px; }
-td.heading	{ FONT-WEIGHT: 900; FONT-SIZE: 10px; }
-td.heading_3	{ FONT-WEIGHT: 400; FONT-SIZE: 12px;  border:2px solid black; text-align: left; }
-td.heading_4	{ FONT-WEIGHT: 900; FONT-SIZE: 10px;  text-align: right; }
-td.plain	{ FONT-WEIGHT: 400; FONT-SIZE: 10px; text-align: center; }
-td.plain_l	{ FONT-WEIGHT: 400; FONT-SIZE: 10px; text-align: left; }
-input[type='text'] { font-size: 12px; font-family: monospace; }
-textarea  { font-size: 12px; font-family: monospace; }
-*/
 </STYLE>
 </HEAD>
 <?php
@@ -183,14 +167,23 @@ switch ($step) {
 
 
 ?>
+<!-- 1/1/2015 -->
+<STYLE TYPE="text/css">
+.box { background-color: transparent; border: 0px solid #000000; color: #000000; padding: 0px; position: absolute; z-index:1000; }
+.bar { background-color: #DEE3E7; color: #000000; cursor: move; font-weight: bold; padding: 2px 1em 2px 1em;  z-index:1000; }
+.content { padding: 1em; }
+</STYLE>
+
 <BODY onload = "document.form_205a.f3.focus();">		<!-- <?php echo __LINE__ ; ?> -->
-<div id ='nav' style="position:fixed; top:200px; left:150px;">
+<div id="boxB" class="box" style="left:5px; top:20px;">
+  <div class="bar" STYLE="width:12em; color:red; background-color : transparent;"
+       onmousedown="dragStart(event, 'boxB')"><i>&nbsp;&nbsp;&nbsp;&nbsp;Drag us</i></div>
+  <div class="content" style="width:auto;">
 	<input type = "reset" onclick = "document.form_205a.reset();"><br />
 	<input type = "button" value = 'Cancel'  style = 'margin-top: 20px;' onclick = "document.can_form.submit()" /><br />
 	<input type = "button" value = 'OK - Mail this'  style = 'margin-top: 20px;' onclick = "validate(document.form_205a);"/>
+	</div>
 </div>
-
-
 <center><br />
 <h3>COMMUNICATIONS LIST (ICS 205A)</h3>
 <form name = "form_205a" method = "post" action = "<?php echo basename(__FILE__); ?>" >

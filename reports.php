@@ -50,6 +50,7 @@
 1/7/2013 - date correction, use setting disp_stat for column headings
 2/4/2013 - Change to after action report to add associated messages to ticket detail.
 5/31/2013 - strtotime() applied for date arithnetic/conversion
+1/2/2015 - shortened scope string, per JB site
 */
 error_reporting(E_ALL);									// 10/1/08
 $asof = "3/24/10";
@@ -1635,7 +1636,8 @@ function my_stripslashes_deep($value) {
 		$query = "SELECT *, COUNT(`scope`) FROM `$GLOBALS[mysql_prefix]ticket` GROUP BY `scope` HAVING COUNT(`scope`)>=1  AND status > 0";  // build assoc array of all tickets
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) {
-			$tickets[$row['id']] = $row['scope'];
+//			$tickets[$row['id']] = $row['scope'];
+			$tickets[$row['id']] = shorten($row['scope'], 60);		// 1/2/2015
 			}
 
 		print "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Select {$incident}: 

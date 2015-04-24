@@ -31,6 +31,7 @@ function br2nl($input) {
 	
 $ticket_id = (isset($_GET['ticket_id'])) ? clean_string($_GET['ticket_id']) : NULL;
 $responder_id = (isset($_GET['responder_id'])) ? clean_string($_GET['responder_id']) : NULL;
+$facility_id = (isset($_GET['facility_id'])) ? clean_string($_GET['facility_id']) : NULL;
 $filter = (isset($_GET['filter'])) ? clean_string($_GET['filter']) : "";
 $sort = (isset($_GET['sort'])) ? clean_string($_GET['sort']) : NULL;
 $way = (isset($_GET['way'])) ? clean_string($_GET['way']) : NULL;
@@ -40,7 +41,7 @@ $where = "WHERE (`m`.`msg_type` = '2' OR `m`.`msg_type` = '4' OR `m`.`msg_type` 
 
 if(isset($ticket_id)) { $where .= " AND (`ticket_id` = '" . $ticket_id . "')"; }
 if(isset($responder_id)) { $where .= " AND (`resp_id` = '" . $responder_id . "')"; }
-	
+if(isset($facility_id)) { $where .= " AND (`resp_id` = '" . $facility_id . "')"; }	
 if((isset($filter)) && ($filter != "")) { $where .= " AND ((`m`.`fromname` REGEXP '" . $filter . "') OR (`m`.`message` REGEXP '" . $filter . "') OR (`m`.`recipients` REGEXP '" . $filter . "') OR  (`m`.`subject` REGEXP '" . $filter . "'))"; }
 
 
@@ -134,7 +135,7 @@ if (mysql_num_rows($result) == 0) { 				// 8/6/08
 		$ret_arr[$i][3] = $fromname;
 		$ret_arr[$i][4] = $respstring;
 		$ret_arr[$i][5] = stripslashes_deep(shorten($msg_row['subject'], 18));
-		$ret_arr[$i][6] = stripslashes_deep(shorten($the_message, 2000));
+		$ret_arr[$i][6] = htmlentities(shorten($the_message, 80));
 		$ret_arr[$i][7] = format_date_2(strtotime($msg_row['date']));
 		$ret_arr[$i][8] = get_owner($msg_row['_by']);	
 		$ret_arr[$i][9] = $the_class;

@@ -63,21 +63,7 @@ $tick_id = (isset($_REQUEST['ticket_id'])) ? $_REQUEST['ticket_id'] : "";							
 		.hover 	{ margin-left: 4px;  font: normal 12px Arial, Helvetica, sans-serif; color:#000000; border: 1px inset #FFFFFF;
   				  padding: 4px 0.5em;text-decoration: none; float: left; background-color: #DEE3E7;font-weight: bolder;}		
 	</STYLE>	
-<?php
-	if ($gmaps) {
-		$key_str = (strlen($api_key) == 39)?  "key={$api_key}&" : "";
-		if((array_key_exists('HTTPS', $_SERVER)) && ($_SERVER['HTTPS'] == 'on')) {
-			$gmaps_url =  "https://maps.google.com/maps/api/js?" . $key_str . "libraries=geometry,weather&sensor=false";
-			} else {
-			$gmaps_url =  "http://maps.google.com/maps/api/js?" . $key_str . "libraries=geometry,weather&sensor=false";
-			}
-?>	
-		<SCRIPT TYPE="text/javascript" src="<?php print $gmaps_url;?>"></SCRIPT>
-		<SCRIPT SRC="./js/graticule.js" type="text/javascript"></SCRIPT>
 		<SCRIPT SRC="./js/misc_function.js" type="text/javascript"></SCRIPT>	<!-- 6/10/11 -->
-<?php
-		}
-?>
 <SCRIPT>
 	function ck_frames() {		//  onLoad = "ck_frames()"
 		if(self.location.href==parent.location.href) {
@@ -260,7 +246,6 @@ $tick_id = (isset($_REQUEST['ticket_id'])) ? $_REQUEST['ticket_id'] : "";							
 		if (!req) return;
 		var method = (postData) ? "POST" : "GET";
 		req.open(method,url,true);
-		req.setRequestHeader('User-Agent','XMLHTTP/1.0');
 		if (postData)
 			req.setRequestHeader('Content-type','application/x-www-form-urlencoded');
 		req.onreadystatechange = function () {
@@ -317,7 +302,7 @@ $tick_id = (isset($_REQUEST['ticket_id'])) ? $_REQUEST['ticket_id'] : "";							
 ?>
 	</HEAD>
 <?php 
-	print (($get_action == "add")||($get_action == "update"))? "<BODY onLoad = 'do_notify(); ck_frames();' onUnload='GUnload();'>\n": "<BODY onLoad = 'ck_frames();'>\n";
+	print (($get_action == "add")||($get_action == "update"))? "<BODY onLoad = 'do_notify(); ck_frames();'>\n": "<BODY onLoad = 'ck_frames();'>\n";
 
 	$do_yr_asof = false;		// js year housekeeping
 
@@ -376,11 +361,11 @@ $tick_id = (isset($_REQUEST['ticket_id'])) ? $_REQUEST['ticket_id'] : "";							
 				}		// end insert process
 				
 			add_header($_GET['ticket_id']);
+			$id = $_GET['ticket_id'];
 			print '<br /><FONT CLASS="header">Action record has been added.</FONT><BR /><BR />';
 
-			print "<A HREF='main.php?id=" . $_GET['ticket_id'] . "'><U>Continue</U></A>";
-			show_ticket($_GET['ticket_id']);
-//________________________________________________________________
+			print "<A HREF='main.php'><U>Continue</U></A>";
+			require_once('./forms/ticket_view_screen.php');
 			print "</BODY>";				// 10/19/08
 			
 			$addrs = notify_user($_GET['ticket_id'],$GLOBALS['NOTIFY_ACTION_CHG']);		// returns array or FALSE
@@ -408,7 +393,6 @@ $tick_id = (isset($_REQUEST['ticket_id'])) ? $_REQUEST['ticket_id'] : "";							
 		if (!req) return;
 		var method = (postData) ? "POST" : "GET";
 		req.open(method,url,true);
-		req.setRequestHeader('User-Agent','XMLHTTP/1.0');
 		if (postData)
 			req.setRequestHeader('Content-type','application/x-www-form-urlencoded');
 		req.onreadystatechange = function () {

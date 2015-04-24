@@ -18,6 +18,7 @@ function directory_empty($path) {
 		return TRUE;
 		}
 	}
+	
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
@@ -46,6 +47,7 @@ function directory_empty($path) {
 </style>
 <script src="./js/misc_function.js" type="text/javascript"></script>
 <script src="./js/leaflet/leaflet.js"></script>
+<script type="text/javascript" src="./js/L.Graticule.js"></script>
 <SCRIPT>
 	window.onload = function() {
 		if($('map_canvas')) { initialise(); }
@@ -81,24 +83,23 @@ function directory_empty($path) {
 		$('the_box').style.display='block';
 		$('waiting').style.display='block';
 		$('waiting').innerHTML = "Please Wait, Downloading Tiles<BR /><IMG style='vertical-align: middle;' src='./images/progressbar3.gif'/>";
-		var zoom_top = document.map_tiles_form.zoom_top.value;
-		var zoom_btm = document.map_tiles_form.zoom_bot.value;
+		var zoom_top = parseInt(document.map_tiles_form.zoom_top.value);
+		var zoom_btm = parseInt(document.map_tiles_form.zoom_bot.value) + 1;
 		var top_left_lat = document.map_tiles_form.tl_lat.value;
 		var top_left_lon = document.map_tiles_form.tl_lon.value;	
 		var btm_rt_lat = document.map_tiles_form.br_lat.value;
 		var btm_rt_lon = document.map_tiles_form.br_lon.value;	
-		for (var zoom = zoom_top; zoom<=zoom_btm;  zoom++) {
-			var temp = calc_tile_name (zoom, top_left_lat, top_left_lon) ;		// get tile names for each zoom level
+		for (var z = zoom_top; z < zoom_btm;  z++) {
+			var temp = calc_tile_name(z, top_left_lat, top_left_lon) ;		// get tile names for each zoom level
 			var col_first = temp[0];
 			var row_first = temp[1];
-			var temp2 = calc_tile_name (zoom, btm_rt_lat, btm_rt_lon) ;
+			var temp2 = calc_tile_name (z, btm_rt_lat, btm_rt_lon) ;
 			col_last = temp2[0];
 			row_last = temp2[1];
 			for (var col = col_first; col<col_last;  col++) {	
 				for (var row = row_first; row<row_last;  row++) {
-					if((zoom==zoom_btm) && (col==col_last-1) && (row==row_last-1)) { lastfile="yes"; } else { lastfile = "no"; }
-					var url = "./ajax/gettiles.php?dir=" + zoom + "&subdir=" + col + "&file=" + row + "&lastfile=" + lastfile;
-//					alert(url);
+					if((z==zoom_btm) && (col==col_last-1) && (row==row_last-1)) { lastfile="yes"; } else { lastfile = "no"; }
+					var url = "./ajax/gettiles.php?dir=" + z + "&subdir=" + col + "&file=" + row + "&lastfile=" + lastfile;
 					sendRequest (url ,tile_cb, "");			
 					}
 				}
@@ -108,15 +109,19 @@ function directory_empty($path) {
 
 	function tile_cb(req) {
 		var the_ret_file=JSON.decode(req.responseText);
+		var finish_but = "<SPAN id='b6' class = 'plain' style='display: none; z-index: 999; float: none; width: 120px;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick = 'document.forms[\"to_config_Form\"].submit();'>Back to Config</SPAN>";
 		if(the_ret_file[0] == "Completed") {
 			$('file_list').innerHTML += the_ret_file[1];
 			$('file_list').innerHTML += "<BR />";
 			$('file_list').scrollTop = $('file_list').scrollHeight;
+			} else if(the_ret_file[2] == "yes") { 
+			$('waiting').style.display='block'; 
+			$('waiting').innerHTML = "<CENTER>Complete<BR /><BR />" + finish_but + "</CENTER>";
+			$('b6').style.display='block'; 
+			$('b6').style.zindex = 999;
 			} else {
 			alert("Failed");
 			}
-		var finish_but = "<SPAN id='b6' class = 'plain' style='display: none; z-index: 999; float: none; width: 120px;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick = 'document.forms[\"to_config_Form\"].submit();'>Back to Config</SPAN>";
-		if(the_ret_file[2] == "yes") { $('waiting').style.display='block'; $('waiting').innerHTML = "<CENTER>Complete<BR /><BR />" + finish_but + "</CENTER>"; $('b6').style.display='block'; $('b6').style.zindex = 999;}	
 		}				// end function tile_cb()	
 		
 	function get_bounds() {
@@ -212,7 +217,6 @@ function directory_empty($path) {
 		if (!req) return;
 		var method = (postData) ? "POST" : "GET";
 		req.open(method,url,true);
-		req.setRequestHeader('User-Agent','XMLHTTP/1.0');
 		if (postData)
 			req.setRequestHeader('Content-type','application/x-www-form-urlencoded');
 		req.onreadystatechange = function () {

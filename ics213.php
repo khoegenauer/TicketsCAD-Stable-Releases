@@ -30,63 +30,11 @@ function html_mail ($to, $subject, $html_message, $from_address, $from_display_n
 //	snap(__LINE__, $temp);
 	}			// end function html_mail ()
 
-
-function template_213 ($do_form = TRUE) {
+function template_213_t () {	// table-only portion of page
 	global $item;
-	$out_str = "<!DOCTYPE html>
-<HTML>
-<HEAD>
-	<META HTTP-EQUIV=\"CONTENT-TYPE\" CONTENT=\"text/html; charset=windows-1252\">
-	<TITLE>ICS-213 GENERAL MESSAGE</TITLE>
-	<META NAME=\"CHANGEDBY\" CONTENT=\"Arnie Shore\">
-	<META NAME=\"CHANGED\" CONTENT=\"20071223;14270000\">
-	<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=UTF-8\">
-	<META HTTP-EQUIV=\"Expires\" CONTENT=\"0\">
-	<META HTTP-EQUIV=\"Cache-Control\" CONTENT=\"NO-CACHE\">
-	<META HTTP-EQUIV=\"Pragma\" CONTENT=\"NO-CACHE\">
-
-	<STYLE TYPE=\"text/css\">-- 
-	<!--
-		@page { size: 8.5in 11in; margin: 0.5in }
-		P { margin-bottom: 0.08in; direction: ltr; color: #000000; text-align: left; widows: 0; orphans: 0 }
-		P.western { font-family: \"Arial, sans-serif; font-size: 10pt; so-language: en-US; margin-left: 0.01in; margin-top: 0.04in;}
-		P.cjk { font-family: \"Times New Roman\", serif; font-size: 10pt; so-language: zxx }
-		P.ctl { font-family: \"Times\", \"Times New Roman\", serif; font-size: 10pt; so-language: ar-SA }
-		A.sdfootnotesym-western { font-size: 8pt }
-		A.sdfootnotesym-cjk { font-size: 8pt }
-	-->
-	</STYLE>
-<SCRIPT type=\"text/javascript\">
-	function validate(theForm) {						// form contents validation	
-		var errmsg='';
-		if (theForm.f1.value.trim()=='')	{errmsg+=\"TO is required.\\n\";}
-		if (theForm.f3.value.trim()=='')	{errmsg+=\"FROM is required.\\n\";}
-		if (theForm.f5.value.trim()=='')	{errmsg+=\"SUBJECT is required.\\n\";}
-		if (theForm.f8.value.trim()=='')	{errmsg+=\"MESSAGE is required.\\n\";}
-		if (errmsg!='') {
-			alert ('Please correct the following and re-submit:\\n\\n' + errmsg);
-			return false;
-			}
-		else {			// good to go!
-			return true;
-			}
-		}				// end function validate(theForm)
-
-</SCRIPT>
-
-</HEAD>
-<BODY LANG=\"en-US\" TEXT=\"#000000\" BGCOLOR=\"#ffffff\" DIR=\"LTR\"> <!-- 76 -->
-<P CLASS=\"western\" ALIGN=LEFT STYLE=\"margin-bottom: 0in\">
-	<TABLE DIR='LTR' BORDER=1 BORDERCOLOR='#000000' CELLPADDING=0 CELLSPACING=0 STYLE='width: 20.32cm;'>";
-	if ($do_form) {
+	$out_str = "<TABLE DIR='LTR' BORDER=1 BORDERCOLOR='#000000' CELLPADDING=0 CELLSPACING=0 STYLE='width: 20.32cm;'>";
 		$out_str .= "\n<FORM NAME = 'ics213_form' METHOD = 'post' ACTION = '" . basename(__FILE__) . "' >\n";
 		$out_str .= "\n<INPUT TYPE = 'hidden' NAME = 'frm_add_str' VALUE = '{$_POST['frm_add_str']}'/>\n";
-		$end_form = "\n</FORM>";
-		}
-	else {
-		$end_form = "";
-		}
-//	dump($end_form);
 	$out_str .= "<INPUT TYPE = 'hidden' NAME = 'step' VALUE = 2>
 		<COL WIDTH=46*>
 		<COL WIDTH=54*>
@@ -100,152 +48,86 @@ function template_213 ($do_form = TRUE) {
 			</TD>
 		</TR>
 		<TR VALIGN=TOP>
-			<TD COLSPAN=3 WIDTH=48% HEIGHT=30>
-				<P CLASS=\"western\" >
-				<FONT SIZE=1 STYLE=\"font-size: 8pt\">&nbsp;<B>TO</B></FONT></FONT><FONT SIZE=1 STYLE=\"font-size: 8pt\">:&nbsp;{$item[1]}</FONT></FONT></P>
-			</TD>
-			<TD COLSPAN=3 WIDTH=52%>
-				<P CLASS=\"western\" >
-				<FONT SIZE=1 STYLE=\"font-size: 8pt\">&nbsp;POSITION:&nbsp;{$item[2]}</FONT></FONT></P>
-			</TD>
+			<TD COLSPAN=3 WIDTH=48% HEIGHT=30> <P CLASS=\"western\" > <FONT SIZE=1 STYLE=\"font-size: 8pt\">&nbsp;<B>TO</B></FONT><FONT SIZE=1 STYLE=\"font-size: 8pt\">:&nbsp;{$item[1]}</FONT></P> </TD>
+			<TD COLSPAN=3 WIDTH=52%> <P CLASS=\"western\" > <FONT SIZE=1 STYLE=\"font-size: 8pt\">&nbsp;POSITION:&nbsp;{$item[2]}</FONT></P> </TD>
 		</TR>
 		<TR VALIGN=TOP>
-			<TD COLSPAN=3 WIDTH=48% HEIGHT=30>
-				<P CLASS=\"western\" >
-				<FONT SIZE=1 STYLE=\"font-size: 8pt\">&nbsp;FROM:&nbsp;{$item[3]}
-					</FONT></FONT></P>
-			</TD>
-			<TD COLSPAN=3 WIDTH=52%>
-				<P CLASS=\"western\" >
-				<FONT SIZE=1 STYLE=\"font-size: 8pt\">&nbsp;POSITION:&nbsp;{$item[4]}</FONT></FONT></P>
-			</TD>
+			<TD COLSPAN=3 WIDTH=48% HEIGHT=30> <P CLASS=\"western\" > <FONT SIZE=1 STYLE=\"font-size: 8pt\">&nbsp;FROM:&nbsp;{$item[3]} </FONT></P> </TD>
+			<TD COLSPAN=3 WIDTH=52%> <P CLASS=\"western\" > <FONT SIZE=1 STYLE=\"font-size: 8pt\">&nbsp;POSITION:&nbsp;{$item[4]}</FONT></P> </TD>
 		</TR>
 		<TR VALIGN=TOP>
-			<TD COLSPAN=3 WIDTH=48% HEIGHT=30>
-				<P CLASS=\"western\" >
-				<FONT SIZE=1 STYLE=\"font-size: 8pt\">&nbsp;SUBJECT:&nbsp;{$item[5]}
-					</FONT></FONT></P>
-			</TD>
-			<TD COLSPAN=2 WIDTH=28%>
-				<P CLASS=\"western\" >
-				<FONT SIZE=1 STYLE=\"font-size: 8pt\">&nbsp;DATE:&nbsp;{$item[6]}</FONT></FONT></P>
-			</TD>
-			<TD WIDTH=24%>
-				<P CLASS=\"western\" >
-				<FONT SIZE=1 STYLE=\"font-size: 8pt\">&nbsp;TIME:&nbsp;{$item[7]}</FONT></FONT></P>
-			</TD>
+			<TD COLSPAN=3 WIDTH=48% HEIGHT=30> <P CLASS=\"western\" > <FONT SIZE=1 STYLE=\"font-size: 8pt\">&nbsp;SUBJECT:&nbsp;{$item[5]} </FONT></P> </TD>
+			<TD COLSPAN=2 WIDTH=28%> <P CLASS=\"western\" > <FONT SIZE=1 STYLE=\"font-size: 8pt\">&nbsp;DATE:&nbsp;{$item[6]}</FONT></P> </TD>
+			<TD WIDTH=24%> <P CLASS=\"western\" > <FONT SIZE=1 STYLE=\"font-size: 8pt\">&nbsp;TIME:&nbsp;{$item[7]}</FONT></P> </TD>
 		</TR>
 		<TR>
-			<TD COLSPAN=6 WIDTH=100% VALIGN=TOP BGCOLOR=\"#e5e5e5\">
-				<P CLASS=\"western\" >
-				<FONT SIZE=1 STYLE=\"font-size: 8pt\">&nbsp;MESSAGE:</FONT></FONT></P>
-			</TD>
+			<TD COLSPAN=6 WIDTH=100% VALIGN=TOP BGCOLOR=\"#e5e5e5\"> <P CLASS=\"western\" > <FONT SIZE=1 STYLE=\"font-size: 8pt\">&nbsp;MESSAGE:</FONT></P> </TD>
 		</TR>
 		<TR>
-			<TD COLSPAN=6 WIDTH=100% HEIGHT=100 VALIGN=TOP>
-				<P CLASS=\"western\" >
-				{$item[8]}
-				<BR>
-				</P>
-			</TD>
+			<TD COLSPAN=6 WIDTH=100% HEIGHT=100 VALIGN=TOP> <P CLASS=\"western\" > {$item[8]} <BR> </P> </TD>
 		</TR>
 		<TR VALIGN=TOP>
-			<TD COLSPAN=4 WIDTH=52% HEIGHT=27>
-				<P CLASS=\"western\" STYLE=\"margin-left: 0.01in; margin-top: 0.04in; margin-bottom: 0.04in\">
-				<FONT SIZE=1 STYLE=\"font-size: 8pt\">&nbsp;SIGNATURE:&nbsp;{$item[9]}</FONT></FONT></P>
-				<P CLASS=\"western\" >
-				</P>
-			</TD>
-			<TD COLSPAN=2 WIDTH=48%>
-				<P CLASS=\"western\" STYLE=\"margin-left: 0.01in; margin-top: 0.04in; margin-bottom: 0.04in\">
-				<FONT SIZE=1 STYLE=\"font-size: 8pt\">&nbsp;POSITION:&nbsp;{$item[10]}</FONT></FONT></P>
-				<P CLASS=\"western\" >
-				</P>
-			</TD>
+			<TD COLSPAN=4 WIDTH=52% HEIGHT=27> <P CLASS=\"western\" STYLE=\"margin-left: 0.01in; margin-top: 0.04in; margin-bottom: 0.04in\"> <FONT SIZE=1 STYLE=\"font-size: 8pt\">&nbsp;SIGNATURE:&nbsp;{$item[9]}</FONT></P>  </TD>
+			<TD COLSPAN=2 WIDTH=48%> <P CLASS=\"western\" STYLE=\"margin-left: 0.01in; margin-top: 0.04in; margin-bottom: 0.04in\"> <FONT SIZE=1 STYLE=\"font-size: 8pt\">&nbsp;POSITION:&nbsp;{$item[10]}</FONT></P>  </TD>
 		</TR>
 		<TR>
-			<TD COLSPAN=6 WIDTH=100% VALIGN=TOP BGCOLOR=\"#e5e5e5\">
-				<P CLASS=\"western\" >
-				<FONT SIZE=1 STYLE=\"font-size: 8pt\">&nbsp;REPLY:</FONT></FONT></P>
-			</TD>
+			<TD COLSPAN=6 WIDTH=100% VALIGN=TOP BGCOLOR=\"#e5e5e5\"> <P CLASS=\"western\" > <FONT SIZE=1 STYLE=\"font-size: 8pt\">&nbsp;REPLY:</FONT></P> </TD>
 		</TR>
 		<TR>
-			<TD COLSPAN=6 WIDTH=100% HEIGHT=100 VALIGN=TOP>
-				<P CLASS=\"western\" >
-				{$item[11]}<BR>
-				</P>
-			</TD>
+			<TD COLSPAN=6 WIDTH=100% HEIGHT=100 VALIGN=TOP> <P CLASS=\"western\" > {$item[11]}<BR> </P> </TD>
 		</TR>
 		<TR VALIGN=TOP>
-			<TD WIDTH=30%>
-				<P CLASS=\"western\" STYLE=\"margin-left: 0.01in; margin-top: 0.04in; margin-bottom: 0.04in\">
-				<FONT SIZE=1 STYLE=\"font-size: 8pt\">&nbsp;DATE:&nbsp;{$item[12]}</FONT></FONT></P>
-				<P CLASS=\"western\" >
-				</P>
-			</TD>
-			<TD WIDTH=20%>
-				<P CLASS=\"western\" STYLE=\"margin-left: 0.01in; margin-top: 0.04in; margin-bottom: 0.04in\">
-				<FONT SIZE=1 STYLE=\"font-size: 8pt\">&nbsp;TIME:&nbsp;{$item[13]}</FONT></FONT></P>
-				<P CLASS=\"western\" >
-				</P>
-			</TD>
-			<TD COLSPAN=4 WIDTH=50%>
-				<P CLASS=\"western\" STYLE=\"margin-left: 0.01in; margin-top: 0.04in; margin-bottom: 0.04in\">
-				<FONT SIZE=1 STYLE=\"font-size: 8pt\">&nbsp;SIGNATURE/POSITION:&nbsp;{$item[14]}</FONT></FONT></P>
-				<P CLASS=\"western\" >
-				</P>
-			</TD>
+			<TD WIDTH=30%> <P CLASS=\"western\" STYLE=\"margin-left: 0.01in; margin-top: 0.04in; margin-bottom: 0.04in\"> <FONT SIZE=1 STYLE=\"font-size: 8pt\">&nbsp;DATE:&nbsp;{$item[12]}</FONT></P>  </TD> <TD WIDTH=20%> <P CLASS=\"western\" STYLE=\"margin-left: 0.01in; margin-top: 0.04in; margin-bottom: 0.04in\"> <FONT SIZE=1 STYLE=\"font-size: 8pt\">&nbsp;TIME:&nbsp;{$item[13]}</FONT></P>  </TD>
+			<TD COLSPAN=4 WIDTH=50%> <P CLASS=\"western\" STYLE=\"margin-left: 0.01in; margin-top: 0.04in; margin-bottom: 0.04in\"> <FONT SIZE=1 STYLE=\"font-size: 8pt\">&nbsp;SIGNATURE/POSITION:&nbsp;{$item[14]}</FONT></P>  </TD>
 		</TR>
-	{$end_form}</TABLE><BR />";
+		</TABLE><BR />";
+	return $out_str;
+	}							// end function template_213_t ()
 
-	if ($do_form) {
-		$out_str .= "<SPAN ID = 'do_form' ALIGN='center' STYLE = 'MARGIN-LEFT:250px;'>
-			<INPUT TYPE = 'button' VALUE= 'Submit' onclick = \"if(validate(document.ics213_form)) {document.ics213_form.submit();}\" />
-			<INPUT TYPE = 'reset' VALUE= 'Reset' STYLE = 'MARGIN-LEFT:40px;' onclick = \"document.ics213_form.reset();\">
-			<INPUT TYPE = 'button' VALUE= 'Cancel' STYLE = 'MARGIN-LEFT:40px;' onclick = \"window.close();\"></SPAN><BR /><BR />";
-		}				// end if ($do_form)
+
+	function template_213 ($do_form = TRUE) {		// returns full page
+		global $item;
+		$out_str = "<!DOCTYPE html>
+	<HTML>
+	<HEAD>
+		<META HTTP-EQUIV=\"CONTENT-TYPE\" CONTENT=\"text/html; charset=windows-1252\">
+		<TITLE>ICS-213 GENERAL MESSAGE</TITLE>
+	<META NAME=\"CHANGEDBY\" CONTENT=\"Arnie Shore\">
+	<META NAME=\"CHANGED\" CONTENT=\"20071223;14270000\">
+	<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=UTF-8\">
+	<META HTTP-EQUIV=\"Expires\" CONTENT=\"0\">
+	<META HTTP-EQUIV=\"Cache-Control\" CONTENT=\"NO-CACHE\">
+	<META HTTP-EQUIV=\"Pragma\" CONTENT=\"NO-CACHE\">
+
+	<STYLE TYPE=\"text/css\">--
+	<!--
+		@page { size: 8.5in 11in; margin: 0.5in }
+		P { margin-bottom: 0.08in; direction: ltr; color: #000000; text-align: left; widows: 0; orphans: 0 }
+		P.western { font-family: \"Arial, sans-serif; font-size: 10pt; so-language: en-US; margin-left: 0.01in; margin-top: 0.04in;}
+		P.cjk { font-family: \"Times New Roman\", serif; font-size: 10pt; so-language: zxx }
+		P.ctl { font-family: \"Times\", \"Times New Roman\", serif; font-size: 10pt; so-language: ar-SA }
+		A.sdfootnotesym-western { font-size: 8pt }
+		A.sdfootnotesym-cjk { font-size: 8pt }
+	-->
+	</STYLE>
+
+</HEAD>
+<BODY LANG=\"en-US\" TEXT=\"#000000\" BGCOLOR=\"#ffffff\" DIR=\"LTR\"> <!-- 115 -->
+<P CLASS=\"western\" ALIGN=LEFT STYLE=\"margin-bottom: 0in\">";
+
+	$out_str .= template_213_t ();		// table string
+
 	$out_str .=  "</BODY></HTML>";
 	return $out_str;
 	}							// end function template_213 () 
 
 // do_login(basename(__FILE__));
-/*
-	if (!(mysql_table_exists("$GLOBALS[mysql_prefix]ics213"))) {				
-		$query = "CREATE TABLE `$GLOBALS[mysql_prefix]ics213` (
-			  `id` int(7) NOT NULL AUTO_INCREMENT,
-			  `f1` varchar(80) COLLATE utf8_unicode_ci NULL,
-			  `f2` varchar(80) COLLATE utf8_unicode_ci NULL,
-			  `f3` varchar(80) COLLATE utf8_unicode_ci NULL,
-			  `f4` varchar(80) COLLATE utf8_unicode_ci NULL,
-			  `f5` varchar(80) COLLATE utf8_unicode_ci NULL,
-			  `f6` varchar(80) COLLATE utf8_unicode_ci NULL,
-			  `f7` varchar(80) COLLATE utf8_unicode_ci NULL,
-			  `f8` varchar(2000)COLLATE utf8_unicode_ci NULL,
-			  `f9` varchar(80) COLLATE utf8_unicode_ci NULL,
-			  `f10` varchar(80) COLLATE utf8_unicode_ci NULL,
-			  `f11` varchar(2000) COLLATE utf8_unicode_ci NULL,
-			  `f12` varchar(80) COLLATE utf8_unicode_ci NULL,
-			  `f13` varchar(80) COLLATE utf8_unicode_ci NULL,
-			  `f14` varchar(80) COLLATE utf8_unicode_ci NULL,
-			
-			  `_by` int(7) NOT NULL DEFAULT '0',
-			  `_from` varchar(16) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',
-			  `_on` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-			  PRIMARY KEY (`id`)
-			) ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;";
-		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename(__FILE__), __LINE__);
-		}
-*/
-
-$step = (array_key_exists ("step", $_POST))? $_POST['step']: 0 ;
-switch ($step) {				
-	case 0:								/*  collect addresses */
 ?>
 <!DOCTYPE html>
-<HTML>
+<HTML>	<!-- 171 -->
 <HEAD>
-<TITLE><?php print LessExtension(basename(__FILE__));?> </TITLE>
-<META NAME="Description" CONTENT="Email to units">
+<TITLE><?php echo LessExtension(basename(__FILE__));?></TITLE>
+<META NAME="Description" CONTENT="<?php print basename(__FILE__);?>">
 <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
 <META HTTP-EQUIV="Expires" CONTENT="0">
 <META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
@@ -253,6 +135,15 @@ switch ($step) {
 <META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
 <META HTTP-EQUIV="Script-date" CONTENT="6/13/09">
 <LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">	<!-- 3/15/11 -->
+<script src = "./js/jquery-1.4.2.min.js"></script>
+<script src="./js/misc_function.js" TYPE="text/javascript"></script>	<!-- 9/14/12 -->
+
+<?php
+
+$step = (array_key_exists ("step", $_POST))? $_POST['step']: 0 ;
+switch ($step) {
+	case 0:								/*  collect addresses */
+?>
  
 <script type="application/javascript">
 
@@ -307,7 +198,7 @@ switch ($step) {
 		}		// end function do_clear
 
 	</SCRIPT>
-	</HEAD> <!-- 355 -->
+	</HEAD> <!-- 217 c a s e  0 -->
 	<BODY><CENTER><BR /><BR />
 <?php
 	$i=0;		// 3/6/2014
@@ -349,27 +240,17 @@ switch ($step) {
 
 ?>
 		<TR CLASS='<?php print $evenodd[($i)%2]; ?>'><TD ALIGN='center' COLSPAN=3><BR /><BR />&nbsp;
-<!--		
-			<INPUT TYPE='button' 	VALUE='ICS205' 		onClick = "do_205()">
-			<INPUT TYPE='button' 	VALUE='ICS205-A' 	onClick = "do_205a()"  style = "margin-left:20px;">
-			<INPUT TYPE='button' 	VALUE='ICS213' 		onClick = "do_213()"   style = "margin-left:20px;">
-			<INPUT TYPE='button' 	VALUE='ICS214' 		onClick = "do_214()"   style = "margin-left:20px;">
-			<INPUT TYPE='button' 	VALUE='ICS205' 		onClick = "this.form.action = 'ics205.php'; this.form.submit();">
-			<INPUT TYPE='button' 	VALUE='ICS205-A' 	onClick = "this.form.action = 'ics205a.php'; this.form.submit();"  style = "margin-left:20px;">
-			<INPUT TYPE='button' 	VALUE='ICS213' 		onClick = "this.form.action = 'ics213.php'; this.form.submit();"   style = "margin-left:20px;">
-			<INPUT TYPE='button' 	VALUE='ICS214' 		onClick = "this.form.action = 'ics214.php'; this.form.submit();"   style = "margin-left:20px;">
-3/8/2014
--->			
 			<INPUT TYPE='button' 	VALUE='ICS205' 		onClick = "do_mail_str('ics205.php');">
 			<INPUT TYPE='button' 	VALUE='ICS205-A' 	onClick = "do_mail_str('ics205a.php');"  style = "margin-left:20px;">
 			<INPUT TYPE='button' 	VALUE='ICS213' 		onClick = "do_mail_str('ics213.php');"   style = "margin-left:20px;">
+			<INPUT TYPE='button' 	VALUE='ICS213-RR' 	onClick = "do_mail_str('ics213rr.php');" style = "margin-left:20px;">	<!-- 10/2/2014 -->
 			<INPUT TYPE='button' 	VALUE='ICS214' 		onClick = "do_mail_str('ics214.php');"   style = "margin-left:20px;">
 			<p>
 			<INPUT TYPE='reset' 	VALUE='Reset'>
 			<INPUT TYPE='button' 	VALUE='Cancel' onClick = 'window.close();' style = "margin-left:60px;">
 			</p>
 			</TD></TR>
-			</TABLE></FORM>
+			</FORM></TABLE>
 		  
 <?php
 			}		// end if(mysql_affected_rows()>0)
@@ -420,36 +301,53 @@ switch ($step) {
 		$item[12] = in_str  (12, 16, 12);  
 		$item[13] = in_str  (13, 8, 13);  
 		$item[14] = in_str  (14, 34, 14);  
+?>
 	
-		echo template_213(TRUE);
+<SCRIPT type='text/javascript'>
+	function validate(theForm) {						// form contents validation
+		var errmsg='';
+		if (theForm.f1.value.trim()=='')	{errmsg+='TO is required.\n';}
+		if (theForm.f3.value.trim()=='')	{errmsg+='FROM is required.\n';}
+		if (theForm.f5.value.trim()=='')	{errmsg+='SUBJECT is required.\n';}
+		if (theForm.f8.value.trim()=='')	{errmsg+='MESSAGE is required.\n';}
+		if (errmsg!='') {
+			alert ('Please correct the following and re-submit:\n\n' + errmsg);
+			return false;
+			}
+		else {			// good to go!
+			return true;
+			}
+		}				// end function validate(theForm)
+
+</SCRIPT>
+<!-- 1/1/2015 -->
+<STYLE TYPE="text/css">
+.box { background-color: transparent; border: 0px solid #000000; color: #000000; padding: 0px; position: absolute; z-index:1000; }
+.bar { background-color: #DEE3E7; color: #000000; cursor: move; font-weight: bold; padding: 2px 1em 2px 1em;  z-index:1000; }
+.content { padding: 1em; }
+</STYLE>
+
+<?php
+		echo "\n<center>\n";
+		echo template_213_t();
+?>
+<div id="boxB" class="box" style="left:5px; top:20px;  background-color : transparent;">
+  <div class="bar" STYLE="color:red; background-color : transparent; width:60px;"
+       onmousedown="dragStart(event, 'boxB')"><i>Drag us</i></div>
+  <div class="content" style="width:auto; text-align: left">
+		<input type = 'button' value= 'Submit' onclick = 'if(validate(document.ics213_form)) {document.ics213_form.submit();}' /><br />
+		<input type = 'reset'  value= 'Reset'  onclick = 'document.ics213_form.reset();'  style='margin-top: 10px;'/><br />
+		<input type = 'button' value= 'Cancel' onclick = 'window.close();' style='margin-top: 10px;' />
+		</div>
+	</div>
+
+<?php
 		break;		// end case 1
 
 	case 2:								/*  process form and address data */
 
 //		dump($_POST);
-/*
-		$item[1] =  quote_smart(trim($_POST['f1'])); 
-		$item[2] =  quote_smart(trim($_POST['f2'])); 
-		$item[3] =  quote_smart(trim($_POST['f3'])); 
-		$item[4] =  quote_smart(trim($_POST['f4'])); 
-		$item[5] =  quote_smart(trim($_POST['f5'])); 
-		$item[6] =  quote_smart(trim($_POST['f6'])); 
-		$item[7] =  quote_smart(trim($_POST['f7'])); 
-		$item[8] =  quote_smart(trim($_POST['f8'])); 
-		$item[9] =  quote_smart(trim($_POST['f9'])); 
-		$item[10] = quote_smart(trim($_POST['f10'])); 
-		$item[11] = quote_smart(trim($_POST['f11'])); 
-		$item[12] = quote_smart(trim($_POST['f12'])); 
-		$item[13] = quote_smart(trim($_POST['f13'])); 
-		$item[14] = quote_smart(trim($_POST['f14'])); 
-	
-		$query_insert  = "INSERT INTO `$GLOBALS[mysql_prefix]ics213` (
-			 `f1`, `f2`, `f3`, `f4`, `f5`, `f6`, `f7`, `f8`, `f9`, `f10`, `f11`, `f12`, `f13`, `f14`
-			) VALUES (
-			 {$item[1]}, {$item[2]}, {$item[3]}, {$item[4]}, {$item[5]}, {$item[6]}, {$item[7]}, {$item[8]}, {$item[9]}, {$item[10]}, {$item[11]}, {$item[12]}, {$item[13]}, {$item[14]}
-			)";
-		$result	= mysql_query($query_insert) or do_error($query_insert,'mysql_query() failed', mysql_error(), basename( __FILE__), __LINE__);
-*/
+
 		$item[1] =  trim($_POST['f1']); 	// to
 		$item[2] =  trim($_POST['f2']); 	// position
 		$item[3] =  trim($_POST['f3']); 	// from
@@ -464,10 +362,7 @@ switch ($step) {
 		$item[12] = trim($_POST['f12']); 	// date
 		$item[13] = trim($_POST['f13']); 	// time
 		$item[14] = trim($_POST['f14']); 	// signature/position
-/*
-$message = preg_replace("#(?<!\r)\n#si", "\r\n", $message);
-addresses: $Result = preg_replace("/([\w\s]+)<([\S@._-]*)>/", "$2", $Input);
-*/	
+
 		$html_message = template_213(FALSE);
 
 		$to_array = explode ("|", $_POST['frm_add_str']);
@@ -484,24 +379,12 @@ addresses: $Result = preg_replace("/([\w\s]+)<([\S@._-]*)>/", "$2", $Input);
 		$from_display_name = str_replace ( "'", "", $temp);
 		$result = html_mail ($to, $subject, $html_message, $from_address, $from_display_name);
 
-		do_log($GLOBALS['LOG_ICS213_MESSAGE_SEND'], 0, 0, $item[5], 0, 0,0);	// subject line as info column
+//		do_log($GLOBALS['LOG_ICS213_MESSAGE_SEND'], 0, 0, $item[5], 0, 0,0);	// subject line as info column
 ?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
-<HTML>
-<HEAD>
-<TITLE>ICS-213 Mail sent</TITLE>
-<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
-<META HTTP-EQUIV="Expires" CONTENT="0">
-<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
-<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
-<META HTTP-EQUIV="Content-Script-Type"	CONTENT="text/javascript">
-<SCRIPT>
-</SCRIPT>
-</HEAD>
-<BODY onLoad = "setTimeout('window.close()',2500);">	<!-- 484 -->
+</HEAD> <!-- 399 case 2 -->
+
+<BODY onLoad = "setTimeout('window.close()',3500);">	<!-- 379 -->
 <DIV style = 'margin-left:400px; margin-top100px;'><H2>ICS-213 MAIL SENT - window closing ... </H2></DIV>
-</BODY>
-</HTML>
 
 <?php
 		
@@ -510,5 +393,6 @@ addresses: $Result = preg_replace("/([\w\s]+)<([\S@._-]*)>/", "$2", $Input);
 	default:							/* error????  */
 	    echo " error  error  error at;  " . __LINE__;
 	}				// end switch
-
 ?>
+</BODY>
+</HTML>

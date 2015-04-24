@@ -833,10 +833,22 @@ Changes for 2.41K
 
 258.  Revised link within notify email.
 
+Changes for 3.00A (almost too many changes to list)
+
+259.  Major re-write to use Open Streetmaps instead of Google Maps.
+
+260.  Use of Open Streetmaps allows downloading offline map tiles for use when not connected to the internet.
+
+261.  Revised most screens and included new sidebar for Messages, regions, Map controls and Files.
+
+262.  Added Major Incident feature. This is still in it's infancy and is open to suggestions.
+
+263.  Added ability to remove files in the file list for Superadmin.
+
 Let us know if the above is too terse and where further expansion wd be useful.
 <A NAME = 'bottom'></A>
 
-June '14
+March '15
 Arnie Shore
 Andy Harvey, UK
 

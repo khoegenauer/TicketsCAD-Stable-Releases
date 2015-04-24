@@ -7,7 +7,7 @@ if(!(file_exists("./incs/mysql.inc.php"))) {
 
 require_once('./incs/functions.inc.php');	
 
-$version = "2.41K Beta - 06/212/14";	
+$version = "3.00A Beta - 03/22/15";	
 
 /*
 10/1/08 added error reporting
@@ -97,6 +97,7 @@ $version = "2.41K Beta - 06/212/14";
 9/10/13 Added Warnings, mailgroups, personnel and various settings to support those features and mobile
 10/31/13 Added fields to in_types.
 2/24/14 Added Setting to restrict units to only see their own mobile screen
+1/7/15 Changes for version 3.00
 */
 
 //snap(basename(__FILE__) . " " . __LINE__  , count($_SESSION));
@@ -126,6 +127,20 @@ function count_responders() {	//	5/11/12 For quick start.
 	$result = mysql_query($query);	
 	$count_responders = mysql_num_rows($result);
 	return $count_responders;
+	}
+
+function checkBase64Encoded($encodedString) {
+	$length = strlen($encodedString);
+	// Check every character.
+	for ($i = 0; $i < $length; ++$i) {
+		$c = $encodedString[$i];
+		if (($c < '0' || $c > '9') && ($c < 'a' || $c > 'z') && ($c < 'A' || $c > 'Z') && ($c != '+') && ($c != '/') && ($c != '=')) {
+			// Bad character found.
+			return false;
+			}
+		}
+	// Only good characters found.
+	return true;
 	}
 
 function table_exists($name) {			//	3/15/11
@@ -237,10 +252,10 @@ function do_caption ($temp, $repl="") { 				// adds a 'captions' table entry - 1
 	}
 	
 function do_setting ($which, $what) {				// 7/7/09
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]settings` WHERE `name`= '$which' LIMIT 1";		// 5/25/09
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]settings` WHERE `name`= '" . $which . "' LIMIT 1";		// 5/25/09
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 	if (mysql_affected_rows()==0) {
-		$query = "INSERT INTO `$GLOBALS[mysql_prefix]settings` ( `id` , `name` , `value` ) VALUES (NULL , '$which', '$what');";
+		$query = "INSERT INTO `$GLOBALS[mysql_prefix]settings` ( `id` , `name` , `value` ) VALUES (NULL , '" . $which . "', '" . $what . "');";
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 		}
 	unset ($result);
@@ -248,10 +263,10 @@ function do_setting ($which, $what) {				// 7/7/09
 	}				// end function do_setting ()
 
 function do_msg_setting ($which, $what) {				// 5/25/13
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]msg_settings` WHERE `name`= '$which' LIMIT 1";		// 5/25/09
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]msg_settings` WHERE `name`= '" . $which . "' LIMIT 1";		// 5/25/09
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 	if (mysql_affected_rows()==0) {
-		$query = "INSERT INTO `$GLOBALS[mysql_prefix]msg_settings` ( `id` , `name` , `value` ) VALUES (NULL , '$which', '$what');";
+		$query = "INSERT INTO `$GLOBALS[mysql_prefix]msg_settings` ( `id` , `name` , `value` ) VALUES (NULL , '" . $which . "', '" . $what . "');";
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 		}
 	unset ($result);
@@ -259,10 +274,10 @@ function do_msg_setting ($which, $what) {				// 5/25/13
 	}				// end function do_msg_setting ()
 
 function update_setting ($which, $what) {		//	3/15/11
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]settings` WHERE `name`= '$which' LIMIT 1";
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]settings` WHERE `name`= '" . $which . "' LIMIT 1";
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 	if (mysql_affected_rows()!=0) {
-		$query = "UPDATE `$GLOBALS[mysql_prefix]settings` SET `value`= '$what' WHERE `name` = '$which'";
+		$query = "UPDATE `$GLOBALS[mysql_prefix]settings` SET `value`= '$what' WHERE `name` = '" . $which . "'";
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 		}
 	unset ($result);
@@ -270,10 +285,10 @@ function update_setting ($which, $what) {		//	3/15/11
 	}				// end function update_setting ()
 	
 function update_msg_settings ($which, $what) {		//	3/15/11
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]msg_settings` WHERE `name`= '$which' LIMIT 1";
+	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]msg_settings` WHERE `name`= '" . $which . "' LIMIT 1";
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 	if (mysql_affected_rows()!=0) {
-		$query = "UPDATE `$GLOBALS[mysql_prefix]msg_settings` SET `value`= '$what' WHERE `name` = '$which'";
+		$query = "UPDATE `$GLOBALS[mysql_prefix]msg_settings` SET `value`= '$what' WHERE `name` = '" . $which . "'";
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 		}
 	unset ($result);
@@ -917,16 +932,16 @@ if (!($version == $old_version)) {		// current? - 6/6/2013  ====================
 
 					// 6/22/11
 		$query = "ALTER TABLE `$GLOBALS[mysql_prefix]facilities` DROP `group` ";		//	6/10/11
-		$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);		
+			$result = mysql_query($query);		
 		$query = "ALTER TABLE `$GLOBALS[mysql_prefix]ticket` DROP `group` ";		//	6/10/11
-		$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);	
+			$result = mysql_query($query);	
 		$query = "ALTER TABLE `$GLOBALS[mysql_prefix]responder` DROP `group` ";		//	6/10/11
-		$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);	
+			$result = mysql_query($query);
 
 		$query = "ALTER TABLE `$GLOBALS[mysql_prefix]user` DROP `group` ";		//	6/10/11
-		$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);		
+			$result = mysql_query($query);			
 		$query = "ALTER TABLE `$GLOBALS[mysql_prefix]assigns` DROP `group` ";		//	6/10/11
-		$result = mysql_query($query) or do_error($query, 'mysql_query() failed', mysql_error(), __FILE__, __LINE__);		
+			$result = mysql_query($query);		
 		$query = "ALTER TABLE `$GLOBALS[mysql_prefix]responder` ADD `t_tracker` TINYINT( 2 ) NOT NULL DEFAULT 0 COMMENT 'if 1 unit uses LocateA tracking - required to set callsign' AFTER `instam`;";
 		$result = mysql_query($query);		// 6/10/11	
 
@@ -1670,6 +1685,197 @@ if (!($version == $old_version)) {		// current? - 6/6/2013  ====================
 					ADD `state` 	VARCHAR( 4 ) NULL DEFAULT NULL AFTER `city` ,
 					ADD `information` VARCHAR( 1024 ) NULL DEFAULT NULL AFTER `state` ";	//	4/24/14
 			$result = mysql_query($query) ;		// note STFU
+			
+			do_setting ('use_osmap','0');		// 11/12/14, Allow for UK use of Ordnance Survey Maps.
+			do_setting ('openspace_api','0');		// 01/23/15, Allow for UK use of Ordnance Survey Maps.
+			
+			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]facilities`";	//	Check if Opening Hours has been converted to new format
+			$result = mysql_query($query) ;
+			if(mysql_num_rows($result) != 0) {
+				while($row = mysql_fetch_assoc($result)) {
+					$opening_hours = $row['opening_hours'];
+					if((!checkBase64Encoded($opening_hours)) || ($opening_hours == "") || (is_null($opening_hours ))) {	//	if Opening Hours field is not valid base64encoded then set it to default value
+						$query = "UPDATE `$GLOBALS[mysql_prefix]facilities` SET `opening_hours`= 'YTo3OntpOjA7YTozOntpOjA7czoyOiJvbiI7aToxO3M6NToiMDA6MDAiO2k6MjtzOjU6IjIzOjU5Ijt9aToxO2E6Mzp7aTowO3M6Mjoib24iO2k6MTtzOjU6IjAwOjAwIjtpOjI7czo1OiIyMzo1OSI7fWk6MjthOjM6e2k6MDtzOjI6Im9uIjtpOjE7czo1OiIwMDowMCI7aToyO3M6NToiMjM6NTkiO31pOjM7YTozOntpOjA7czoyOiJvbiI7aToxO3M6NToiMDA6MDAiO2k6MjtzOjU6IjIzOjU5Ijt9aTo0O2E6Mzp7aTowO3M6Mjoib24iO2k6MTtzOjU6IjAwOjAwIjtpOjI7czo1OiIyMzo1OSI7fWk6NTthOjM6e2k6MDtzOjI6Im9uIjtpOjE7czo1OiIwMDowMCI7aToyO3M6NToiMjM6NTkiO31pOjY7YTozOntpOjA7czoyOiJvbiI7aToxO3M6NToiMDA6MDAiO2k6MjtzOjU6IjIzOjU5Ijt9fQ'";
+						$result = mysql_query($query) ;
+						}
+					}
+				}
+			
+			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]mmarkup_cats` WHERE `category` = 'Basemap';";
+			$result = mysql_query($query);
+			$theRows = mysql_num_rows($result);
+			if($theRows == 0) {
+				$query = "INSERT INTO `$GLOBALS[mysql_prefix]mmarkup_cats` (`category`, `_by`, `_from`)	VALUES ('Basemap', '0', 'Install Routine');";
+				$result = mysql_query($query);
+				} else if($theRows > 1) {
+				$query = "DELETE FROM `$GLOBALS[mysql_prefix]mmarkup_cats` WHERE `category` = 'Basemap'";
+				$result = mysql_query($query);
+				$query = "INSERT INTO `$GLOBALS[mysql_prefix]mmarkup_cats` (`category`, `_by`, `_from`)	VALUES ('Basemap', '0', 'Install Routine');";
+				$result = mysql_query($query);
+				}
+			
+			if (!table_exists("access_requests")) {
+				$query = "CREATE TABLE IF NOT EXISTS `$GLOBALS[mysql_prefix]access_requests` (
+					`id` int(6) NOT NULL auto_increment,
+					`name` varchar(64) NOT NULL,
+					`email` varchar(128) NOT NULL,
+					`phone` varchar(24) NOT NULL,
+					`reason` longtext NOT NULL,
+					`sec_code` varchar(24) NOT NULL,
+					`date` datetime NOT NULL,
+					PRIMARY KEY  (`id`)
+					) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1;";			
+				$result = mysql_query($query) or do_error($query , 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+				}		
+				
+			if (!table_exists("tips")) {
+				$query = "CREATE TABLE IF NOT EXISTS `$GLOBALS[mysql_prefix]tips` (
+					`id` int(7) NOT NULL auto_increment,
+					`title` varchar(24) collate utf8_unicode_ci NOT NULL,
+					`tip` text collate utf8_unicode_ci NOT NULL,
+					`_by` int(7) NOT NULL default '0',
+					`_from` varchar(16) character set latin1 default NULL,
+					`_on` timestamp NOT NULL default CURRENT_TIMESTAMP,
+					PRIMARY KEY  (`id`)
+					) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=1 ;";			
+				$result = mysql_query($query) or do_error($query , 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+				}
+
+			$query = "ALTER TABLE `$GLOBALS[mysql_prefix]log` CHANGE `code` `code` SMALLINT( 7 ) NOT NULL DEFAULT '0'";
+			$result = mysql_query($query) or do_error($query , 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+			
+			do_setting ('access_requests','0');		// 01/29/15
+			
+			$query = "ALTER TABLE `$GLOBALS[mysql_prefix]warnings` ADD `loc_type` SMALLINT(4) NOT NULL DEFAULT 4 AFTER `lng`;";
+			$result = mysql_query($query);	
+
+			if (!table_exists("major_incidents")) {
+				$query = "CREATE TABLE IF NOT EXISTS `$GLOBALS[mysql_prefix]major_incidents` (
+					`id` int(11) NOT NULL,
+					`name` varchar(64) NOT NULL,
+					`description` longtext NOT NULL,
+					`type` int(4) NOT NULL,
+					`gold` int(4) NOT NULL,
+					`silver` int(4) NOT NULL,
+					`bronze` int(4) NOT NULL,
+					`boundary` int(4) NOT NULL,
+					`inc_startime` datetime NOT NULL,
+					`inc_endtime` datetime NOT NULL,
+					`incident_notes` longtext,
+					`_by` int(11) NOT NULL,
+					`_on` datetime NOT NULL,
+					`_from` varchar(16) NOT NULL
+					) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1;";			
+				$result = mysql_query($query);
+				}
+				
+			if (!table_exists("mi_types")) {
+				$query = "CREATE TABLE IF NOT EXISTS `$GLOBALS[mysql_prefix]mi_types` (
+					`id` int(4) NOT NULL,
+					`name` varchar(64) NOT NULL,
+					`bg_color` varchar(12) NOT NULL DEFAULT 'transparent',
+					`color` varchar(12) NOT NULL DEFAULT '#000000',
+					`_by` int(11) NOT NULL,
+					`_on` datetime NOT NULL,
+					`_from` varchar(16) NOT NULL
+					) ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;";			
+				$result = mysql_query($query);
+				}
+				
+			if (!table_exists("mi_x")) {
+				$query = "CREATE TABLE IF NOT EXISTS `$GLOBALS[mysql_prefix]mi_x` (
+					`id` int(6) NOT NULL,
+					`mi_id` int(6) NOT NULL,
+					`ticket_id` int(6) NOT NULL
+					) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1;";			
+				$result = mysql_query($query);
+				}
+
+			$query = "INSERT INTO `$GLOBALS[mysql_prefix]mi_types` (
+				`id`, `name`, `bg_color`, `color`, `_by`, `_on`, `_from`) VALUES (
+				1, 'Environmental', 'transparent', '#000000', 1, '2015-02-27 11:50:34', '::1');";
+			$result = mysql_query($query);
+			
+			$query = "ALTER TABLE `$GLOBALS[mysql_prefix]files` ADD `mi_id` SMALLINT(4) NOT NULL DEFAULT 0 AFTER `facility_id`;";
+			$result = mysql_query($query);	
+			
+			$query = "ALTER TABLE `$GLOBALS[mysql_prefix]files` CHANGE `ticket_id` `ticket_id` MEDIUMINT( 6 ) NOT NULL DEFAULT '0',
+				CHANGE `responder_id` `responder_id` MEDIUMINT( 6 ) NOT NULL DEFAULT '0',
+				CHANGE `facility_id` `facility_id` MEDIUMINT( 6 ) NOT NULL DEFAULT '0',
+				CHANGE `mi_id` `mi_id` MEDIUMINT( 6 ) NOT NULL DEFAULT '0';";
+			$result = mysql_query($query);
+			
+			do_setting ('os_watch','0/0/0');        // minutes priority/standard/routine - initially off, reasonable is 5/15/60
+			
+			$query = "ALTER TABLE `$GLOBALS[mysql_prefix]un_status` ADD `watch` INT(1) NOT NULL DEFAULT '0' COMMENT 'if 1, watch this unit' AFTER `dispatch`;";
+			$result = @mysql_query($query);                        // note stfu
+			
+			if (!table_exists("states_translator")) {			
+				$query = "CREATE TABLE IF NOT EXISTS `$GLOBALS[mysql_prefix]states_translator` (
+					`id` int(4) NOT NULL,
+					`name` varchar(64) NOT NULL,
+					`code` varchar(4) NOT NULL
+					) ENGINE=InnoDB AUTO_INCREMENT=51 DEFAULT CHARSET=latin1;";
+				$result = @mysql_query($query);
+				}
+				
+			$query = "INSERT INTO `$GLOBALS[mysql_prefix]states_translator` (`id`, `name`, `code`) VALUES
+				(1, 'Alabama', 'AL'),
+				(2, 'Alaska', 'AK'),
+				(3, 'Arizona', 'AZ'),
+				(4, 'Arkansas', 'AR'),
+				(5, 'California', 'CA'),
+				(6, 'Colorado', 'CO'),
+				(7, 'Connecticut', 'CT'),
+				(8, 'Delaware', 'DE'),
+				(9, 'Florida', 'FL'),
+				(10, 'Georgia', 'GA'),
+				(11, 'Hawaii', 'HI'),
+				(12, 'Idaho', 'ID'),
+				(13, 'Illinois', 'IL'),
+				(14, 'Indiana', 'IN'),
+				(15, 'Iowa', 'IA'),
+				(16, 'Kansas', 'KS'),
+				(17, 'Kentucky', 'KY'),
+				(18, 'Louisiana', 'LA'),
+				(19, 'Maine', 'ME'),
+				(20, 'Maryland', 'MD'),
+				(21, 'Massachusetts', 'MA'),
+				(22, 'Michigan', 'MI'),
+				(23, 'Minnesota', 'MN'),
+				(24, 'Mississippi', 'MS'),
+				(25, 'Missouri', 'MO'),
+				(26, 'Montana', 'MT'),
+				(27, 'Nebraska', 'NE'),
+				(28, 'Nevada', 'NV'),
+				(29, 'New Hampshire', 'NH'),
+				(30, 'New Jersey', 'NJ'),
+				(31, 'New Mexico', 'NM'),
+				(32, 'New York', 'NY'),
+				(33, 'North Carolina', 'NC'),
+				(34, 'North Dakota', 'ND'),
+				(35, 'Ohio', 'OH'),
+				(36, 'Oklahoma', 'OK'),
+				(37, 'Oregon', 'OR'),
+				(38, 'Pennsylvania', 'PA'),
+				(39, 'Rhode Island', 'RI'),
+				(40, 'South Carolina', 'SC'),
+				(41, 'South Dakota', 'SD'),
+				(42, 'Tennessee', 'TN'),
+				(43, 'Texas', 'TX'),
+				(44, 'Utah', 'UT'),
+				(45, 'Vermont', 'VT'),
+				(46, 'Virginia', 'VA'),
+				(47, 'Washington', 'WA'),
+				(48, 'West Virginia', 'WV'),
+				(49, 'Wisconsin', 'WI'),
+				(50, 'Wyoming', 'WY'),
+				(51, 'England', 'UK');";
+				$result = @mysql_query($query);
+				
+				$query = "INSERT INTO `$GLOBALS[mysql_prefix]states_translator` (`id`, `name`, `code`) VALUES (52, 'District of Columbia', 'DC');";
+				$result = @mysql_query($query);
+				
 		}		// end (!($version ==...) ==================================================			
 
 	function update_disp_stat ($which, $what, $old) {		//	10/26/11
@@ -1783,27 +1989,6 @@ if (!($version == $old_version)) {		// current? - 6/6/2013  ====================
 		
 	$temp = explode(" ", get_variable('_version'));	
 	$disp_version = $temp[0];
-	
-	// if (table_exists("stats_type")) {	//	6/10/11	===============================================================	
-		// $query_truncate = "TRUNCATE TABLE `$GLOBALS[mysql_prefix]stats_type`;";		//	6/10/11
-		// $result_truncate = mysql_query($query_truncate);
-		
-		// if($result_truncate) {
-			// $query_insert = "INSERT INTO `$GLOBALS[mysql_prefix]stats_type` (`st_id`, `name`, `stat_type`) VALUES
-						// (1, 'Number of Open Tickets', 'int'),
-						// (2, 'Tickets not Assigned', 'int'),
-						// (3, 'Units Assgnd not Responding', 'int'),
-						// (4, 'Units Respg Not On Scene', 'int'),
-						// (5, 'Units On Scene', 'int'),
-						// (6, 'Average Time to Dispatch', 'avg'),
-						// (7, 'Average Dispatched to Responding', 'avg'),
-						// (8, 'Average Dispatched to On Scene', 'avg'),
-						// (9, 'Average Time Ticket Open', 'avg'),
-						// (10, 'Number of available Responders', 'int'),
-						// (11, 'Average time to close ticket', 'avg');";
-			// $result_insert = mysql_query($query_insert) or do_error($query_insert , 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);		//	6/10/11	
-		// }
-	// }
 	
 if((count_responders()== 0) && (get_variable('title_string') == "") && ((!empty($_GET)) && ($_GET['first_start'] == "yes"))) {	//	5/11/12 For quick start routine
 	print '<BR /><BR /><BR /><B>Do you wish to use the Tickets Quick start routine?';

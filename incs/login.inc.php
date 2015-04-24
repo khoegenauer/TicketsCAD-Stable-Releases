@@ -99,6 +99,7 @@ function check_conn () {				// returns TRUE/FALSE
 		}	// end function check_conn ()
 
 function set_filenames($internet, $userchoice) {
+	$localmaps = get_variable('local_maps');
 	$internet_good = (($internet == 1) || (($internet == 3) && (check_conn()))) ? true: false;		// check_conn()  returns TRUE/FALSE = 8/31/10
 	if(($internet_good) && ($userchoice == "Show")) {	//	10/29/13
 		$normal = true;
@@ -106,6 +107,8 @@ function set_filenames($internet, $userchoice) {
 		$normal = false;
 		} elseif(!$internet_good) {
 		$normal = false;
+		} elseif($localmaps == "1") {
+		$normal = true;
 		} else {
 		$normal = false;
 		}
@@ -137,10 +140,21 @@ function redir($url, $time = 0) {
 	die; 
 	} 
 
+function dupe_user($id, $ip) {
+	$query 	= "SELECT * FROM `$GLOBALS[mysql_prefix]user` WHERE `user` = " . $id . " AND `_from` != '" . $ip . "' LIMIT 1";
+	$result = mysql_query($query) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
+	if(mysql_num_rows($result) == 1) {
+		return true;
+		} else {
+		return false;
+		}
+	}
+
 function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {			// do login/ses sion code - returns array - 2/12/09, 3/8/09,	1/30/14
 	global $hide_dispatched, $hide_status_groups;
 	@session_start();
 	global $expiry, $istest;
+	$allow_accessRequests = get_variable("access_requests");
 	$no_autoforward = ($na) ? 1 : 0;	//	1/30/14
 	$now = mysql_format_date(time() - (intval(get_variable('delta_mins'))*60));
 
@@ -150,7 +164,9 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 	
 	$internet = intval(get_variable("internet"));				// 8/22/10
 	if ((array_key_exists ('user_id', $_SESSION)) && (is_expired($_SESSION['user_id']))) {
-
+		if(dupe_user($_SESSION['user_id'], $_SERVER['REMOTE_ADDR'])) {
+			do_logout();
+			}
 		$the_date = mysql_format_date($expiry) ;
 		$sess_key = session_id();										// not expired
 		$query = "UPDATE `$GLOBALS[mysql_prefix]user` SET `expires`= '{$the_date}' WHERE `sid` = '{$sess_key}' LIMIT 1";
@@ -239,7 +255,7 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 				$_SESSION['ticket_per_page'] = 0;
 				$_SESSION['show_hide_unit'] =  "s";		// show/hide units
 				$_SESSION['show_hide_unav'] = "s";		// show/hide unavailable units - 4/27/10
-				$_SESSION['show_hide_fac']  = "h";		// show/hide facilities - 3/8/10
+				$_SESSION['show_hide_fac']  = "s";		// show/hide facilities - 3/8/10
 				$_SESSION['unit_flag_1'] = "";		// unit id where status or position change
 				$_SESSION['unit_flag_2'] = "";		// usage tbd 4/7/10
 				$_SESSION['tick_flag_1'] = "";		// usage tbd 4/7/10
@@ -256,7 +272,7 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 				$_SESSION['regions_boxes'] = "s";		// 6/10/11				
 				$_SESSION['user_unit_id'] = $row['responder_id'];		//3/19/11
 				$_SESSION['show_hide_upper'] = "Show Menu";		//6/10/11
-				
+				$_SESSION['sh_cond'] = "s";
 				foreach($categories as $key => $value) {				// 3/15/11
 					$sess_flag = "show_hide_" . $value;
 					$_SESSION[$sess_flag] = "s";
@@ -264,7 +280,7 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 
 				foreach($fac_categories as $key => $value) {				// 3/15/11
 					$fac_sess_flag = "show_hide_fac_" . $value;
-					$_SESSION[$fac_sess_flag] = "h";
+					$_SESSION[$fac_sess_flag] = "s";
 					}
 //				$temp = implode(";",  $_SESSION);
 
@@ -330,7 +346,7 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 		<STYLE type="text/css">
 		input		{background-color:transparent;}		/* Benefit IE radio buttons */
 	  	</STYLE>
-
+		<SCRIPT TYPE="text/javascript" SRC="./js/misc_function.js"></SCRIPT>
 		<SCRIPT defer="defer">	<!-- 11/18/10 -->
 		String.prototype.trim = function () {
 			return this.replace(/^\s*(\S*(\s+\S+)*)\s*$/, "$1");
@@ -514,7 +530,30 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {
 			<TD COLSPAN=2>&nbsp;&nbsp;</TD>
 		</TR>
 		<TR CLASS='even'>
-			<TD COLSPAN=3 ALIGN='center'><INPUT TYPE="submit" VALUE="<?php print get_text("Log In"); ?>"></TD>
+			<TD COLSPAN=3 ALIGN='center'>
+				<INPUT id='login_but' class='plain' style='float: none;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' TYPE="submit" VALUE="<?php print get_text("Log In"); ?>">
+			</TD>
+		</TR>
+		<TR CLASS='even'>
+			<TD COLSPAN=3 ALIGN='center' style='height: 30px;'>
+				&nbsp;
+			</TD>
+		</TR>
+<?php
+		if($allow_accessRequests == "1") {
+?>
+			<TR CLASS='even'>
+				<TD CLASS='text_small' COLSPAN=99 ALIGN='CENTER'><BR />
+					<A ID='req_but' class='plain' style='float: none;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' HREF="contact.php">Request Access</A>
+				</TD>
+			</TR>
+<?php
+			}
+?>
+		<TR CLASS='even'>
+			<TD COLSPAN=3 ALIGN='center' style='height: 30px;'>
+				&nbsp;
+			</TD>
 		</TR>
 <?php
 		if($guest_exists) {	//	6/1/12

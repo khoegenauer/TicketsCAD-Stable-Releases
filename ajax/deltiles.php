@@ -18,7 +18,11 @@ function rmdir_recurse($path) {
 	while(false !== ($file = readdir($handle))) {  
 		if($file != '.' and $file != '..' ) {  
 			$fullpath = $path.$file; 
-			if(is_dir($fullpath)) rmdir_recurse($fullpath); else unlink($fullpath);  
+			if(is_dir($fullpath)) {
+				rmdir_recurse($fullpath); 
+				} else {
+				unlink($fullpath);  
+				}
 		}  
 	}  
 	closedir($handle);  

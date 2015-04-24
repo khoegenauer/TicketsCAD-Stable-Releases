@@ -8,9 +8,7 @@ function br2nl($input) {
 	return preg_replace('/<br(\s+)?\/?>/i', "\n", $input);
 	}
 
-if(empty($_GET)) {
-	exit;
-	}
+
 $ticket_id = (isset($_GET['ticket_id'])) ? $_GET['ticket_id'] : 0;
 $responder_id = (isset($_GET['responder_id'])) ? $_GET['responder_id'] : 0;
 $facility_id = (isset($_GET['facility_id'])) ? $_GET['facility_id'] : 0;

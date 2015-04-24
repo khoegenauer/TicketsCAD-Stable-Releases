@@ -83,7 +83,51 @@ function do_fac($theFac, $theWidth, $search=FALSE, $dist=TRUE) {
 	$print .= "<TR CLASS='odd'  VALIGN='top'><TD>Description:</TD>	<TD>" . highlight($search, nl2br($theFac['fac_descr'])) . "</TD></TR>\n";
 	$print .= "<TR CLASS='even'  VALIGN='top'><TD>Capability:</TD>	<TD>" . highlight($search, nl2br($theFac['capab'])) . "</TD></TR>\n";
 	$print .= "<TR CLASS='odd'  VALIGN='top'><TD>Status:</TD>	<TD>" . $theFac['status_val'] . "</TD></TR>\n";
-	$print .= "<TR CLASS='even'  VALIGN='top'><TD>Opening Hours:</TD>	<TD>" . $theFac['opening_hours'] . "</TD></TR>\n";
+	$print .= "<TR CLASS = 'even'><TD CLASS='td_label'><A CLASS='td_label' HREF='#' TITLE='Facility opening hours - e.g. 24x7x365, 8 - 5 mon to sat etc.'>Opening hours</A>:&nbsp;</TD>";
+	$print .= "<TD><TABLE style='width: 100%;'><TR>";
+	$print .= "<TH style='text-align: left;'><A CLASS='td_label' HREF='#' TITLE='Day of the Week'>" . get_text("Day") . "</A></TH>";
+	$print .= "<TH style='text-align: left;'><A CLASS='td_label' HREF='#' TITLE='Opening Time'>" . get_text("Opening") . "</A></TH>";
+	$print .= "<TH style='text-align: left;'><A CLASS='td_label' HREF='#' TITLE='Closing Time'>" . get_text("Closing") . "</A></TH>";
+	$print .= "</TR>";
+	$opening_arr_serial = base64_decode($theFac['opening_hours']);
+	$opening_arr = unserialize($opening_arr_serial);
+	$z=0;
+	foreach($opening_arr as $val) {
+		switch($z) {
+			case 0:
+			$dayname = "Monday";
+			break;
+			case 1:
+			$dayname = "Tuesday";
+			break;
+			case 2:
+			$dayname = "Wednesday";
+			break;
+			case 3:
+			$dayname = "Thursday";
+			break;
+			case 4:
+			$dayname = "Friday";
+			break;
+			case 5:
+			$dayname = "Saturday";
+			break;
+			case 6:
+			$dayname = "Sunday";
+			break;
+			}
+		if($val[0] == "on") {
+			$print .= "<TR>";
+			$print .= "<TD style='text-align: left;'><SPAN CLASS='td_data'>" . $dayname . "</SPAN></TD>";
+			$print .= "<TD style='text-align: left;'><SPAN CLASS='td_data'>" . $val[1] . "</SPAN></TD>";
+			$print .= "<TD style='text-align: left;'><SPAN CLASS='td_data'>" . $val[2] . "</SPAN></TD>";
+			$print .= "</TR>";
+			}
+		$z++;
+		}
+	$print .= "</TABLE>";
+	$print .= "</TD>";			
+	$print .= "</TR>";
 	$print .= "<TR CLASS='odd'  VALIGN='top'><TD>Access Rules:</TD>	<TD>" . $theFac['access_rules'] . "</TD></TR>\n";
 	$print .= "<TR CLASS='even'  VALIGN='top'><TD>Sec Reqs:</TD>	<TD>" . $theFac['security_reqs'] . "</TD></TR>\n";
 	$print .= "<TR CLASS='odd'  VALIGN='top'><TD>Cont name:</TD>	<TD>" . $theFac['contact_name'] . "</TD></TR>\n";
@@ -313,7 +357,6 @@ if (!empty($_POST)) {
 		if (!req) return;
 		var method = (postData) ? "POST" : "GET";
 		req.open(method,url,true);
-		req.setRequestHeader('User-Agent','XMLHTTP/1.0');
 		if (postData)
 			req.setRequestHeader('Content-type','application/x-www-form-urlencoded');
 		req.onreadystatechange = function () {
@@ -638,7 +681,6 @@ require_once('./incs/links.inc.php');
 		if (!req) return;
 		var method = (postData) ? "POST" : "GET";
 		req.open(method,url,true);
-		req.setRequestHeader('User-Agent','XMLHTTP/1.0');
 		if (postData)
 			req.setRequestHeader('Content-type','application/x-www-form-urlencoded');
 		req.onreadystatechange = function () {

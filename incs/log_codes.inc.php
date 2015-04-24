@@ -31,6 +31,7 @@ $types = array();
 	$types[$GLOBALS['LOG_UNIT_COMPLETE']]					="{$unit} completed";
 	$types[$GLOBALS['LOG_UNIT_CHANGE']]						="{$unit} updated";
 	$types[$GLOBALS['LOG_UNIT_TO_QUARTERS']]				="{$unit} {$to_quarters}";		// 3/11/12
+	$types[$GLOBALS['LOG_UNIT_COMMENT']] 					="{$unit} comment";
 	
 	$types[$GLOBALS['LOG_CALL_EDIT']]						="Call edit";				// 6/19/11
 	$types[$GLOBALS['LOG_CALL_DISP']]						="{$unit} dispatched";

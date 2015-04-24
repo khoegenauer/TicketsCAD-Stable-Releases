@@ -20,6 +20,22 @@ $base = "http://tile.openstreetmap.org";
 $local = "../_osm/tiles";
 $url = "";
 
+function change_osm_permissions() {
+	global $local;
+	$dp = opendir($local);
+	while($file = readdir($dp)) {
+		if (($file == ".") || ($file == ".."))
+			continue;
+		$fullPath = $local."/".$file;
+		if(is_dir($fullPath)) {
+			chmod($fullPath, 0777);
+			chmod_r($fullPath, 0777, 0777);
+			} else {
+			chmod($fullPath, 0777);
+			}
+		}
+	closedir($dp);
+	}
 function do_file ($dir, $subdir, $file) {
 	global $got_curl, $base, $local, $url, $completed;
 	if (!(file_exists($local))) {
@@ -44,7 +60,7 @@ function do_file ($dir, $subdir, $file) {
 			curl_setopt($ch, CURLOPT_URL, $url);
 			curl_setopt ($ch, CURLOPT_RETURNTRANSFER, 1);
 			$the_tile = curl_exec ($ch);
-			$completed[1] = "{$theFileName}";
+			$completed[1] = "{$theFileName} downloaded";
 			curl_close ($ch);
 			}
 		else {				// not CURL
@@ -53,18 +69,23 @@ function do_file ($dir, $subdir, $file) {
 	
 		if ($fp = fopen($my_addr, 'wb')) {
 			fwrite ($fp, $the_tile);
-			$completed[1] = "{$theFileName}";
+			$completed[1] = "{$theFileName} downloaded";
 			fclose ($fp);
 			}		
 		else {
-			print "error " . __LINE__ . "<br />";		// @fopen fails
+//			print "error " . __LINE__ . "<br />";		// @fopen fails
 			}
-		}		// end if ()
+		} else {
+			$theFileName = "_osm/tiles/{$dir}/{$subdir}/{$file}.png";
+			$completed[1] = "{$theFileName} existed already";
+			}
 
 	}		// end function do_file ()
 
 do_file($dir, $subdir, $file);
-	
+if($_GET['lastfile'] == "yes") {
+	change_osm_permissions();
+	}
 $completed[0] = "Completed";
 $completed[2] = $_GET['lastfile'];
 print json_encode($completed);

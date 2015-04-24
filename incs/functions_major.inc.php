@@ -269,7 +269,7 @@ function list_tickets($sort_by_field='',$sort_value='', $my_offset=0) {	// list 
 		}
 		
 	$heading = $captions[($func)] . " - " . get_variable('map_caption');
-	$regs_string = "<FONT SIZE='-1'>Allocated " . get_text("Regions") . ":&nbsp;&nbsp;" . $al_names . "&nbsp;&nbsp;|&nbsp;&nbsp;Currently Viewing " . get_text("Regions") . ":&nbsp;&nbsp;" . $curr_names . "</FONT>";	//	6/10/11
+	$regs_string = "<FONT SIZE='-1'>Allocated " . get_text("but") . ":&nbsp;&nbsp;" . $al_names . "&nbsp;&nbsp;|&nbsp;&nbsp;Currently Viewing " . get_text("Regions") . ":&nbsp;&nbsp;" . $curr_names . "</FONT>";	//	6/10/11
 	$eols = array ("\r\n", "\n", "\r");		// all flavors of eol
 	@session_start(); 
 
@@ -313,29 +313,39 @@ function list_tickets($sort_by_field='',$sort_value='', $my_offset=0) {	// list 
 	</TD></TR>
 	<TR><TD align = 'left' VALIGN='TOP'  >
 		<TABLE>
-			<TR class = 'heading'><TH width = <?php print $col_width;?> ALIGN='center' COLSPAN='99'>Incidents <SPAN ID='sched_flag'></SPAN>
+			<TR class = 'heading'>
+				<TH width = <?php print $col_width;?> ALIGN='center' COLSPAN='99'>Incidents <SPAN ID='sched_flag'></SPAN>
 				<SPAN id='collapse_incs' onClick="hideDiv('incs_list_sh', 'collapse_incs', 'expand_incs')" style = 'display: "";'><IMG SRC = './markers/collapse.png' ALIGN='right'></SPAN>
 			<SPAN id='expand_incs' onClick="showDiv('incs_list_sh', 'collapse_incs', 'expand_incs')" style = 'display: none;'><IMG SRC = './markers/expand.png' ALIGN='right'></SPAN>
-			</TH></TR>
-			<TR><TD>	
+				</TH>
+			</TR>
+			<TR>
+				<TD>	
 				<DIV ID='incs_list_sh'>
 					<DIV ID = 'side_bar'></DIV>
 				</DIV>
-			</TD></TR>
+				</TD>
+			</TR>
 		</TABLE>
 		<TABLE>
-			<TR class = 'heading'><TH width = <?php print $col_width;?> ALIGN='center' COLSPAN='99'><?php print get_text("Units");?> 
+			<TR class = 'heading'>
+				<TH width = <?php print $col_width;?> ALIGN='ions
+				
+				' COLSPAN='99'><?php print get_text("Units");?> 
 				<SPAN id='collapse_resp' onClick="hideDiv('resp_list_sh', 'collapse_resp', 'expand_resp')" style = "display: <?php print $resp_col_butt;?>;"><IMG SRC = './markers/collapse.png' ALIGN='right'></SPAN>
 				<SPAN id='expand_resp' onClick="showDiv('resp_list_sh', 'collapse_resp', 'expand_resp')" style = "display: <?php print $resp_exp_butt;?>;"><IMG SRC = './markers/expand.png' ALIGN='right'></SPAN>
-			</TH></TR>
-			<TR><TD>		
+				</TH>
+			</TR>
+			<TR>
+				<TD>		
 				<DIV ID='resp_list_sh' style='display: <?php print $show_resp;?>'>
 					<DIV ID = 'side_bar_r' style='min-height: 100px; max-height: <?php print $the_height;?>px; overflow-y: scroll; overflow-x: hidden;'></DIV>
 					<DIV ID = 'side_bar_rl'></DIV>
 					<DIV STYLE = "height:12px;">&nbsp;</DIV>
 					<DIV ID = 'units_legend'></DIV>
 				</DIV>
-			</TD></TR>
+				</TD>
+			</TR>
 		</TABLE>
 		<TABLE>
 			<TR class = 'heading'><TH width = <?php print $col_width;?> ALIGN='center' COLSPAN='99'>Facilities 
@@ -3947,7 +3957,6 @@ print get_buttons_inner2();	//	4/12/12
 		print "</TD></TR>";
 		print "</TABLE>\n";
 		print "<BR /><BR /><BR />";
-
 // =============== 10/30/09 
 
 		function my_to_date($in_date) {			// date_time format to user's spec

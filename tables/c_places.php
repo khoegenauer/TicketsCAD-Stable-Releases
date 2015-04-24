@@ -11,82 +11,22 @@
 	$result = @mysql_query($query) ;		// note STFU
 	
 ?>
-	<SCRIPT src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=<?php print get_variable('gmaps_api_key');?>"
-			type="text/javascript"></SCRIPT>
 	<SCRIPT type="text/javascript">
 
-	var geocoder;		// note GLOBAL!
-	var map;
-
-	function initialize() {
-	  if (GBrowserIsCompatible()) {
-		geocoder = new GClientGeocoder();
-		map = new GMap2(document.getElementById("map_canvas"));
-		map.setUIToDefault();										// 8/13/10
-
-		map.addControl(new GMapTypeControl());
-<?php print (get_variable('terrain') == 1)? "\t\tmap.addMapType(G_PHYSICAL_MAP);\n" : "";?>
-		map.addControl(new GOverviewMapControl());
-		map.enableScrollWheelZoom();
-		
-		var center = new GLatLng(<?php echo get_variable('def_lat'); ?>, <?php echo get_variable('def_lng'); ?>);
-		map.setCenter(center, <?php echo get_variable('def_zoom'); ?>);
-
-		var marker = new GMarker(center, {draggable: true});
-
-		GEvent.addListener(map, "click", function(marker, point) {
-			if (point) {
-				document.c.frm_lat.value = point.lat().toFixed(6);
-				document.c.frm_lon.value = point.lng().toFixed(6);
-				map.clearOverlays();
-				map.addOverlay(new GMarker(point));										// to center
-				var center = new GLatLng( point.lat(),point.lng());
-				map.setCenter(center, (<?php echo get_variable('def_zoom'); ?>+2));		// zoom in 2 levels
+	function addrlkup(theForm) {		 //
+		if ((theForm.the_city.value.trim()==""  || theForm.the_st.value.trim()=="")) {
+			alert ("City and State are required for location lookup.");
+			return false;
 				}
+		var myAddress = theForm.the_city.value.trim() + " "  +theForm.the_st.value.trim();
+		control.options.geocoder.geocode(myAddress, function(results) {
+			var r = results[0]['center'];
+			var theLat = r.lat;
+			var theLng = r.lng;
+			point_on_map(theForm, theLat, theLng);
 				});
-
-		map.addOverlay(marker);
-	  }
-	}			// end function initialize()	
-
-	function addrlkup(theForm) {		   //
-		var address = theForm.the_city.value + " "  + theForm.the_st.value;
-		if (geocoder) {								// defined in function initialize()
-			geocoder.getLatLng(
-				address,
-				function(point) {
-					if (!point) {
-						alert(address + " not found");
-						} 
-					else {
-						map.setCenter(point, <?php echo get_variable('def_zoom'); ?>);
-						var marker = new GMarker(point);
-						document.c.frm_lat.value = point.lat().toFixed(6);
-						document.c.frm_lon.value = point.lng().toFixed(6);
-						map.clearOverlays();
-						map.addOverlay(new GMarker(point));										// to center
-						var center = new GLatLng( point.lat(),point.lng());
-						map.setCenter(center, (<?php echo get_variable('def_zoom'); ?>+2));		// zoom in 2 levels		
-						}
-					}
-				);
-			}
 		}				// end function addrlkup()
 	
-
-		function $() {									// 2/11/09
-			var elements = new Array();
-			for (var i = 0; i < arguments.length; i++) {
-				var element = arguments[i];
-				if (typeof element == 'string')
-					element = document.getElementById(element);
-				if (arguments.length == 1)
-					return element;
-				elements.push(element);
-				}
-			return elements;
-			}
-
 	function is_float(str) {
 	    return /^[-+]?\d+(\.\d+)?$/.test(str);
 		}
@@ -94,24 +34,6 @@
 	String.prototype.trim = function () {
 		return this.replace(/^\s*(\S*(\s+\S+)*)\s*$/, "$1");
 		};
-
-	var sv_starting;
-	function sv_win(theForm) {				// 4/1/2014
-		sv_starting = false;							// test
-		if(sv_starting) {return;}				// dbl-click proof
-		sv_starting = true;					
-
-		var thelat = theForm.frm_lat.value;
-		var thelng = theForm.frm_lon.value;
-		var url = "street_view.php?thelat=" + thelat + "&thelng=" + thelng;
-		newwindow_sv=window.open(url, "sta_log",  "titlebar=no, location=0, resizable=1, scrollbars, height=450,width=640,status=0,toolbar=0,menubar=0,location=0, left=100,top=300,screenX=100,screenY=300");
-		if (!(newwindow_sv)) {
-			alert ("Street view operation requires popups to be enabled. Please adjust your browser options - or else turn off the Call Board option.");
-			return;
-			}
-		newwindow_sv.focus();
-		starting = false;
-		}		// end function sv win()
 
 	function validate(theForm) {	//
 		var errmsg="";
@@ -143,11 +65,6 @@
 			theForm.submit();
 			}
 		}				// end function validate()
-	function do_reset() {
-		document.c.reset();
-		$('but1').style.opacity = $('but2').style.opacity = $('row1').style.opacity = $('row2').style.opacity = $('row3').style.opacity = $('row4').style.opacity = $('row5').style.opacity = 0.2;		
-		document.c.apply_to_c.checked = document.c.apply_to_b.checked = false;	
-		}		// end function
 
 	function fn_check_borc(inval) {
 		$('but1').style.opacity = $('but2').style.opacity = $('row1').style.opacity = $('row2').style.opacity = $('row3').style.opacity = $('row4').style.opacity = $('row5').style.opacity = 1.0;		
@@ -161,6 +78,37 @@
 		$('ID3').readOnly = $('ID4').readOnly = $('ID5').readOnly = (inval=='city');		
 
 		}		// end function fn_check_borc()
+
+
+	function addrFromClick(latlng) {
+		var popup = L.popup();	
+		control.options.geocoder.reverse(latlng, map.options.crs.scale(map.getZoom()), function(results) {
+			var r = results[0];
+			var theLat = latlng.lat;
+			var theLng = latlng.lng;
+			if (r) {
+				document.c.frm_street.value = r.name;
+				if(r.city) { var theCity = r.city; } else { theCity = "";}
+				document.c.the_city.value = theCity;
+				document.c.the_st.value = r.state;
+				document.c.frm_lat.value = theLat.toFixed(6); 
+				document.c.frm_lon.value = theLng.toFixed(6);
+				document.c.frm_street.focus();
+				}
+			});
+		}
+		
+	function point_on_map(my_form, lat, lng) {
+		if(marker) {map.removeLayer(marker);}
+		if(myMarker) {map.removeLayer(myMarker);}
+		my_form.frm_lat.value=lat.toFixed(6);	
+		my_form.frm_lon.value=lng.toFixed(6);		
+		var iconurl = "./our_icons/yellow.png";
+		icon = new baseIcon({iconUrl: iconurl});	
+		marker = L.marker([lat, lng], {icon: icon});
+		marker.addTo(map);
+		map.setView([lat, lng], 13);
+		}				// end function pt_to_map ()
 
 
 </SCRIPT>
@@ -192,8 +140,6 @@
 				&nbsp;&nbsp;&nbsp;&nbsp;<?php print get_text("St");?>:&nbsp;<INPUT MAXLENGTH="4" SIZE="2" TYPE="text" NAME="the_st" VALUE="" /><button type="button" style = "margin-left:40px;" onClick="addrlkup(this.form)">
 				<img src="./markers/glasses.png" alt="Lookup location." />&nbsp;&nbsp;Lookup</TD></TR>
 
-			<TR><TD>&nbsp;</TD></TR>
-			<TR><TD CLASS="td_label" colspan=2 align=center><SPAN ID='do_sv' onClick = "sv_win(document.c)" style='display:block'><u>Street view</U></SPAN></TD></TR>
 			<TR><TD>&nbsp;</TD></TR>
 
 			<TR id = 'row2' VALIGN="baseline" CLASS="even" style = "opacity:0.2" ><TD CLASS="td_label" ALIGN="right">Name:</TD>
@@ -240,7 +186,38 @@
 		</TD></TR>
 		</TABLE>
 
-<SCRIPT>
-initialize();
-</SCRIPT>
+		<SCRIPT>
+		var map;
+		var baseIcon = L.Icon.extend({options: {shadowUrl: './our_icons/shadow.png',
+			iconSize: [20, 32],	shadowSize: [37, 34], iconAnchor: [10, 31],	shadowAnchor: [10, 32], popupAnchor: [0, -20]
+			}
+			});
+		var baseFacIcon = L.Icon.extend({options: {iconSize: [28, 28], iconAnchor: [14, 29], popupAnchor: [0, -20]
+			}
+			});
+		var baseSqIcon = L.Icon.extend({options: {iconSize: [20, 20], iconAnchor: [10, 21], popupAnchor: [0, -20]
+			}
+			});
+		var basecrossIcon = L.Icon.extend({options: {iconSize: [40, 40], iconAnchor: [20, 41], popupAnchor: [0, -41]
+			}
+			});
+		var latLng;
+		var in_local_bool = "<?php print get_variable('local_maps');?>";
+		var theLocale = <?php print get_variable('locale');?>;
+		init_map(2, <?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>, "", 13, theLocale, 1);
+		map.setView([<?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>], 13);
+		var bounds = map.getBounds();	
+		var zoom = map.getZoom();
+		var got_points = false;	// map is empty of points
+		function onMapClick(e) {
+		if(marker) {map.removeLayer(marker); }
+			var iconurl = "./our_icons/yellow.png";
+			icon = new baseIcon({iconUrl: iconurl});	
+			marker = new L.marker(e.latlng, {id:1, icon:icon, draggable:'true'});
+			marker.addTo(map);
+			addrFromClick(e.latlng);
+			};
+
+		map.on('click', onMapClick);
+		</SCRIPT>
 <?php
