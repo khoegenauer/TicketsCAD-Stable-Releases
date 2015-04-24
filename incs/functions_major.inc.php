@@ -162,6 +162,7 @@ $iw_width = 	"300px";		// map infowindow with
 7/30/13 Revised to solve issue with showing and hiding individual Facility categories
 9/10/13 Added "Address About" and "To Address" fields, fixed on click event in maps mode for ticket entered in no maps mode.
 12/23/13 Revised sidebar numbering and unit marker creation to separate units markers from ticket markers in preparation for dynamic unit markers
+1/10/14 Revised sidebar click numbering to cure wrong infowindow being opened.
 */
 
 $nature = get_text("Nature");			// 12/03/10
@@ -2990,7 +2991,7 @@ if(count($al_groups == 0)) {	//	catch for errors - no entries in allocates for t
 		$latitude = $row['lat'];		// 7/18/10		
 		$longitude = $row['lng'];		// 7/18/10
 
-		$on_click =  ((!(my_is_float($row['lat']))) || ($quick))? " myclick_nm({$row['unit_id']}) ": "myclick_u({$u_sb_indx})";		// 1/2/10
+		$on_click =  ((!(my_is_float($row['lat']))) || ($quick))? " myclick_nm({$row['unit_id']}) ": "myclick_u({$row['unit_id']})";		// 1/2/10, 1/10/14
 		$got_point = FALSE;
 
 		$name = $row['name'];			//	10/8/09
@@ -4274,7 +4275,6 @@ function createMarker(unit_point, number) {		// unit marker
 		});
 	return unit_marker;
 	}
-
 
 <?php
 	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE ticket_id='$id'";
