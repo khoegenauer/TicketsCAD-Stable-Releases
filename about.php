@@ -766,6 +766,10 @@ Changes for Tickets 2.41B
 
 235.  Various fixes, no new functionality
 
+Changes for Tickets 2.41C
+
+236.  4 Fixes to Callboard and notifies.
+
 Let us know if the above is too terse and where further expansion wd be useful.
 <A NAME = 'bottom'></A>
 
