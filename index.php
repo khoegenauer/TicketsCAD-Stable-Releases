@@ -7,7 +7,7 @@ if(!(file_exists("./incs/mysql.inc.php"))) {
 
 require_once('./incs/functions.inc.php');	
 
-$version = "2.41A Beta - 10/16/13";	
+$version = "2.41B Beta - 10/31/13";	
 
 /*
 10/1/08 added error reporting
@@ -95,6 +95,7 @@ $version = "2.41A Beta - 10/16/13";
 5/7/13 Added new "status_updated" field to responder table
 8/1/13 Added Mobile redirect for mobile devices
 9/10/13 Added Warnings, mailgroups, personnel and various settings to support those features and mobile
+10/31/13 Added fields to in_types.
 */
 
 //snap(basename(__FILE__) . " " . __LINE__  , count($_SESSION));
@@ -1618,6 +1619,12 @@ if (!($version == $old_version)) {		// current? - 6/6/2013  ====================
 			do_insert_night_colors('sev_background', 'EFEFEF');			//	9/10/13	
 			do_insert_day_colors('sev_text', '000000');			//	9/10/13
 			do_insert_night_colors('sev_text', '000000');			//	9/10/13				
+
+			$query = "ALTER TABLE `$GLOBALS[mysql_prefix]in_types` ADD `notify_mailgroup` INT( 4 ) NULL DEFAULT NULL AFTER `opacity`";		// 10/31/13
+			$result = mysql_query($query);				
+
+			$query = "ALTER TABLE `$GLOBALS[mysql_prefix]in_types` ADD `notify_email` VARCHAR( 256 ) NULL DEFAULT NULL AFTER `notify_mailgroup`";		// 10/31/13
+			$result = mysql_query($query);				
 		}		// end (!($version ==...) ==================================================			
 
 	function update_disp_stat ($which, $what, $old) {		//	10/26/11

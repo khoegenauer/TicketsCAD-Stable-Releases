@@ -17,8 +17,9 @@
 3/1/12 Changed level['MEMBER'] to level['UNIT']
 6/1/12 Hide Guest loging notice if guest account doesn't exist.
 10/23/12 Added Level 'Service User' with redirection
-12/1/2012 include browser identification in log entry
-6/1/2013 revised 'contact us' addr to user addr if available
+12/1/12 include browser identification in log entry
+6/1/13 revised 'contact us' addr to user addr if available
+10/29/13 revised do_login to cure errors in user choice of maps when using internet = 3
 */
 
 function do_logout($return=FALSE){						/* logout - destroy session data */
@@ -50,8 +51,8 @@ function do_logout($return=FALSE){						/* logout - destroy session data */
 	do_login('main.php', TRUE);				// wait for login
 	}
 // ==========================================================================
-	function check_conn () {				// returns TRUE/FALSE
-		$url = "http://maps.google.com/";
+function check_conn () {				// returns TRUE/FALSE
+	$url = "http://www.yahoo.com/";
 		$response="";
 		$parts=parse_url($url);
 		if(!$parts) return false; /* the URL was seriously wrong */
@@ -95,12 +96,19 @@ function do_logout($return=FALSE){						/* logout - destroy session data */
 				return FALSE;
 				}
 			}
-			
 		}	// end function check_conn ()
 
-	function set_filenames($internet, $userchoice) {
-		$internet_good = (($internet == 1) || (($internet == 3) && (check_conn ())));		// check_conn()  returns TRUE/FALSE = 8/31/10			
-		$normal = ($internet_good && $userchoice == "Show") ? true : false; 
+function set_filenames($internet, $userchoice) {
+	$internet_good = (($internet == 1) || (($internet == 3) && (check_conn()))) ? true: false;		// check_conn()  returns TRUE/FALSE = 8/31/10
+	if(($internet_good) && ($userchoice == "Show")) {	//	10/29/13
+		$normal = true;
+		} elseif(($internet_good) && ($userchoice == "Hide")) {
+		$normal = false;
+		} elseif(!$internet_good) {
+		$normal = false;
+		} else {
+		$normal = false;
+		}
 		$_SESSION['internet'] = $normal;                        
 		$_SESSION['good_internet'] = $internet_good;
 //		$_SESSION['fip'] =($normal)? "./incs/functions.inc.php":	"./incs/functions_nm.inc.php";                        
@@ -140,9 +148,7 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE) {			// do logi
 //																			7/3/11
 	$warn = ((array_key_exists ('expires', $_SESSION)) && ($now > $_SESSION['expires']))? "Log-in has expired due to inactivity.  Please log in again." : "";
 	
-	$internet = get_variable("internet");				// 8/22/10
-//	$temp = implode(";",  $_SESSION);
-	
+	$internet = intval(get_variable("internet"));				// 8/22/10
 	if ((array_key_exists ('user_id', $_SESSION)) && (is_expired($_SESSION['user_id']))) {
 
 		$the_date = mysql_format_date($expiry) ;
@@ -150,13 +156,15 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE) {			// do logi
 		$query = "UPDATE `$GLOBALS[mysql_prefix]user` SET `expires`= '{$the_date}' WHERE `sid` = '{$sess_key}' LIMIT 1";
 		$result = mysql_query($query) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 		$_SESSION['expires'] = $expiry;
+		$userchoice = $_SESSION['maps_sh'];
 		$warn = "";
-		if($internet==3) {set_filenames($internet);}			// possible change to filenames based on connect status - 8/31/10
+		if($internet==3) {set_filenames($internet, $userchoice);}			// possible change to filenames based on connect status - 8/31/10
 		}				// end if((!(empty($_SESSION)))  && ...)
 
 	else { 				// not logged in; now either get form data or db check form entries 	
 		if(array_key_exists('frm_passwd', $_POST)) {		// first, db check
 																														// 6/25/10
+			$userchoice = $_POST['frm_maps'];
 			$categories = array();													// 3/15/11
 
 			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE `clear` <> 'NULL'";	// 3/15/11
@@ -214,7 +222,6 @@ function do_login($requested_page, $outinfo = FALSE, $hh = FALSE) {			// do logi
 					WHERE `id` = {$row['id']} LIMIT 1";
 					
 				$result = mysql_query($query) or do_error("", 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-				$userchoice = $_POST['frm_maps'];
 
 				$_SESSION['id'] = 			$sid;
 				$_SESSION['expires'] = 		time();

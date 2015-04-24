@@ -130,6 +130,11 @@ function get_facilitydetails($value) {
 	var rec_fac_city = [];
 	var rec_fac_state = [];
 
+	String.prototype.trim = function () {
+		return this.replace(/^\s*(\S*(\s+\S+)*)\s*$/, "$1");
+		};
+			
+
 	function $() {									// 1/21/09
 		var elements = new Array();
 		for (var i = 0; i < arguments.length; i++) {

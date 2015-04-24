@@ -678,6 +678,94 @@ Changes for Tickets V 2.30A
 	  
 209.  As usual, various corrections applied in this release regarding functionality and security.   
 
+Changes for Tickets V 2.30B & C
+
+211.  Various fixes to Messaging
+
+Changes for Tickets V 2.40A
+
+212.  Revised mapping to Google Maps API V3.
+
+213.  Various other fixes to messaging.
+
+Changes for Tickets V 2.40B
+
+214.  Creation of map markup now supported - revised from Google maps API V2 to V3.
+
+215.  New "Hello All Stations" (HAS) feature. Allows broadcast message to all logged in users.  Optional, see setting 
+	  "broadcast", and note that the default value is 0, for 'off'.  This feature is experimental; when active, it
+	  requires an Internet connection.
+
+216.  Addition of setting to allow user definition of how many hours before current time, booked calls are hidden from 
+	  the current situation screen.  See setting "hide_booked", where the default is 48 hours.
+
+217.  Addition of system/messaging setting to determine whether incoming email messages from pop3 server are deleted 
+	  after download. Look under messaging settings (note you only see these settings if the system setting
+	  "use_messaging" is not 0.
+	  
+218.  We now provide for an 'ICS-213' button in the top menu; see setting 'ics_top', where a setting of '1' exercises
+	  this option.  Default is '0', for 'off'.
+
+219.  Database schema was revised to add indexing to certain of the larger tables.  Volume users will see some 
+	  performance gains.  And as usual various other fixes.
+
+Changes for Tickets 2.40C
+
+220.  Various fixes. No new functionality.
+
+Changes for Tickets 2.40D
+
+221.  Added PHP native mail test script
+
+222.  Various fixes including messaging, auto unit status and some map functions.
+
+Changes for Tickets 2.41A
+
+223.  Major revisions to Portal - revised main screen, added statistics, new request now in a popup, added ability to 
+      specifiy multiple address requests, provided marker infowindows.
+	 
+224.  Requests via the portal are now acknowledged by email back to the user - needs user email address set. Also status
+      changes (acceptance, decline) are also notified.
+
+225.  Added Mail Lists (mailgroups). These are added and edited via config and collect potential entries from users, units
+      and contacts. Mail Lists are currently only used for system messages (notifies etc) rather than normal mail functionality.
+	  
+226.  Added "Responder Mobile" page. This is accessed directly via ./rm off your tickets directory or automatically if system
+      setting "use responder mobile" is set to 1. The screen is set up for unit rather than admin use and provided specific
+	  unit functions such as inbuilt tracking, messaging, chat, status updates (on-scene etc).
+	  
+227.  The "Responder mobile" page uses Open Streetmaps and supports the use of maps downloaded to the Tickets server. To download
+      map tiles go to the main tickets config page and see the link to "download map tiles". (please note that this can take a 
+	  long time depending on the area chosen.
+	  
+228.  Addition of some new fields to Incident screen ("About address" and "to address") and to units and facilities screens ("About Status
+      and for facilities email or email list). For Facilities the email and email list send a notify of a new job dispatched to or from
+	  that facility.
+	  
+229.  Added location warnings. You can add new locations to be warned about (previous incidents etc) and when adding a new incident
+      Tickets will look at that table and present warnings about any locations within a user definable distance (see config / edit settings).
+	  
+230.  Revision to chat to correctly update logged in users during a current chat - checked on a regualr basis.
+
+231.  Revision to the "Cleanse Regions" routine to enhance the ability to resolve regions based issues and correct any tickets, units etc
+      that have not been allocated to a region or where there are duplicate entries.
+	  
+232.  Auto Dispatch Status - Tickets can be set to automatically update the unit status based on a change in the dispatch status - the
+      specific status values are user definable in config.
+	  
+233.  Per session selection of show or hide maps available at login.
+
+234.  Files - the ability to store files (documents / pictures) securely against Tickets, Units, Facilities, general tickets use and specific
+      portal users. For portal users this could be to store client / service user specific training or contractual documents which are then only
+	  viewable to that user. Can also set global Tickets or portal documents which could be generic processes, contact lists etc. File types can
+	  be documents or pictures, executable scripts are excluded by the file upload script. The directory is protected and barred for direct access.
+
+234.  Various other fixes as normal including coping where a logged in user has no allocated regions.
+
+Changes for Tickets 2.41B
+
+235.  Various fixes, no new functionality
+
 Let us know if the above is too terse and where further expansion wd be useful.
 <A NAME = 'bottom'></A>
 

@@ -12,6 +12,7 @@ $list_length = 99;		// chat list length maximum
 3/15/11 changed stylesheet.php to stylesheet.php
 5/4/11 get_new_colors() added
 9/10/13 Changed logged in users to AJAX to refresh when new users join.
+10/29/13 Revision to pause polling while sending invite.
 */
 @session_start();	
 require_once('./incs/functions.inc.php');		//7/28/10
@@ -354,6 +355,7 @@ $signals_list .= "</SELECT>\n";
 		show_hide('sent_msg');
 		wr_invite(in_val);
 		$('send_butt').style.display='none';
+		if(!the_to) {window.setTimeout('set_to()',10000);}	//	10/29/13
 		do_can ();			// hide some buttons and reset select
 		}
 
@@ -365,10 +367,12 @@ $signals_list .= "</SELECT>\n";
 			}
 		}
 
-	function do_can () {
+	function do_can () {	//	10/29/13
+		$('help').innerHTML = "";
 		$('send_butt').style.display='none';
 		$('can_butt').style.display='none';
 		document.chat_form.chat_invite.options[0].selected = true;
+		if(!the_to) {set_to();}	//	10/29/13	
 		}		// end function do_can ()
 
 	function get_chatusers() {	//	9/10/13
@@ -381,6 +385,12 @@ $signals_list .= "</SELECT>\n";
 			$('whos_chatting').innerHTML = chatusers[0];
 			}
 		}
+
+	function pause_messages() {	//	10/29/13
+		clear_to();
+		$('help').innerHTML = "Click Cancel to return to chat messages";
+		}
+	
 
 	</SCRIPT>
 </HEAD>
@@ -405,7 +415,7 @@ $signals_list .= "</SELECT>\n";
 		<SPAN ID = 'botton_row' STYLE='margin-left:120px;'>
 		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 		<B>Invite </B><SELECT NAME='chat_invite' 
-				onChange = "$('send_butt').style.display='inline';$('can_butt').style.display='inline';"> 
+				onFocus = "pause_messages(); $('can_butt').style.display='inline';" onChange = "$('send_butt').style.display='inline';"> 
 		<OPTION VALUE="" SELECTED>Select</OPTION>	
 		<OPTION VALUE=0>All</OPTION>	
 
@@ -419,8 +429,9 @@ $signals_list .= "</SELECT>\n";
 	print "\t</SELECT>\n";
 ?>
 		<INPUT ID = 'send_butt' TYPE='button' VALUE = 'Send invite' style='margin-left:10px; display:none' onClick = "do_send_inv(document.chat_form.chat_invite.value);">
+		<SPAN ID= 'help' STYLE = 'margin-left:60px; color: red;'><B></B></span>		
 		<SPAN ID= 'sent_msg' STYLE = 'margin-left:60px; display:none;'><B>Invitation Sent!</B></span>
-		<INPUT ID = 'can_butt' TYPE='button' VALUE = 'Cancel' style='margin-left:10px; display:none' onClick = "$('send_butt').style.display='none';$('can_butt').style.display='none';document.chat_form.chat_invite.options[0].selected = true;">
+		<INPUT ID = 'can_butt' TYPE='button' VALUE = 'Cancel' style='margin-left:10px; display:none' onClick = "do_can();">
 		<INPUT TYPE="button" VALUE = "Close"  style='margin-left:60px;'onClick = "this.disabled=true; clear_to(); opener.chat_win_close(); self.close()">
 		<NOBR></CENTER>
 		</SPAN>
