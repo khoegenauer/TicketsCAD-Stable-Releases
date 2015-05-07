@@ -1,48 +1,14 @@
 <?php
 /*
-ALTER TABLE `$GLOBALS[mysql_prefix]in_types` ADD `watch` INT(2) NOT NULL DEFAULT '0' COMMENT 'Used in on-scene-watch' AFTER `set_severity`;
-alert (<?php echo __LINE__;?>);
-<!-- <?php echo __LINE__;?> -->
-$_SESSION['osw_ntrupt_ok'] = TRUE;
-2/15/2015 - initial release
-
-	$guest = is_guest();
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]{$status_table}` ORDER BY `group` ASC, `sort` ASC, `{$status_field}` ASC";
-	$result_st = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
-	$dis = ($guest)? " DISABLED": "";								// 9/17/08
-	$the_grp = strval(rand());			//  force initial OPTGROUP value
-	$i = 0;
-	$outstr = ($tbl_in == "u") ? "\t\t<SELECT CLASS='sit' id='frm_status_id_u_" . $unit_in . "' name='frm_status_id' {$dis} STYLE='background-color:{$init_bg_color}; color:{$init_txt_color};' ONCHANGE = 'this.style.backgroundColor=this.options[this.selectedIndex].style.backgroundColor; this.style.color=this.options[this.selectedIndex].style.color; do_sel_update({$unit_in}, this.value)' >" :
-	"\t\t<SELECT CLASS='sit' id='frm_status_id_f_" . $unit_in . "' name='frm_status_id' {$dis} STYLE='background-color:{$init_bg_color}; color:{$init_txt_color}; width: 90%;' ONCHANGE = 'this.style.backgroundColor=this.options[this.selectedIndex].style.backgroundColor; this.style.color=this.options[this.selectedIndex].style.color; do_sel_update_fac({$unit_in}, this.value)' >";	// 12/19/09, 1/1/10. 3/15/11
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result_st))) {
-		if ($the_grp != $row['group']) {
-			$outstr .= ($i == 0)? "": "\t</OPTGROUP>";
-			$the_grp = $row['group'];
-			$outstr .= "\t\t<OPTGROUP LABEL='$the_grp'>";
-			}
-		$sel = ($row['id']==$status_val_in)? " SELECTED": "";
-		$outstr .= "\t\t\t<OPTION VALUE=" . $row['id'] . $sel ." STYLE='background-color:{$row['bg_color']}; color:{$row['text_color']};'  onMouseover = 'style.backgroundColor = this.backgroundColor;'>$row[$status_field] </OPTION>";
-		$i++;
-		}		// end while()
-	$outstr .= "\t\t</OPTGROUP>\t\t</SELECT>";
-	return $outstr;
-	}
-
-
+4/28/2015 - added edit eligibility check, cleaned up header material
 */
 if ( !defined( 'E_DEPRECATED' ) ) { define( 'E_DEPRECATED', 8192 );}		//
 error_reporting (E_ALL  ^ E_DEPRECATED);
 @session_start();
 require_once('./incs/functions.inc.php');
 
-/*
-snap(basename(__FILE__), __LINE__);
-$_SESSION['osw_ntrupt_ok'] = TRUE;				// false if form is active
-snap(__LINE__, $_SESSION['osw_ntrupt_ok']);
-*/
 if (!array_key_exists ("user_id", $_SESSION)) {$_POST['mode'] = 0;}		//3/6/2015 - close this window
 
-//$GLOBALS['LOG_UNIT_COMMENT']	=24;		// 2/24/2015 - add to log_codes.inc.php!!!!
 
 $evenodd = array ("even", "odd");
 $handle = 		get_text("Handle");
@@ -97,16 +63,19 @@ function set_orig() {
 	}		// end function set orig()
 
 function do_log (the_unit) {
+	<?php if (!can_edit()) {echo "\n\t return false;\n";} ?>
 	document.osw_form.ref.value = the_unit;
 	document.osw_form.mode.value = do_LOG;		// write log entry
 	document.osw_form.submit();
 	}
 function do_note (the_tick) {
+	<?php if (!can_edit()) {echo "\n\t return false;\n";} ?>
 	document.osw_form.ref.value = the_tick;
 	document.osw_form.mode.value = do_NOTE;		// write note entry
 	document.osw_form.submit();
 	}
 function do_mail (the_unit) {
+	<?php if (!can_edit()) {echo "\n\t return false;\n";} ?>
 	document.osw_form.ref.value = the_unit;
 	document.osw_form.mode.value = do_MAIL;		//
 	document.osw_form.submit();
@@ -225,7 +194,7 @@ switch ($mode) {
 	$query = "{$query_core}
 			{$mode_cl}
 			ORDER BY `severity` DESC, `scope` ASC, `handle` ASC ;";
-	snap(__LINE__, $query);
+//	snap(__LINE__, $query);
 
 	$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 	echo "<table id='data_tbl' border = 1 cellpadding = 2 cellspacing = 2 style = 'border-collapse: collapse;'>";

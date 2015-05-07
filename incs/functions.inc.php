@@ -2329,7 +2329,7 @@ function mail_it ($to_str, $smsg_to_str, $text, $ticket_id, $text_sel=1, $txt_on
 	$message = str_replace("\n.", "\n..", $message);					// see manual re mail win platform peculiarities
 
 //	$subject = (strpos ($match_str, "A" ))? "": "Incident: {$the_scope}";	// 11/14/2012 - 11/14/2012 - don't duplicate
-	$subject = get_text("Incident") . ": {$the_scope}";						// 7/3/2013
+	$subject = ($text != "") ? $text : get_text("Incident") . ": {$the_scope}";						// 7/3/2013
 	
 	if ($txt_only) {
 		return $subject . "\n" . $message;		// 2/16/09

@@ -404,11 +404,6 @@ $the_level = (isset($_SESSION['level'])) ? $_SESSION['level'] : 0 ;
 
 			add_header($id, FALSE, TRUE);
 	print '<FONT CLASS="header">Ticket <I>' . $_POST['frm_scope'] . '</I> has been updated</FONT><BR /><BR />';		/* show updated ticket */
-			if($_SESSION['internet']) {
-			require_once('./forms/ticket_view_screen.php');
-				} else {
-				require_once('./forms/ticket_view_screen_NM.php');
-				}
 	$addrs = notify_user($id,$GLOBALS['NOTIFY_TICKET_CHG']);		// returns array or FALSE
 
 	unset ($_SESSION['active_ticket']);								// 5/4/11
@@ -854,40 +849,19 @@ function set_size() {
 	if ((isset($_GET['action'])) && ($_GET['action'] == 'update')) {		/* update ticket */
 		if ($id == '' OR $id <= 0 OR !check_for_rows("SELECT * FROM $GLOBALS[mysql_prefix]ticket WHERE id='$id' LIMIT 1")) {
 			print "<FONT CLASS=\"warn\">Invalid Ticket ID: '$id'</FONT>";
-			}
-		else {
+			} else {
 			$the_addrs = edit_ticket($id);	// post updated data	11/18/13
-?>			
-<SCRIPT>
-<?php
-			if ($the_addrs) {	//	11/18/13
-?>
-				function do_notify() {	//	11/18/13
-					var theAddresses = '<?php print implode("|", array_unique($the_addrs));?>';		// drop dupes
-					var theText= "TICKET-Update: ";
-					var theId = '<?php print $id;?>';
-					var params = "frm_to="+ escape(theAddresses) + "&frm_text=" + escape(theText) + "&frm_ticket_id=" + theId + "&text_sel=1" ;		// ($to_str, $text, $ticket_id)   10/15/08
-					sendRequest ('mail_it.php',handleResult, params);	// ($to_str, $text, $ticket_id)   10/15/08
-					}			// end function do notify()
-				
-				function handleResult(req) {				// the 'called-back' function, 11/18/13
-					}
-<?php
 
+			if ($addrs) {
+				$theTo = implode("|", array_unique($addrs));
+				$theText = "TICKET-Update: " . $_POST['frm_scope'];
+				mail_it ($theTo, "", $theText, $id, 1 );
+				}				// end if ($addrs)
+			if($_SESSION['internet']) {
+				require_once('./forms/ticket_view_screen.php');
 				} else {
-?>		
-				function do_notify() {
-					return;
-					}			// end function do notify()
-<?php		
+				require_once('./forms/ticket_view_screen_NM.php');
 				}			
-			
-?>
-</SCRIPT>
-			<script type="text/javascript">
-			do_notify();
-			</script>
-<?php
 			}
 		exit();
 		}
@@ -1231,11 +1205,11 @@ function set_size() {
 
 //	facility handling  - 3/25/10
 
-			$query_al = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `type`= 4 AND `resource_id` = '$_SESSION[user_id]';";	//	6/10/11
-			$result_al = mysql_query($query_al);	// 4/13/11
+			$query_gp = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `type`= 4 AND `resource_id` = '$_SESSION[user_id]';";	//	6/10/11
+			$result_gp = mysql_query($query_gp);	// 4/13/11
 			$al_groups = array();
-			while ($row_al = stripslashes_deep(mysql_fetch_assoc($result_al))) 	{	//	6/10/11
-				$al_groups[] = $row_al['group'];
+			while ($row_gp = stripslashes_deep(mysql_fetch_assoc($result_gp))) 	{	//	6/10/11
+				$al_groups[] = $row_gp['group'];
 				}
 				
 			if(isset($_SESSION['viewed_groups'])) {	//	6/10/11
@@ -1725,78 +1699,4 @@ if($gmaps) {
 	}
 ?>
 </BODY>
-<?php
-
-
-			if ($addrs) {				// 10/21/08, 8/28/13
-?>			
-<SCRIPT>
-	function do_notify() {
-		var theAddresses = '<?php print implode("|", array_unique($addrs));?>';		// drop dupes
-		var theText= "TICKET-Update: ";
-		var theId = '<?php print $_GET['id'];?>';
-		var params = "frm_to="+ escape(theAddresses) + "&frm_text=" + escape(theText) + "&frm_ticket_id=" + theId + "&text_sel=1" ;		// ($to_str, $text, $ticket_id)   10/15/08
-		sendRequest ('mail_it.php',handleResult, params);	// ($to_str, $text, $ticket_id)   10/15/08
-		}			// end function do notify()
-	
-	function handleResult(req) {				// the 'called-back' function
-		}
-
-	function sendRequest(url,callback,postData) {
-		var req = createXMLHTTPObject();
-		if (!req) return;
-		var method = (postData) ? "POST" : "GET";
-		req.open(method,url,true);
-		if (postData)
-			req.setRequestHeader('Content-type','application/x-www-form-urlencoded');
-		req.onreadystatechange = function () {
-			if (req.readyState != 4) return;
-			if (req.status != 200 && req.status != 304) {
-<?php
-	if($istest) {print "\t\t\talert('HTTP error ' + req.status + '" . __LINE__ . "');\n";}
-?>
-				return;
-				}
-			callback(req);
-			}
-		if (req.readyState == 4) return;
-		req.send(postData);
-		}
-	
-	var XMLHttpFactories = [
-		function () {return new XMLHttpRequest()	},
-		function () {return new ActiveXObject("Msxml2.XMLHTTP")	},
-		function () {return new ActiveXObject("Msxml3.XMLHTTP")	},
-		function () {return new ActiveXObject("Microsoft.XMLHTTP")	}
-		];
-	
-	function createXMLHTTPObject() {
-		var xmlhttp = false;
-		for (var i=0;i<XMLHttpFactories.length;i++) {
-			try {
-				xmlhttp = XMLHttpFactories[i]();
-				}
-			catch (e) {
-				continue;
-				}
-			break;
-			}
-		return xmlhttp;
-		}
-	
-</SCRIPT>
-<?php
-
-			}		// end if($addrs) 
-		else {
-?>		
-<SCRIPT>
-	function do_notify() {
-		return;
-		}			// end function do notify()
-</SCRIPT>
-<?php		
-			}
-
-?>
 </HTML>

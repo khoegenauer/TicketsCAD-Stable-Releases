@@ -16,13 +16,12 @@
 3/23/2015 - added os-watch functions
 4/4/2015 - expanded osw for incident type inclusion
 4/13/2015 - handle empty 'not-in' string
+4/28/2015 - added osw eligibility by user level
 */
 error_reporting(E_ALL);
 @session_start();
 require_once('./incs/functions.inc.php');		//7/28/10
 // snap(basename(__FILE__), __LINE__);
-
-$_SESSION["osw_ntrupt_ok"] = TRUE; 						// usage TBD
 
 function error_out($err_arg) {							// 2/10/12
 	do_log($GLOBALS['LOG_ERROR'], 0, 0, $err_arg);		// logs supplied error message
@@ -288,17 +287,21 @@ $status_updated_time = ($row2)? $row2['status_updated'] : "0";		//	9/10/13
 
 $the_dispatch_change = ($assign_row)? $assign_row['as_of']: "";
 
-//	3/23/2015
+//	4/28/2015
 
-//	ALTER TABLE `$GLOBALS[mysql_prefix]in_types` ADD `watch` INT(2) NOT NULL DEFAULT '0' COMMENT 'Used in on-scene-watch' AFTER `set_severity`;
-$limit = 9999;
+switch (intval(get_variable('osw_user_level') ) ) {					// set TRUE (do it) or FALSE ( do not )
+	case 1 : $is_eligible = (in_array ($_SESSION['level'] , array ($GLOBALS['LEVEL_SUPER'], $GLOBALS['LEVEL_ADMINISTRATOR']	) ) ) ; break;
+	case 2 : $is_eligible = (in_array ($_SESSION['level'] , array ($GLOBALS['LEVEL_SUPER'], $GLOBALS['LEVEL_ADMINISTRATOR'], $GLOBALS['LEVEL_USER'] ) ) ); break;
+	case 3 : $is_eligible = (in_array ($_SESSION['level'] , array ($GLOBALS['LEVEL_SUPER'], $GLOBALS['LEVEL_ADMINISTRATOR'], $GLOBALS['LEVEL_USER'], $GLOBALS['LEVEL_UNIT'] ) ) ); break;
+	case 4 : $is_eligible = (in_array ($_SESSION['level'] , array ($GLOBALS['LEVEL_SUPER'], $GLOBALS['LEVEL_ADMINISTRATOR'], $GLOBALS['LEVEL_USER'], $GLOBALS['LEVEL_UNIT'] , $GLOBALS['LEVEL_GUEST'] ) ) ) ; break;
+	default: $is_eligible = (is_super() ) ;		// default and errors
+	}								// end switch ()
 
 $watch_arr = [0, 0, 0];		// p, n, r
 
-$osw_ntrupt_ok = array_key_exists ("osw_ntrupt_ok", $_SESSION) && ($_SESSION['osw_ntrupt_ok']);  		// disallow if $_SESSION['osw_ntrupt_ok'] == FALSE;
+if ( $is_eligible ) {			//		2/19/2015 - if user is eligible then set $watch_arr elements
+	$limit = 1;
 
-if ( !is_super() || (!$osw_ntrupt_ok) ) {$watch_val = 0;}				//		2/19/2015 - set $watch_val
-else {
 	$core_query = "SELECT `t`.`id`, `r`.`id` AS `unit_id` FROM `$GLOBALS[mysql_prefix]assigns` `a`
 		LEFT JOIN `$GLOBALS[mysql_prefix]ticket` `t` 		ON (`a`.`ticket_id` = `t`.`id`)
 		LEFT JOIN `$GLOBALS[mysql_prefix]responder` `r` 	ON (`a`.`responder_id` = `r`.`id`)
@@ -350,7 +353,7 @@ else {
 		$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(), basename( __FILE__), __LINE__);
 		$watch_arr[2] =  (mysql_num_rows($result) > 0 )? 1: 0;
 		}			// end if/else
-	}			// end is_super() if/else
+	}			// end if ($is_eligible)
 
 $watch_val  =  join(",", $watch_arr);		// to comma-sep'd string
 

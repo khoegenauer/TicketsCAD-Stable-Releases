@@ -514,7 +514,8 @@ function get_setting_help($setting){/* get help for settings */
 		case "xastir_dbuser": 			return "For Xastir Database the MySQL user id.";	 break;	
 		case "xastir_server": 			return "The address of the Xastir Database, localhost by default.";	 break;
 		case "os_watch": 				return "Example: 5/15/60, meaning units on-scene at priority calls are reported every 5 minutes, on-scene at normal calls every 15, and &#39;Others&#39; every 60 minutes.  See documentation re &#39;Others&#39;.";	 break;		// 4/14/2015
-
+		case "osw_user_level": 			return "Sets user permission level for OS Watch list access. Set 1 to allow Admin-level access, 2 for Operator access, 3 for Unit access, 4 for Guest access.";	 break;		// 4/28/2015
+		case "add_uselocation":			return "When opening a new incident from the mobile screen use (1) or don&#39;t (0) use location of device to auto populate Incident location."; break;
 		default: 						return "No help for '$setting'"; break;	//	 ics_top
 		}
 	}

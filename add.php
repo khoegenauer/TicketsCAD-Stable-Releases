@@ -9,9 +9,10 @@ if (empty($_SESSION)) {
 
 require_once('incs/functions.inc.php');		//7/28/10
 do_login(basename(__FILE__));
-$gmaps = $_SESSION['internet'];
+
 $in_win = array_key_exists ("mode", $_GET);		// in
 $from_mi = array_key_exists ("mi", $_GET);
+$gmaps = $_SESSION['internet'] && !$in_win;
 
 if($istest) {print "_GET"; dump($_GET);}
 if($istest) {print "_POST"; dump($_POST);}
@@ -190,7 +191,7 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 
 	if ($get_add == 'true')	{
 		function updt_ticket($id) {							/* 1/25/09 */
-			global $addrs, $NOTIFY_TICKET;	//	8/28/13
+			global $addrs, $_POST, $NOTIFY_TICKET;	//	8/28/13
 	
 			$post_frm_meridiem_problemstart = ((empty($_POST) || ((!empty($_POST)) && (empty ($_POST['frm_meridiem_problemstart'])))) ) ? "" : $_POST['frm_meridiem_problemstart'] ;
 			$post_frm_meridiem_booked_date = ((empty($_POST) || ((!empty($_POST)) && (empty ($_POST['frm_meridiem_booked_date'])))) ) ? "" : $_POST['frm_meridiem_booked_date'] ; //10/1/09
@@ -289,11 +290,8 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 				}
 				
 			// perform db update	//9/22/09 added facility capability, 10/1/09 added receiving facility
-			@session_start();	
 			$by = $_SESSION['user_id'];
-//			$booked_date = empty($frm_booked_date)? "NULL" : quote_smart(trim($frm_booked_date)) ;	// 6/20/10
 			$booked_date = (intval(trim($_POST['frm_do_scheduled'])==1))?  quote_smart($frm_booked_date): "NULL" ;	// 1/2/11, 1/19/10
-//			die;
 			// 6/26/10
 			$query = "UPDATE `$GLOBALS[mysql_prefix]ticket` SET 
 				`portal_user`= " . 	quote_smart(trim($portal_user)) . ",			
@@ -322,7 +320,7 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 				`date`='$now',
 				`updated`='$now',
 				`_by` = $by
-				WHERE ID=$id";	//	9/10/13
+				WHERE ID=" . $id;	//	9/10/13
 			$result = mysql_query($query) or do_error($query, 'mysql query failed', mysql_error(),basename( __FILE__), __LINE__);
 
 			$tick_stat = $_POST['frm_status'];	// 6/10/11
@@ -495,6 +493,17 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 			}				// end function updt ticket() 
 			
 		$ticket_name = updt_ticket(trim($_POST['ticket_id']));				// 1/25/09
+		$addrs = notify_user($_POST['ticket_id'],$GLOBALS['NOTIFY_TICKET_CHG']);		// returns array of adddr's for notification, or FALSE
+		if ($addrs) {				// any addresses?	8/28/13
+			$theTo = implode("|", array_unique($addrs));
+			$theText = "New " . get_text("Incident");
+			mail_it ($theTo, "", $theText, $_POST['ticket_id'], 1 );
+			}				// end if/else ($addrs)
+		if((intval(get_variable('auto_route'))==1) && (!$in_win)) {
+			$form_name = "to_routes";
+			} else if((intval(get_variable('auto_route'))==0) && (!$in_win)) {
+			$form_name = "to_main";
+			}
 ?>
 			<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 			<html xmlns="http://www.w3.org/1999/xhtml">
@@ -512,92 +521,31 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 			<![endif]-->
 			<SCRIPT SRC="./js/misc_function.js" TYPE="text/javascript"></SCRIPT>	<!-- 9/14/12 -->
 			<SCRIPT SRC="./js/jscolor/jscolor.js"></SCRIPT>	<!-- 9/14/12 -->
-		<SCRIPT>
 <?php
-		$addrs = notify_user($_POST['ticket_id'],$GLOBALS['NOTIFY_TICKET_CHG']);		// returns array of adddr's for notification, or FALSE
-		if ($addrs) {				// any addresses?	8/28/13
-?>	
-	function do_notify() {
 
-		var theAddresses = '<?php print implode("|", array_unique($addrs));?>';		// drop dupes
-		var theText= ' New <?php print get_text("Incident");?>: ';
-		var theId = '<?php print $_POST['ticket_id'];?>';
 		
-//		mail_it ($to_str, $text, $theId, $text_sel=1;, $txt_only = FALSE)
-
-		var params = "frm_to="+ escape(theAddresses) + "&frm_text=" + escape(theText) + "&frm_ticket_id=" + theId + "&text_sel=1";		// ($to_str, $text, $ticket_id)   10/15/08
-		sendRequest ('mail_it.php',handleResult, params);	// ($to_str, $text, $ticket_id)   10/15/08
-		}			// end function do notify()
-	
-	function handleResult(req) {				// the 'called-back' function
-<?php
-
-		if($istest) {print "\t\t\talert('HTTP error ' + req.status + '" . __LINE__ . "');\n";}
-?>
-		}
-
-	function sendRequest(url,callback,postData) {
-		var req = createXMLHTTPObject();
-		if (!req) return;
-		var method = (postData) ? "POST" : "GET";
-		req.open(method,url,true);
-		if (postData)
-			req.setRequestHeader('Content-type','application/x-www-form-urlencoded');
-		req.onreadystatechange = function () {
-			if (req.readyState != 4) return;
-			if (req.status != 200 && req.status != 304) {
-<?php
-	if($istest) {print "\t\t\talert('HTTP error ' + req.status + '" . __LINE__ . "');\n";}
-?>
-				return;
-				}
-			callback(req);
+		if ( ( intval ( get_variable ('broadcast')==1 ) ) &&  ( intval ( get_variable ('internet')==1 ) ) ) { 	
+			require_once('./incs/socket2me.inc.php');		// 5/22/2013
 			}
-		if (req.readyState == 4) return;
-		req.send(postData);
-		}
-	
-	var XMLHttpFactories = [
-		function () {return new XMLHttpRequest()	},
-		function () {return new ActiveXObject("Msxml2.XMLHTTP")	},
-		function () {return new ActiveXObject("Msxml3.XMLHTTP")	},
-		function () {return new ActiveXObject("Microsoft.XMLHTTP")	}
-		];
-	
-	function createXMLHTTPObject() {
-		var xmlhttp = false;
-		for (var i=0;i<XMLHttpFactories.length;i++) {
-			try { xmlhttp = XMLHttpFactories[i](); }
-			catch (e) { continue; }
-			break;
-			}
-		return xmlhttp;
-		}
-<?php
-		}				// end if ($addrs)
-	else {
 ?>
-	function do_notify() {	// dummy
-		return;
-		}
-<?php
-	
-		}				// end if/else ($addrs)
-	$form_name = (intval(get_variable('auto_route'))==1)? "to_routes" : "to_main";	
-?>
-
-		</SCRIPT>
-<?php				// 7/3/2013
-	if ( ( intval ( get_variable ('broadcast')==1 ) ) &&  ( intval ( get_variable ('internet')==1 ) ) ) { 	
-		require_once('./incs/socket2me.inc.php');		// 5/22/2013
-		}
-?>
-		
 		</HEAD>
-	<BODY onLoad = "do_notify();document.<?php print $form_name;?>.submit();">
 <?php
-	$now = time() - (intval(get_variable('delta_mins')*60));		// 6/20/10
-	print "<BR /><BR /><BR /><CENTER><FONT CLASS='header'>Ticket: '{$ticket_name}  ' Added by '{$_SESSION['user_id']}' at " . date(get_variable("date_format"),$now) . "</FONT></CENTER><BR /><BR />";
+		if(!$in_win) {
+			$onloadStr = "document." . $form_name . "submit();";
+			} else {
+			$onloadStr = "";
+				}
+?>
+		<BODY onLoad = "<?php print $onloadStr;?>">
+<?php
+	
+		$now = time() - (intval(get_variable('delta_mins')*60));		// 6/20/10
+		print "<BR /><BR /><BR /><CENTER><FONT CLASS='header'>Ticket: '{$ticket_name}  ' Added by '{$_SESSION['user_id']}' at " . date(get_variable("date_format"),$now) . "</FONT></CENTER><BR /><BR />";
+		if($in_win) {
+?>
+			<CENTER><SPAN id='cont_but' class='plain' style='float: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='window.close();'>FINISH</SPAN></CENTER>
+<?php
+			} else {
 ?>	
 	<FORM NAME='to_main' METHOD='post' ACTION='main.php'>
 	<CENTER><INPUT TYPE='submit' VALUE='Main' />
@@ -608,6 +556,8 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 	<INPUT TYPE='submit' VALUE='Routes' /></CENTER>
 	</FORM>
 <?php
+			}
+		exit();
 		}				// end if ($_GET['add'] ...
 //					==============================================
 	else {
@@ -669,23 +619,23 @@ table.cruises th { text-align: left; border-left: 1px solid #999; background: #C
 <SCRIPT SRC="./js/suggest.js" TYPE="text/javascript"></SCRIPT>			<!-- 2/20/11 -->
 <SCRIPT TYPE="text/javascript" SRC="./js/domready.js"></script>
 <SCRIPT SRC="./js/messaging.js" TYPE="text/javascript"></SCRIPT>
-	<script src="./js/proj4js.js"></script>
-	<script src="./js/proj4-compressed.js"></script>
-	<script src="./js/leaflet/leaflet.js"></script>
-	<script src="./js/proj4leaflet.js"></script>
-	<script src="./js/leaflet/KML.js"></script>  
-	<script src="./js/leaflet-openweathermap.js"></script>
-	<script src="./js/esri-leaflet.js"></script>
-	<script src="./js/osopenspace.js"></script>
-	<script src="./js/Control.Geocoder.js"></script>
-	<SCRIPT SRC="./js/usng.js" TYPE="text/javascript"></SCRIPT>
-	<SCRIPT SRC='./js/jscoord.js' TYPE="text/javascript"></SCRIPT>			<!-- coordinate conversion 12/10/10 -->	
-	<SCRIPT SRC="./js/lat_lng.js" TYPE="text/javascript"></SCRIPT>	<!-- 11/8/11 -->
-	<SCRIPT SRC="./js/geotools2.js" TYPE="text/javascript"></SCRIPT>	<!-- 11/8/11 -->
-	<SCRIPT SRC="./js/osgb.js" TYPE="text/javascript"></SCRIPT>	<!-- 11/8/11 -->	
-	<script type="text/javascript" src="./js/osm_map_functions.js.php"></script>
-	<script type="text/javascript" src="./js/L.Graticule.js"></script>
-	<script type="text/javascript" src="./js/leaflet-providers.js"></script>
+<script src="./js/proj4js.js"></script>
+<script src="./js/proj4-compressed.js"></script>
+<script src="./js/leaflet/leaflet.js"></script>
+<script src="./js/proj4leaflet.js"></script>
+<script src="./js/leaflet/KML.js"></script>  
+<script src="./js/leaflet-openweathermap.js"></script>
+<script src="./js/esri-leaflet.js"></script>
+<script src="./js/osopenspace.js"></script>
+<script src="./js/Control.Geocoder.js"></script>
+<SCRIPT SRC="./js/usng.js" TYPE="text/javascript"></SCRIPT>
+<SCRIPT SRC='./js/jscoord.js' TYPE="text/javascript"></SCRIPT>			<!-- coordinate conversion 12/10/10 -->	
+<SCRIPT SRC="./js/lat_lng.js" TYPE="text/javascript"></SCRIPT>	<!-- 11/8/11 -->
+<SCRIPT SRC="./js/geotools2.js" TYPE="text/javascript"></SCRIPT>	<!-- 11/8/11 -->
+<SCRIPT SRC="./js/osgb.js" TYPE="text/javascript"></SCRIPT>	<!-- 11/8/11 -->	
+<script type="text/javascript" src="./js/osm_map_functions.js.php"></script>
+<script type="text/javascript" src="./js/L.Graticule.js"></script>
+<script type="text/javascript" src="./js/leaflet-providers.js"></script>
 <SCRIPT>
 	var protocols = new Array();		// 7/7/09
 	var states_arr = <?php echo json_encode($states); ?>;
@@ -1006,8 +956,6 @@ table.cruises th { text-align: left; border-left: 1px solid #999; background: #C
 ?>		
 		if (theForm.frm_contact.value == "")		{errmsg+= "\tReported-by is required\n";}
 		if (theForm.frm_scope.value == "")			{errmsg+= "\tIncident name is required\n";}
-//		if (theForm.frm_description.value == "")	{errmsg+= "\t<?php print get_text("Synopsis");?> is required\n";}
-//		theForm.frm_lat.disabled=false;														// 9/9/08
 <?php
 	if ($gmaps) {
 ?>
@@ -1052,6 +1000,10 @@ table.cruises th { text-align: left; border-left: 1px solid #999; background: #C
 			if ($gmaps) {
 ?>				
 			find_warnings(theForm.frm_lat.value, theForm.frm_lng.value);	//	9/10/13		
+<?php
+			} else {
+?>
+			document.add.submit();
 <?php
 				}
 ?>
@@ -1215,12 +1167,28 @@ table.cruises th { text-align: left; border-left: 1px solid #999; background: #C
 		alert("You can't change this value");
 		return false;
 	}
+		
+	function getLocation() {
+		if (navigator.geolocation) {
+			navigator.geolocation.getCurrentPosition(showPosition);
+			}
+		}
+
+	function showPosition(position) {
+		document.add.frm_lat.value = position.coords.latitude;
+		document.add.frm_lng.value = position.coords.longitude;
+		document.add.show_lat.value = position.coords.latitude;
+		document.add.show_lng.value = position.coords.longitude;
+		control = new L.Control.Geocoder();
+		var point = new L.LatLng(position.coords.latitude, position.coords.longitude);
+		getTheAddress(point);	
+		}
  <?php
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `type`= 4 AND `resource_id` = '$_SESSION[user_id]';";	//	6/10/11
-	$result = mysql_query($query);	// 4/13/11
+	$query_gp = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `type`= 4 AND `resource_id` = '$_SESSION[user_id]';";	//	6/10/11
+	$result_gp = mysql_query($query_gp);	// 4/13/11
 	$al_groups = array();
-	while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{	//	6/10/11
-		$al_groups[] = $row['group'];
+	while ($row_gp = stripslashes_deep(mysql_fetch_assoc($result_gp))) 	{	//	6/10/11
+		$al_groups[] = $row_gp['group'];
 		}
 		
 	if(isset($_SESSION['viewed_groups'])) {	//	6/10/11
@@ -1337,7 +1305,7 @@ table.cruises th { text-align: left; border-left: 1px solid #999; background: #C
 .bar { background-color: #DEE3E7; color: #000000; cursor: move; font-weight: bold; padding: 2px 1em 2px 1em;  z-index:1000; }
 .content { padding: 1em; }
 </STYLE>
-<SCRIPT SRC="./js/misc_function.js" type="text/javascript"></SCRIPT></head>
+<SCRIPT SRC="./js/misc_function.js" type="text/javascript"></SCRIPT>
 <?php
 	if ( ( intval ( get_variable ('broadcast')==1 ) ) &&  ( intval ( get_variable ('internet')==1 ) ) ) { 	
 	require_once('./incs/socket2me.inc.php');		// 5/22/2013
@@ -1351,7 +1319,9 @@ $cid_lat = isset($cid_lat) ? $cid_lat : ""; // 8/8/11
 $cid_lng = isset($cid_llng) ? $cid_lng : ""; // 8/8/11
 $onload_str = "load(" .  get_variable('def_lat') . ", " . get_variable('def_lng') . "," . get_variable('def_zoom') . ");";
 $onload_str .= (is_float($cid_lat))? " pt_to_map( add, {$cid_lat} ,{$cid_lng});": "";
-$do_inwin = ($in_win) ? "" : "ck_frames()";
+$doloc = intval(get_variable('add_uselocation'));
+$loc_startup = ($doloc == 1) ? "getLocation();" : "";
+$do_inwin = ($in_win) ? $loc_startup : "ck_frames();";
 //dump(__LINE__);
 //dump(is_float($cid_lat));
 //dump($onload_str);
@@ -1460,9 +1430,9 @@ while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{	// 6/10/11
 	while ($row2 = stripslashes_deep(mysql_fetch_assoc($result2))) 	{	// 6/10/11		
 			$al_names .= $row2['group_name'] . ", ";
 		}
-
-
 	}
+
+
 if(is_super()) {
 	$al_names .= "&nbsp;&nbsp;Superadmin Level";
 }	
@@ -1573,7 +1543,17 @@ if (mysql_num_rows($result_bldg) > 0) {
 <TR CLASS='spacer'>
 	<TD CLASS='spacer' COLSPAN='3' ALIGN='center'>&nbsp;</TD>
 </TR>
-<FORM NAME="add" METHOD="post" ENCTYPE="multipart/form-data" ACTION="<?php print basename(__FILE__);?>?add=true" onSubmit="return validate(document.add)">
+<?php
+if(!$in_win) {
+?>
+	<FORM NAME="add" METHOD="post" ENCTYPE="multipart/form-data" ACTION="<?php print basename(__FILE__);?>?add=true" onSubmit="return validate(document.add)">
+<?php
+	} else {
+?>
+	<FORM NAME="add" METHOD="post" ENCTYPE="multipart/form-data" ACTION="<?php print basename(__FILE__);?>?add=true&mode=1" onSubmit="return validate(document.add)">
+<?php
+	}
+?>
 <!--  new bldg stuff  -->
 <?php
 if (mysql_num_rows($result_bldg) > 0) {
@@ -1960,7 +1940,7 @@ if($has_portal == 1) {
 	</TR>
 <?php
 		}				// end if (mysql_num_rows($result_sigs)>0)
-	if ($gmaps) {
+	if ($gmaps || $doloc) {
 ?>
 
 	<TR CLASS='odd'>

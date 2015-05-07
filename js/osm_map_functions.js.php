@@ -1301,6 +1301,7 @@ function to_str(instr) {			// 0-based conversion - 2/13/09
 	}
 	
 function loc_lkup(my_form) {		   						// 7/5/10
+	if(!$('map_canvas')) {return; }
 	if(my_form.frm_street.value.trim() != "" && my_form.frm_city.value.trim() == "") {
 		var theCity = my_form.frm_street.value.trim();
 		var theStreet = "";
@@ -1323,6 +1324,7 @@ function loc_lkup(my_form) {		   						// 7/5/10
 	}				// end function loc_lkup()
 	
 function pt_to_map (my_form, lat, lng) {
+	if(!$('map_canvas')) {return; }
 	if(marker) {map.removeLayer(marker);}
 	if(myMarker) {map.removeLayer(myMarker);}
 	my_form.frm_lat.value=lat.toFixed(6);	
@@ -1345,7 +1347,7 @@ function pt_to_map (my_form, lat, lng) {
 function newGetAddress(latlng, currform) {
 	var popup = L.popup();
 	var loc = <?php print get_variable('locale');?>;
-	control.options.geocoder.reverse(latlng, map.options.crs.scale(map.getZoom()), function(results) {
+	control.options.geocoder.reverse(latlng, 20, function(results) {
 		var r = results[0];
 		var lat = parseFloat(latlng.lat.toFixed(6));
 		var lng = parseFloat(latlng.lng.toFixed(6));
@@ -1532,6 +1534,55 @@ function newGetAddress(latlng, currform) {
 				.setLatLng(latlng)
 				.setContent(theContent)
 				.openOn(map);
+			}
+		});
+	}
+
+function getTheAddress(latlng) {
+	var loc = <?php print get_variable('locale');?>;
+	control.options.geocoder.reverse(latlng, 20, function(results) {
+		var r = results[0];
+		var lat = parseFloat(latlng.lat.toFixed(6));
+		var lng = parseFloat(latlng.lng.toFixed(6));
+		var theCity = "";
+		if(!r.city) {
+			if(r.suburb && (r.suburb != "")) {
+				theCity = r.suburb;
+				} else if(r.locality && (r.locality != "")) {
+				theCity = r.locality;
+				} else {
+				theCity = "";
+				}
+			} else {
+			theCity = r.city;
+			}
+		if(!r.state) {
+			if(r.county) {
+				var state = r.county;
+				} else {
+				var state = "";
+				}
+			} else {
+			var state = r.state;
+			}
+		if (r) {
+			var street = (r.road) ? r.road : "";
+			var number = (r.house_number) ? r.house_number : "";
+			var address1 = (number != "") ? number + " " : "";
+			var address2 = (street != "") ? street : "";
+			document.add.frm_street.value = address1 + address2;
+			document.add.frm_city.value = theCity;
+			var theState = (state != "") ? states_arr[state] : "";
+			document.add.frm_state.value = theState;
+			document.add.frm_lat.value = lat; 
+			document.add.frm_lng.value = lng; 
+			document.add.show_lat.value = lat; 
+			document.add.show_lng.value = lng; 
+			document.add.frm_street.focus();
+			var loc = <?php print get_variable('locale');?>;
+			if(loc == 0) { document.add.frm_ngs.value=LLtoUSNG(lat, lng, 5); }
+			if(loc == 1) { document.add.frm_ngs.value=LLtoOSGB(lat, lng, 5); }
+			if(loc == 2) { document.add.frm_ngs.value=LLtoUTM(lat, lng, 5); }
 			}
 		});
 	}
@@ -2047,15 +2098,11 @@ function mytclick(id) {					// Responds to sidebar click, then triggers listener
 	
 function myrclick(id) {					// Responds to sidebar click, then triggers listener above -  note [i]
 	if((quick) || (!rmarkers[id]) || (internet == 0)) {
-		document.view_form.id.value = id;
-		document.view_form.func.value='responder';
-		document.view_form.view.value='true';
-		document.view_form.submit();		
-//		document.resp_form.id.value=id;
-//		document.resp_form.func.value='responder';
-//		document.resp_form.edit.value='true';
-//		document.resp_form.action='units.php';
-//		document.resp_form.submit();
+		document.resp_form.id.value=id;
+		document.resp_form.func.value='responder';
+		document.resp_form.edit.value='true';
+		document.resp_form.action='units.php';
+		document.resp_form.submit();
 		} else {
 		if($('screenname').innerHTML == "fullscreen") {
 			get_fs_resppopup(id);
@@ -2068,15 +2115,11 @@ function myrclick(id) {					// Responds to sidebar click, then triggers listener
 	
 function myfclick(id) {					// Responds to sidebar click, then triggers listener above -  note [i]
 	if((quick) || (!fmarkers[id]) || (internet == 0)) {
-		document.view_form.id.value = id;
-		document.view_form.func.value='responder';
-		document.view_form.view.value='true';
-		document.view_form.submit();	
-//		document.fac_form.id.value=id;
-//		document.fac_form.func.value='responder';
-//		document.fac_form.edit.value='true';
-//		document.fac_form.action='facilities.php';
-//		document.fac_form.submit();
+		document.fac_form.id.value=id;
+		document.fac_form.func.value='responder';
+		document.fac_form.edit.value='true';
+		document.fac_form.action='facilities.php';
+		document.fac_form.submit();
 		} else {
 		if($('screenname').innerHTML == "fullscreen") {
 			get_fs_facspopup(id);
@@ -2429,16 +2472,20 @@ function load_incidentlist(sort, dir) {
 		if(!inc_arr) { alert("Error Decoding Incidentlist"); }
 		if(window.inc_period_changed == 1) {
 //			destroy_incmarkers();
+			if($('map_canvas')) {	
 			for(var key in tmarkers) {
 				if(tmarkers[key]) {map.removeLayer(tmarkers[key]);}
+				}
 				}
 			$('the_list').innerHTML = "";
 			window.inc_period_changed = 0;
 			}
 		if((inc_arr[0]) && (inc_arr[0][0] == 0)) {
 			window.inc_last_display = 0;
+			if($('map_canvas')) {	
 			for(var key in tmarkers) {
 				if(tmarkers[key]) {map.removeLayer(tmarkers[key]);}
+				}
 				}
 			outputtext = "<marquee direction='left' style='font-size: 1.5em; font-weight: bold;'>......No Incidents, please select another time period or add a new incident.........</marquee>";
 			$('the_list').innerHTML = outputtext;
@@ -2801,7 +2848,7 @@ function load_responderlist(sort, dir) {
 		var resp_arr = JSON.decode(req.responseText);
 		if(!resp_arr) { alert("Error Decoding Responderlist"); }
 		if((resp_arr[0]) && (resp_arr[0][0] == 0)) {
-//			do_destroy();
+			destroy_unitmarkers();
 			var outputtext = "<marquee direction='left' style='font-size: 1.5em; font-weight: bold;'>......No Units to view.........</marquee>";
 			$('the_rlist').innerHTML = outputtext;
 			$('boxes').innerHTML = resp_arr[0][19];
@@ -2863,6 +2910,7 @@ function load_responderlist(sort, dir) {
 							window.do_resp_update = true;
 							}
 						infowindowtext = "";
+						if($('map_canvas')) {						
 						if(rmarkers[unit_no]) {
 							if(window.changed_resp_sort == false) {
 								var curPos = rmarkers[unit_no].getLatLng();
@@ -2871,7 +2919,7 @@ function load_responderlist(sort, dir) {
 									rmarkers[unit_no].setLatLng(theLatLng);
 									}
 								} else {
-/* 								do_destroy();
+	/* 								do_destroy();
 								if((isFloat(resp_arr[key][3])) && (isFloat(resp_arr[key][4]))) {
 									var marker = createUnitMarker(resp_arr[key][3], resp_arr[key][4], infowindowtext, resp_arr[key][18], 0, unit_no, resp_arr[key][2], resp_arr[key][20], 0, resp_arr[key][9], resp_arr[key][25]); // 7/28/10, 3/15/11, 12/23/13
 									marker.addTo(map);
@@ -2883,7 +2931,6 @@ function load_responderlist(sort, dir) {
 									} */
 								}
 							} else {
-							if($('map_canvas')) {
 							if((isFloat(resp_arr[key][3])) && (isFloat(resp_arr[key][4]))) {
 									var marker = createUnitMarker(resp_arr[key][3], resp_arr[key][4], infowindowtext, resp_arr[key][18], 0, unit_no, resp_arr[key][2], resp_arr[key][20], 0, resp_arr[key][9], resp_arr[key][25]); // 7/28/10, 3/15/11, 12/23/13
 								marker.addTo(map);
@@ -3166,7 +3213,7 @@ function load_responderlist2(sort, dir) {
 		var responder_number = 0;	
 		var resp_arr = JSON.decode(req.responseText);
 		if((resp_arr[0]) && (resp_arr[0][0] == 0)) {
-//			do_destroy();
+			destroy_unitmarkers();
 			var outputtext = "<marquee direction='left' style='font-size: 1.5em; font-weight: bold;'>......No Units to view.........</marquee>";
 			$('the_rlist').innerHTML = outputtext;
 			$('boxes').innerHTML = resp_arr[0][19];
@@ -3232,6 +3279,7 @@ function load_responderlist2(sort, dir) {
 							window.do_resp_update = true;
 							}
 						infowindowtext = "";
+						if($('map_canvas')) {
 						if(rmarkers[unit_no]) {
 							if(window.changed_resp_sort == false) {
 								var curPos = rmarkers[unit_no].getLatLng();
@@ -3240,7 +3288,7 @@ function load_responderlist2(sort, dir) {
 									rmarkers[unit_no].setLatLng(theLatLng);
 									}
 								} else {
-/* 								do_destroy();
+	/* 								do_destroy();
 								if((isFloat(resp_arr[key][3])) && (isFloat(resp_arr[key][4]))) {
 									var marker = createUnitMarker(resp_arr[key][3], resp_arr[key][4], infowindowtext, resp_arr[key][18], 0, unit_no, resp_arr[key][2], resp_arr[key][20], 0, resp_arr[key][9], resp_arr[key][25]); // 7/28/10, 3/15/11, 12/23/13
 									marker.addTo(map);
@@ -3264,6 +3312,7 @@ function load_responderlist2(sort, dir) {
 								}
 							}							
 							}							
+							}
 						responder_number = unit_no;
 						}
 					i++;
@@ -3498,7 +3547,7 @@ function load_facilitylist(sort, dir) {
 		var fac_arr = JSON.decode(req.responseText);
 		if(!fac_arr) { alert("Error Decoding Facilitylist"); }
 		if((fac_arr[0]) && (fac_arr[0][0] == 0)) {
-//			do_destroy();
+			destroy_facmarkers();
 			var outputtext = "<marquee direction='left' style='font-size: 1.5em; font-weight: bold;'>......No Facilities to view.........</marquee>";
 			$('the_flist').innerHTML = outputtext;
 			$('fac_boxes').innerHTML = fac_arr[0][12];
@@ -3553,6 +3602,8 @@ function load_facilitylist(sort, dir) {
 						window.facilities_updated[fac_id] = fac_arr[key][9];
 						window.do_fac_update = true;
 						}
+						
+					if($('map_canvas')) {						
 					if(fmarkers[fac_id]) {
 						if(window.changed_resp_sort == false) {
 							// not changed sort order but don't refresh markers
@@ -3567,7 +3618,6 @@ function load_facilitylist(sort, dir) {
 							var icon_str = fac_arr[key][2].toString();
 							}
 						infowindowtext = "";
-						if($('map_canvas')) {
 						if((isFloat(fac_arr[key][3])) && (isFloat(fac_arr[key][4]))) {
 								var marker = createFacilityMarker(fac_arr[key][3], fac_arr[key][4], infowindowtext, fac_arr[key][11], 0, fac_id, icon_str,  fac_arr[key][15], 0, "This is a Facility"); // 7/28/10, 3/15/11, 12/23/13
 							marker.addTo(map);
@@ -4629,9 +4679,9 @@ function load_files(ticket, responder, facility, mi, allowedit, sort, dir, type)
 					var theURL = "./ajax/download.php?filename=" + file_arr[key][0] + "&origname=" + file_arr[key][1] + "&type=" + file_arr[key][2];
 					outputtext += "<TR CLASS='" + colors[i%2] + "' style='width: 100%;'>";
 					outputtext += "<TD><input type='checkbox' name='frm_file[]' value='" + file_id + "'></TD>";					
-					outputtext += "<TD onClick='location.href=\"" + theURL + "\"'>" + pad(30, the_title, "\u00a0") + "</TD>";
-					outputtext += "<TD onClick='location.href=\"" + theURL + "\"'>" + pad(15, file_arr[key][4], "\u00a0") + "</TD>";
-					outputtext += "<TD onClick='location.href=\"" + theURL + "\"'>" + pad(20, file_arr[key][5], "\u00a0") + "</TD>";
+					outputtext += "<TD style='white-space: nowrap;' onClick='location.href=\"" + theURL + "\"'>" + pad(30, the_title, "\u00a0") + "</TD>";
+					outputtext += "<TD onClick='location.href=\"" + theURL + "\"'>" + pad(17, file_arr[key][4], "\u00a0") + "</TD>";
+					outputtext += "<TD style='white-space: nowrap;' onClick='location.href=\"" + theURL + "\"'>" + pad(20, file_arr[key][5], "\u00a0") + "</TD>";
 					outputtext += "<TD onClick='location.href=\"" + theURL + "\"'>" + pad(20, file_arr[key][7], "\u00a0") + "</TD>";
 					outputtext += "</TR>";
 					}
@@ -4645,15 +4695,15 @@ function load_files(ticket, responder, facility, mi, allowedit, sort, dir, type)
 				if(filetbl) {
 					var headerRow = filetbl.rows[0];
 					var tableRow = filetbl.rows[1];
-					if(tableRow.cells[0] && headerRow.cells[0]) {headerRow.cells[0].style.width = tableRow.cells[0].offsetWidth + "px";}
-					if(tableRow.cells[1] && headerRow.cells[1]) {headerRow.cells[1].style.width = tableRow.cells[1].offsetWidth + "px";}
-					if(tableRow.cells[2] && headerRow.cells[2]) {headerRow.cells[2].style.width = tableRow.cells[2].offsetWidth + "px";}
-					if(tableRow.cells[3] && headerRow.cells[3]) {headerRow.cells[3].style.width = tableRow.cells[3].offsetWidth + "px";}
-					if(tableRow.cells[4] && headerRow.cells[4]) {headerRow.cells[4].style.width = tableRow.cells[4].offsetWidth + "px";}
+					if(tableRow.cells[0] && headerRow.cells[0]) {headerRow.cells[0].style.width = tableRow.cells[0].clientWidth - 4 + "px";}
+					if(tableRow.cells[1] && headerRow.cells[1]) {headerRow.cells[1].style.width = tableRow.cells[1].clientWidth - 4 + "px";}
+					if(tableRow.cells[2] && headerRow.cells[2]) {headerRow.cells[2].style.width = tableRow.cells[2].clientWidth - 4 + "px";}
+					if(tableRow.cells[3] && headerRow.cells[3]) {headerRow.cells[3].style.width = tableRow.cells[3].clientWidth - 4 + "px";}
+					if(tableRow.cells[4] && headerRow.cells[4]) {headerRow.cells[4].style.width = tableRow.cells[4].clientWidth - 4 + "px";}
 					} else {
 					var cellwidthBase = window.mapWidth / 20;
-					headerRow.cells[0].style.width = (cellwidthBase * 3) + "px";
-					headerRow.cells[1].style.width = (cellwidthBase * 7) + "px";
+					headerRow.cells[0].style.width = (cellwidthBase * 2) + "px";
+					headerRow.cells[1].style.width = (cellwidthBase * 6) + "px";
 					headerRow.cells[2].style.width = (cellwidthBase * 3) + "px";
 					headerRow.cells[3].style.width = (cellwidthBase * 3) + "px";
 					headerRow.cells[4].style.width = (cellwidthBase * 4) + "px";

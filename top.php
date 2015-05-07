@@ -46,6 +46,8 @@
 3/23/2015 - corrected script-name to 'os_watch' 2 places
 3/30/2015 - added OSW initialization
 4/2/2015 - added data existence check
+4/26/2015 - added audible to osw window launch
+
 */
 
 error_reporting(E_ALL);
@@ -320,6 +322,7 @@ if(file_exists("./incs/modules.inc.php")) {
 		var cond_r = ( (we_have_arr[2] > 0 ) && ( cycle_r > 0 ) && ( l_time_now >= g_routine_run_at ) );			// routine
 
 		if (cond_r) {		// routine = do everything
+			do_audible();				// 4/26/2015
 			g_routine_run_at = 		l_time_now + (cycle_r*60*1000);		// next routine  when-to-run, note global
 			g_priority_run_at = 	l_time_now + (cycle_p*60*1000);		// next priority when-to-run, note global
 			g_normal_run_at = 		l_time_now + (cycle_n*60*1000);		// next normal   when-to-run, note global
@@ -329,6 +332,7 @@ if(file_exists("./incs/modules.inc.php")) {
 			}
 
 		else if (cond_n) {		// normal = do normal and priority
+			do_audible();				// 4/26/2015
 			g_priority_run_at = 	l_time_now + (cycle_p*60*1000);			// next priority when-to-run, note global
 			g_normal_run_at = 		l_time_now + (cycle_n*60*1000);			// next normal when-to-run, note global
 			var window_addr = "os_watch.php?mode=2&rand=" + rand; ;
@@ -337,6 +341,7 @@ if(file_exists("./incs/modules.inc.php")) {
 			}
 
 		else if (cond_p) {		// priority = do priority only
+			do_audible();				// 4/26/2015
 			g_priority_run_at = 		l_time_now + (cycle_p*60*1000);		// next 5-minute when to run, note global
 			var window_addr = "os_watch.php?mode=1&rand=" + rand; ;
 			newwindow_co=window.open( window_addr, "Watch_out",  "titlebar, location=0, resizable=1, scrollbars, height=240,width=960,status=0,toolbar=0,menubar=0,location=0, left=100,top=300,screenX=100,screenY=300");

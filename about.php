@@ -866,6 +866,16 @@ Changes for 3.03A - bug fix release plus enhancement to Major Incidents and addi
       ordered manner.
 	  
 269.  Various maintenance fixes.
+
+Changes for 3.04A - Maintenance Release
+
+270.  Various maintenance fixes including major fix for no-maps mode
+
+Changes for 3.05A - Maintenance Release plus enhancements to On-scene watch feature
+
+271.  Various maintenance fixes including incident notifications.
+
+272.  Enhancement to On-scene watch feature adding user level for with alerts are shown.
 <A NAME = 'bottom'></A>
 
 April '15

@@ -129,8 +129,8 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 	else if ((array_key_exists('q', ($_GET))) && ($_GET['q']== 'notify')) {
 ?>
 		<FONT CLASS="header"><BR />Notifies</FONT><BR /><blockquote>
-		This feature enables notification of ticket events, currently limited to email. Each notify event consists of
-		one email address to which the notification will be sent, a command string to trigger a program or script (not implemented yet)
+		This feature enables notification of ticket events via email or text message. Each notify event consists of
+		one email/text address to which the notification will be sent, a command string to trigger a program or script (not implemented yet)
 		and at which ticket changes to notify.<BR /><BR />
 
 		To add a notify event, when viewing the ticket, click the <B>Notify</B> link and fill in the form. To view and/or edit the notifies
@@ -209,15 +209,22 @@ function ck_frames() {		//  onLoad = "ck_frames()"
 		}
 	else if ((array_key_exists('q', ($_GET))) && ($_GET['q']== 'osw')) {
 ?>
-		<blockquote>
-		<FONT CLASS="header"><BR />On-scene Watch</FONT> (Spring '15)<BR /><BR />
+		<blockquote style = "width: 60%;">
+		<FONT CLASS="header"></p><p>On-scene Watch</FONT> (Spring '15)
+		<p>
 		This feature provides a 'reminder' capability by periodically notifying the Super-Admin operator of units requiring special
-		attention.  Tickets (V3 and <BR />later) does this by opening a pop-up window listing qualifying units by handle.<BR /><BR />
+		attention. Tickets (V3 and later) does this by opening a pop-up window listing qualifying units by handle.</p>
+		<p>
 		Units with dispatch status <B>On-scene</B> are included, as are units with <B>Watch</B> checked in the 'Unit Status' form, and/or dispatched
-		to an incident  <BR />similarly identified in the 'Incident Type' form.<BR /><BR />
+		to an incident similarly identified in the 'Incident Type' form.</p>
+		<p>
 		Timing cycles are controlled via an <B>OS-Watch</B> Config/setting value of - as example - <B><I>5/15/60</I></B>, which reports on-scene units on
-		high-priority calls <BR />every 5 minutes, on normal-priority calls every 15 minutes, and the others every 60 minutes.  A value of zero denotes
-		non-use of that timer.  <BR />Thus, 0/0/0, which is the initial value, disables OS-Watch for each time slice. Or, completely.
+		high-priority calls every 5 minutes, on normal-priority calls every 15 minutes, and the others every 60 minutes. A value of zero denotes
+		non-use of that timer. >Thus, 0/0/0, the initial value, disables OS-Watch for each time slice. That is, completely.</p>
+		<p>
+		By default, the list is presented only to Super-Admins. To change, revise the default Config/Setting <B>OSW User Level</B> value of <B>0</B> to the following values:
+		<B>1</B> to include Admins; <B>2</B> to include Operators; <B>3</B> to include Units; and <B>4</B> to include Guests.</p>
+		<p></p><p></p>
 		</blockquote>
 <?php
 		}

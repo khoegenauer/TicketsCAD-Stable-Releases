@@ -7,7 +7,7 @@ if(!(file_exists("./incs/mysql.inc.php"))) {
 
 require_once('./incs/functions.inc.php');	
 
-$version = "3.04A Beta - 04/17/15";	
+$version = "3.05A Beta - 04/28/15";	
 
 /*
 10/1/08 added error reporting
@@ -1958,6 +1958,9 @@ if (!($version == $old_version)) {		// current? - 6/6/2013  ====================
 				
 				$query = "ALTER TABLE `$GLOBALS[mysql_prefix]in_types` ADD `watch` INT(2) NOT NULL DEFAULT 0 AFTER `set_severity`;";
 				$result = mysql_query($query);			
+
+				do_setting ('add_uselocation','0');		// 04/26/15	USe current location when adding new incident from mobile.
+				do_setting ('osw_user_level','0');		// 04/26/15
 
 		}		// end (!($version ==...) ==================================================			
 

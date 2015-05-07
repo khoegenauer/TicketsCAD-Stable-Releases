@@ -149,9 +149,7 @@ $get_action = (empty($_GET['action']))? "form" : $_GET['action'];		// 10/21/08
 	</SCRIPT>
 	</HEAD>
 <?php 
-	print (($_SESSION['internet']) && ($get_action == "add")||($get_action == "update"))? 
-		"<BODY onLoad = 'do_notify(); ck_window();' onUnload='GUnload();'>\n":
-		"<BODY onLoad = 'ck_window();'>\n";
+	print "<BODY onLoad = 'ck_window();'>\n";
 
 	$do_yr_asof = false;		// js year housekeeping
 
@@ -228,86 +226,17 @@ $get_action = (empty($_GET['action']))? "form" : $_GET['action'];		// 10/21/08
 				$result = mysql_query($query) or do_error($query,$query, mysql_error(), basename(__FILE__), __LINE__);
 //				}		// end insert process
 				
-//			add_header($_GET['ticket_id']);
 			print "<br /><FONT CLASS='header' STYLE = 'margin-left:200px;'>Action record has been added</FONT><BR /><BR />";
-
-//			show_ticket($_GET['ticket_id']);
 			print "<BR /><BR /><INPUT TYPE='button' VALUE='Finished' onClick = 'opener.location.reload(true); opener.parent.frames[\"upper\"].show_msg(\"Action added!\"); window.close();' STYLE = 'margin-left:300px;' /><BR /><BR /><BR />";	//	01/22/11Added refresh of opener window.
 			print "</BODY>";				// 10/19/08
-			
-			$addrs = notify_user($_GET['ticket_id'],$GLOBALS['NOTIFY_ACTION_CHG']);		// returns array or FALSE
+			$id = $_GET['ticket_id'];
+			$addrs = notify_user($id,$GLOBALS['NOTIFY_ACTION_CHG']);		// returns array or FALSE
 
 			if ($addrs) {
-?>			
-<SCRIPT>
-
-	function do_notify() {
-		var theAddresses = '<?php print implode("|", array_unique($addrs));?>';		// drop dupes
-		var theText= "TICKET - ACTION: ";
-		var theId = '<?php print $_POST['frm_ticket_id'];?>';
-		
-//		mail_it ($to_str, $text, $ticket_id, $text_sel=1, $txt_only = FALSE)
-
-		var params = "frm_to="+ escape(theAddresses) + "&frm_text=" + escape(theText) + "&frm_ticket_id=" + theId +"&text_sel=1";		// ($to_str, $text, $ticket_id)   10/15/08
-		sendRequest ('mail_it.php',handleResult, params);	// ($to_str, $text, $ticket_id)   10/15/08
-		}			// end function do notify()
-	
-	function handleResult(req) {				// the 'called-back' function
-		}
-
-	function sendRequest(url,callback,postData) {
-		var req = createXMLHTTPObject();
-		if (!req) return;
-		var method = (postData) ? "POST" : "GET";
-		req.open(method,url,true);
-		if (postData)
-			req.setRequestHeader('Content-type','application/x-www-form-urlencoded');
-		req.onreadystatechange = function () {
-			if (req.readyState != 4) return;
-			if (req.status != 200 && req.status != 304) {
-<?php
-	if($istest) {print "\t\t\talert('HTTP error ' + req.status + '" . __LINE__ . "');\n";}
-?>
-				return;
-				}
-			callback(req);
-			}
-		if (req.readyState == 4) return;
-		req.send(postData);
-		}
-	
-	var XMLHttpFactories = [
-		function () {return new XMLHttpRequest()	},
-		function () {return new ActiveXObject("Msxml2.XMLHTTP")	},
-		function () {return new ActiveXObject("Msxml3.XMLHTTP")	},
-		function () {return new ActiveXObject("Microsoft.XMLHTTP")	}
-		];
-	
-	function createXMLHTTPObject() {
-		var xmlhttp = false;
-		for (var i=0;i<XMLHttpFactories.length;i++) {
-			try {
-				xmlhttp = XMLHttpFactories[i]();
-				}
-			catch (e) {
-				continue;
-				}
-			break;
-			}
-		return xmlhttp;
-		}
-	
-</SCRIPT>
-<?php
-			} else {
-?>		
-<SCRIPT>
-	function do_notify() {
-		return;
-		}			// end function do notify()
-</SCRIPT>
-<?php		
-			}
+				$theTo = implode("|", array_unique($addrs));
+				$theText = "TICKET - ACTION: ";
+				mail_it ($theTo, "", $theText, $id, 1 );
+				}				// end if/else ($addrs)
 			
 		print "</HTML>";				// 10/19/08
 		}		// end else ...
@@ -452,21 +381,11 @@ $get_action = (empty($_GET['action']))? "form" : $_GET['action'];		// 10/21/08
 		$regions_inuse = get_regions_inuse($user_level);	//	6/10/11
 		$group = get_regions_inuse_numbers($user_level);	//	6/10/11		
 
-		$query = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `type`= 4 AND `resource_id` = '$_SESSION[user_id]' ORDER BY `id` ASC;";	// 4/13/11
-		$result = mysql_query($query);	// 4/13/11
+		$query_gp = "SELECT * FROM `$GLOBALS[mysql_prefix]allocates` WHERE `type`= 4 AND `resource_id` = '$_SESSION[user_id]';";	//	6/10/11
+		$result_gp = mysql_query($query_gp);	// 4/13/11
 		$al_groups = array();
-		$al_names = "";	
-		while ($row = stripslashes_deep(mysql_fetch_assoc($result))) 	{	// 4/13/11
-			$al_groups[] = $row['group'];
-			if(!(is_super())) {
-				$query2 = "SELECT * FROM `$GLOBALS[mysql_prefix]region` WHERE `id`= '$row[group]';";	// 4/13/11
-				$result2 = mysql_query($query2);	// 4/13/11
-				while ($row2 = stripslashes_deep(mysql_fetch_assoc($result2))) 	{	// 4/13/11		
-					$al_names .= $row2['group_name'] . ", ";
-					}
-				} else {
-					$al_names = "ALL. Superadmin Level";
-				}
+		while ($row_gp = stripslashes_deep(mysql_fetch_assoc($result_gp))) 	{	//	6/10/11
+			$al_groups[] = $row_gp['group'];
 			}
 			
 		if(isset($_SESSION['viewed_groups'])) {	//	6/10/11

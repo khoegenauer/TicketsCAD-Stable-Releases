@@ -22,7 +22,7 @@ if($istest) {
 	dump($_POST);
 	}
 $disposition = get_text("Disposition");				// 12/1/10
-
+$mode = (array_key_exists ("mode", $_GET)) ? array_key_exists ("mode", $_GET) : 0;
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 <HTML>
@@ -57,29 +57,45 @@ if (empty($_POST)) { 		// pass # 1
 		}		// end if (empty($_POST))		
 		
 else {			// not empty then is finished
+	$mode = $_POST['frm_mode'];
 	$quick = (intval(get_variable('quick'))==1);				// 12/16/09
 //	dump($quick);
 	if ($quick) {
 		do_is_finished();
+		if($mode == 0) {
+			
 ?>
-<BODY onLoad = "opener.parent.frames['upper'].show_msg ('Incident closed!');opener.location.href = 'main.php'; window.close();"> <!-- 4/5/10 -->
-</BODY></HTML>
+			<BODY onLoad = "opener.parent.frames['upper'].show_msg ('Incident closed!');opener.location.href = 'main.php'; window.close();"> <!-- 4/5/10 -->
+			</BODY></HTML>
+<?php
+			} else {
+?>
+			<BODY onLoad = "opener.parent.frames['upper'].show_msg ('Incident closed!'); opener.location.reload(); window.close();"> <!-- 4/5/10 -->
+			</BODY></HTML>
 <?php
 		}
-	else{
+		} else {
 ?>
-<BODY onLoad = "if(document.frm_text) {document.frm_note.frm_text.focus() ;}"><CENTER>
+		<BODY onLoad = "if(document.frm_text) {document.frm_note.frm_text.focus() ;}"><CENTER>
 <?php
 		$scope = do_is_finished();		// 2/15/10
+		if($mode == 0) {
 ?>
-<H3>Call '<SPAN style = 'background-color:#DEE3E7'><?php print $scope; ?></SPAN>' closed</H3><BR /><BR />	<!-- 2/15/10 -->
-<INPUT TYPE = 'button' VALUE = 'Finished' onClick = "opener.location.href = 'main.php'; window.close();">
-</BODY>
-</HTML>
-
+			<H3>Call '<SPAN style = 'background-color:#DEE3E7'><?php print $scope; ?></SPAN>' closed</H3><BR /><BR />	<!-- 2/15/10 -->
+			<INPUT TYPE = 'button' VALUE = 'Finished' onClick = "opener.do_incident_refresh(); window.close();">
+			</BODY>
+			</HTML>
 <?php
+			} else {
+?>
+			<H3>Call '<SPAN style = 'background-color:#DEE3E7'><?php print $scope; ?></SPAN>' closed</H3><BR /><BR />	<!-- 2/15/10 -->
+			<INPUT TYPE = 'button' VALUE = 'Finished' onClick = "opener.location.reload(); window.close();">
+			</BODY>
+			</HTML>
+<?php
+			}
 		}				 // end if/else quick
-	
+	exit();
 	}		// end if/else
 
 function do_is_closed() {
@@ -94,7 +110,7 @@ function do_is_closed() {
 	}				// end function do_is_closed()
 	
 function do_is_start($in_row) {				// 3/22/10
-	global $disposition;
+	global $disposition, $mode;
 ?>
 <SCRIPT>
 	String.prototype.trim = function () {
@@ -167,7 +183,7 @@ function do_is_start($in_row) {				// 3/22/10
 			
 			
 	<TR CLASS='even'><TD ALIGN='right' CLASS='td_label' ><?php print $disposition;?>:&nbsp;</TD>
-		<TD><TEXTAREA NAME='frm_disp' COLS=56 ROWS = 2><?php print $in_row['comments'];?></TEXTAREA>
+		<TD><TEXTAREA NAME='frm_disp' COLS=56 ROWS = 2><?php print str_replace("<BR />", "\n", $in_row['comments']);?></TEXTAREA>
 			</TD></TR>
 		<TR VALIGN = 'TOP' CLASS='odd'>		<!-- 11/15/10 -->
 			<TD></TD><TD CLASS="td_label">Signal &raquo; 
@@ -236,6 +252,8 @@ function do_is_start($in_row) {				// 3/22/10
 	</TD></TR>
 	</TABLE>
 	<INPUT TYPE = 'hidden' NAME = 'frm_ticket_id' VALUE='<?php print $_GET['ticket_id']; ?>' />
+	<INPUT TYPE = 'hidden' NAME = 'frm_scope' VALUE='<?php print $short_descr;?>' />
+	<INPUT TYPE = 'hidden' NAME = 'frm_mode' VALUE='<?php print $mode; ?>' />
 	</FORM>
 	</BODY>
 	</HTML>
@@ -303,63 +321,13 @@ function do_is_start($in_row) {				// 3/22/10
 
 		do_log($GLOBALS['LOG_INCIDENT_CLOSE'], $_POST['frm_ticket_id'])	;
 		$addrs = notify_user($the_id, $GLOBALS['NOTIFY_TICKET_CHG']);		// returns array of adddr's for notification, or FALSE
-		if ($addrs) {				// any addresses?	8/28/13
-?>	
-<SCRIPT>
-			function do_notify() {
-
-				var theAddresses = '<?php print implode("|", array_unique($addrs));?>';		// drop dupes
-				var theText= ' New <?php print get_text("Incident");?>: ';
-				var theId = '<?php print $_POST['ticket_id'];?>';
-				
-		//		mail_it ($to_str, $text, $theId, $text_sel=1;, $txt_only = FALSE)
-
-				var params = "frm_to="+ escape(theAddresses) + "&frm_text=" + escape(theText) + "&frm_ticket_id=" + theId + "&text_sel=1";		// ($to_str, $text, $ticket_id)   10/15/08
-				sendRequest ('mail_it.php',handleResult, params);	// ($to_str, $text, $ticket_id)   10/15/08
-				}			// end function do notify()
-			
-			function handleResult(req) {				// the 'called-back' function
-			}
-
-			function sendRequest(url,callback,postData) {
-				var req = createXMLHTTPObject();
-				if (!req) return;
-				var method = (postData) ? "POST" : "GET";
-				req.open(method,url,true);
-				if (postData)
-					req.setRequestHeader('Content-type','application/x-www-form-urlencoded');
-				req.onreadystatechange = function () {
-					if (req.readyState != 4) return;
-					if (req.status != 200 && req.status != 304) {
-						return;
-						}
-					callback(req);
-					}
-				if (req.readyState == 4) return;
-				req.send(postData);
-				}
-	
-			var XMLHttpFactories = [
-				function () {return new XMLHttpRequest()	},
-				function () {return new ActiveXObject("Msxml2.XMLHTTP")	},
-				function () {return new ActiveXObject("Msxml3.XMLHTTP")	},
-				function () {return new ActiveXObject("Microsoft.XMLHTTP")	}
-				];
-			
-			function createXMLHTTPObject() {
-				var xmlhttp = false;
-				for (var i=0;i<XMLHttpFactories.length;i++) {
-					try { xmlhttp = XMLHttpFactories[i](); }
-					catch (e) { continue; }
-					break;
-					}
-				return xmlhttp;
-				}
-<?php
+			// any addresses?	8/28/13
+		if ($addrs) {
+			$id = $_POST['frm_ticket_id'];
+			$theTo = implode("|", array_unique($addrs));
+			$theText = get_text("Incident") . " " . $row['scope'] . " has been closed";
+			mail_it ($theTo, "", $theText, $id, 1 );
 		}				// end if ($addrs)
-?>
-</SCRIPT>
-<?php
 		unset($result);
 		return $row['scope'];				// 2/15/10
 
